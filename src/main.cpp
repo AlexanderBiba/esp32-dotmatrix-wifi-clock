@@ -17,12 +17,16 @@
 // CLK       VSPI_SCK
 //
 
+#include <ctime>
 #include <WiFi.h>
 #include <WiFiServer.h>
 #include <MD_MAX72xx.h>
+#include <HttpClient.h>
+#include <ArduinoJson.h>
+#include <Timezone.h>
 
 #define PRINT_CALLBACK 0
-#define DEBUG 0
+#define DEBUG 1
 #define LED_HEARTBEAT 0
 
 #if DEBUG
@@ -48,13 +52,13 @@
 // Define the number of devices we have in the chain and the hardware interface
 // NOTE: These pin numbers will probably not work with your hardware and may
 // need to be adapted
-#define HARDWARE_TYPE MD_MAX72XX::PAROLA_HW
-#define MAX_DEVICES 1
+#define HARDWARE_TYPE MD_MAX72XX::GENERIC_HW
+#define MAX_DEVICES 4
 
 // GPIO pins
 #define CLK_PIN 14  // VSPI_SCK
 #define DATA_PIN 13 // VSPI_MOSI
-#define CS_PIN 12    // VSPI_SS
+#define CS_PIN 12   // VSPI_SS
 
 // SPI hardware interface
 // MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
@@ -68,14 +72,27 @@ const char password[] = "shakshuka";
 // WiFi Server object and parameters
 WiFiServer server(80);
 
+// US Eastern Time Zone (New York, Detroit)
+TimeChangeRule myDST = {"EDT", Second, Sun, Mar, 2, -240}; // Daylight time = UTC - 4 hours
+TimeChangeRule mySTD = {"EST", First, Sun, Nov, 2, -300};  // Standard time = UTC - 5 hours
+Timezone myTZ(myDST, mySTD);
+
 // Global message buffers shared by Wifi and Scrolling functions
 const uint8_t MESG_SIZE = 255;
 const uint8_t CHAR_SPACING = 1;
 const uint8_t SCROLL_DELAY = 75;
 
+enum FnType
+{
+  MSG,
+  CLK
+};
+
+FnType operationMode = CLK;
 char curMessage[MESG_SIZE];
 char newMessage[MESG_SIZE];
 bool newMessageAvailable = false;
+long epoch = 0;
 
 const char WebResponse[] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n";
 
@@ -83,16 +100,23 @@ const char WebPage[] =
     "<!DOCTYPE html>"
     "<html>"
     "<head>"
-    "<title>MajicDesigns Test Page</title>"
+    "<title>Wifi Dotmatrix Display</title>"
 
     "<script>"
     "strLine = \"\";"
 
-    "function SendText()"
+    "function submit()"
     "{"
     "  nocache = \"/&nocache=\" + Math.random() * 1000000;"
     "  var request = new XMLHttpRequest();"
-    "  strLine = \"&MSG=\" + document.getElementById(\"txt_form\").Message.value;"
+    "  if (document.getElementById(\"txt_form\").msg.checked)"
+    "  {"
+    "    strLine = \"&MSG=\" + document.getElementById(\"txt_form\").Message.value;"
+    "  }"
+    "  else if (document.getElementById(\"txt_form\").clk.checked)"
+    "  {"
+    "    strLine = \"&CLK\""
+    "  }"
     "  request.open(\"GET\", strLine + nocache, false);"
     "  request.send(null);"
     "}"
@@ -100,13 +124,16 @@ const char WebPage[] =
     "</head>"
 
     "<body>"
-    "<p><b>MD_MAX72xx set message</b></p>"
+    "<p><b>Wifi Clock Set Function</b></p>"
 
     "<form id=\"txt_form\" name=\"frmText\">"
-    "<label>Msg:<input type=\"text\" name=\"Message\" maxlength=\"255\"></label><br><br>"
+    "<input type=\"radio\" id=\"msg\" name=\"fn\" />"
+    "<label for=\"msg\">Message: <input type=\"text\" name=\"Message\" maxlength=\"255\"></label><br><br>"
+    "<input type=\"radio\" id=\"clk\" name=\"fn\" />"
+    "<label for=\"clk\">Clock</label><br><br>"
     "</form>"
     "<br>"
-    "<input type=\"submit\" value=\"Send Text\" onclick=\"SendText()\">"
+    "<input type=\"submit\" value=\"Submit\" onclick=\"submit()\">"
     "</body>"
     "</html>";
 
@@ -149,7 +176,7 @@ boolean getText(char *szMesg, char *psz, uint8_t len)
   boolean isValid = false; // text received flag
   char *pStart, *pEnd;     // pointer to start and end of text
 
-  // get pointer to the beginning of the text
+  // handle message mode
   pStart = strstr(szMesg, "/&MSG=");
 
   if (pStart != NULL)
@@ -175,8 +202,18 @@ boolean getText(char *szMesg, char *psz, uint8_t len)
       }
 
       *psz = '\0'; // terminate the string
+      operationMode = MSG;
       isValid = true;
     }
+  }
+
+  // handle clock mode
+  pStart = strstr(szMesg, "/&CLK");
+
+  if (pStart != NULL)
+  {
+    operationMode = CLK;
+    isValid = true;
   }
 
   return (isValid);
@@ -305,9 +342,16 @@ uint8_t scrollDataSource(uint8_t dev, MD_MAX72XX::transformType_t t)
     p = curMessage;          // reset the pointer to start of message
     if (newMessageAvailable) // there is a new message waiting
     {
-      PRINT("\nNew message - ", newMessage);
-      strcpy(curMessage, newMessage); // copy it in
-      newMessageAvailable = false;
+      switch (operationMode)
+      {
+      case MSG:
+        PRINT("\nNew message - ", newMessage);
+        strcpy(curMessage, newMessage); // copy it in
+        newMessageAvailable = false;
+        break;
+      case CLK:
+        break;
+      }
     }
     state = S_NEXT_CHAR;
     break;
@@ -363,16 +407,121 @@ void scrollText(void)
   }
 }
 
+void getTimeFromServer()
+{
+  PRINTS("\ngetting time from server");
+
+  static WiFiClient wifiClient = WiFiClient();
+  HttpClient client = HttpClient(wifiClient, "worldtimeapi.org");
+  client.get("/api/timezone/America/New_York");
+  int statusCode = client.responseStatusCode();
+  String response = client.responseBody();
+
+  PRINT("\nStatus code: ", statusCode);
+  PRINT("\nResponse: ", response);
+
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, response);
+  if (error)
+  {
+    PRINT("\ndeserializeJson() failed: ", error.f_str());
+    return;
+  }
+
+  long unixtime = doc["unixtime"];
+  PRINT("\nUnix time: ", unixtime);
+  epoch = unixtime - (millis() / 1000);
+}
+
+void setCharOverride(int pos, char c)
+{
+  if (c == '1')
+  {
+    mx.setChar(pos, '1');
+    mx.setColumn(pos - 3, 0);
+    mx.setColumn(pos - 4, 0);
+  }
+  else
+  {
+    mx.setChar(pos, c);
+  }
+}
+
+void printTime(boolean reset)
+{
+  static enum { S_IDLE,
+                S_RESET } state;
+  static long time = epoch + (millis() / 1000);
+
+  if (reset)
+  {
+    state = S_RESET;
+  }
+
+  switch (state)
+  {
+  case S_RESET:
+    PRINTS("\nS_RESET");
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      getTimeFromServer();
+      state = S_IDLE;
+      mx.clear();
+    }
+    break;
+  case S_IDLE:
+    const uint8_t charSize = 5;
+
+    long newTime = epoch + (millis() / 1000);
+    if (newTime != time)
+    {
+      time = newTime;
+      if (WiFi.status() == WL_CONNECTED && (newTime % 3600) == 0) // sync time every hour
+      {
+        getTimeFromServer();
+      }
+
+      char timeStr[sizeof("hh:mm:ss")];
+      time_t nyTime = myTZ.toLocal(newTime);
+      strftime((timeStr), sizeof(timeStr), "%T", gmtime(&nyTime));
+
+      uint8_t pos = -1;
+
+      // seconds
+      pos += charSize;
+      setCharOverride(pos, timeStr[7]);
+      pos += charSize;
+      setCharOverride(pos, timeStr[6]);
+
+      // delim
+      pos += 1;
+      setCharOverride(pos, 0);
+
+      // minutes
+      pos += charSize;
+      setCharOverride(pos, timeStr[4]);
+      pos += charSize;
+      setCharOverride(pos, timeStr[3]);
+
+      // delim
+      pos += 1;
+      setCharOverride(pos, 0);
+
+      // hours
+      pos += charSize;
+      setCharOverride(pos, timeStr[1]);
+      pos += charSize;
+      setCharOverride(pos, timeStr[0]);
+    }
+    break;
+  }
+}
+
 void setup(void)
 {
 #if DEBUG
   Serial.begin(115200);
   PRINTS("\n[MD_MAX72XX WiFi Message Display]\nType a message for the scrolling display from your internet browser");
-#endif
-
-#if LED_HEARTBEAT
-  pinMode(HB_LED, OUTPUT);
-  digitalWrite(HB_LED, LOW);
 #endif
 
   // Display initialization
@@ -385,13 +534,10 @@ void setup(void)
 
   // Connect to and initialize WiFi network
   PRINT("\nConnecting to ", ssid);
-
   WiFi.begin(ssid, password);
-
   while (WiFi.status() != WL_CONNECTED)
   {
     PRINT("\n", err2Str(WiFi.status()));
-    // busy wait delay
     uint32_t t = millis();
     while (millis() - t <= 1000)
       yield();
@@ -405,20 +551,22 @@ void setup(void)
   // Set up first message as the IP address
   sprintf(curMessage, "%d:%d:%d:%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
   PRINT("\nAssigned IP ", curMessage);
+
+  getTimeFromServer();
 }
 
 void loop(void)
 {
-#if LED_HEARTBEAT
-  static uint32_t timeLast = 0;
-
-  if (millis() - timeLast >= HB_LED_TIME)
-  {
-    digitalWrite(HB_LED, digitalRead(HB_LED) == LOW ? HIGH : LOW);
-    timeLast = millis();
-  }
-#endif
+  FnType prevOperationMode = operationMode;
 
   handleWiFi();
-  scrollText();
+  switch (operationMode)
+  {
+  case MSG:
+    scrollText();
+    break;
+  case CLK:
+    printTime(prevOperationMode != operationMode);
+    break;
+  }
 }
