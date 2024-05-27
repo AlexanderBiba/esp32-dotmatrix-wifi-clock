@@ -25,7 +25,7 @@ enum OpearationMode
   CLK
 };
 
-OpearationMode operationMode = MSG;
+OpearationMode operationMode = CLK;
 
 uint8_t htoi(char c)
 {
