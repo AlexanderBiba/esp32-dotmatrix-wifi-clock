@@ -40,23 +40,9 @@ void setupClk()
   epoch = unixtime - (millis() / 1000);
 }
 
-void setCharOverride(int pos, char c, MD_MAX72XX &mx)
+bool getTime(bool reset, char *buffer)
 {
-  if (c == '1')
-  {
-    mx.setChar(pos, '1');
-    mx.setColumn(pos - 3, 0);
-    mx.setColumn(pos - 4, 0);
-  }
-  else
-  {
-    mx.setChar(pos, c);
-  }
-}
-
-bool printTime(bool reset, char *buffer)
-{
-  bool newMessageSet = false;
+  bool newValue = false;
 
   static enum { S_IDLE,
                 S_RESET } state;
@@ -86,7 +72,6 @@ bool printTime(bool reset, char *buffer)
     long newTime = epoch + (millis() / 1000);
     if (newTime != time)
     {
-      PRINTS("\nnewTime != time");
       time = newTime;
       if (WiFi.status() == WL_CONNECTED && (newTime % 3600) == 0) // sync time every hour
       {
@@ -96,40 +81,10 @@ bool printTime(bool reset, char *buffer)
       char timeStr[sizeof("hh:mm:ss")];
       time_t nyTime = myTZ.toLocal(newTime);
       strftime((timeStr), sizeof(timeStr), "%T", gmtime(&nyTime));
-      PRINT("\ntimeStr", timeStr);
-      strcpy(buffer, timeStr);
-      newMessageSet = true;
-      PRINT("\nnewMessage", buffer);
-
-      //   uint8_t pos = -1;
-
-      //   // seconds
-      //   pos += charSize;
-      //   setCharOverride(pos, timeStr[7], mx);
-      //   pos += charSize;
-      //   setCharOverride(pos, timeStr[6], mx);
-
-      //   // delim
-      //   pos += 1;
-      //   setCharOverride(pos, 0, mx);
-
-      //   // minutes
-      //   pos += charSize;
-      //   setCharOverride(pos, timeStr[4], mx);
-      //   pos += charSize;
-      //   setCharOverride(pos, timeStr[3], mx);
-
-      //   // delim
-      //   pos += 1;
-      //   setCharOverride(pos, 0, mx);
-
-      //   // hours
-      //   pos += charSize;
-      //   setCharOverride(pos, timeStr[1], mx);
-      //   pos += charSize;
-      //   setCharOverride(pos, timeStr[0], mx);
+      memcpy(buffer, timeStr, sizeof(timeStr));
+      newValue = true;
     }
     break;
   }
-  return newMessageSet;
+  return newValue;
 }

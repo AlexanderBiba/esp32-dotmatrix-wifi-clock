@@ -91,6 +91,7 @@ void getText(char *szMesg, uint8_t len)
 }
 
 char buffer[MAX_MSG_SIZE];
+uint8_t rawMessageBuffer[MAX_DEVICES * 8];
 
 void setup(void)
 {
@@ -109,22 +110,66 @@ void setup(void)
   setupClk();
 }
 
+void writeChar(char c, uint8_t *buffer)
+{
+  uint8_t c1[5];
+  uint8_t len = getChar(c, 5, c1);
+  for (uint8_t i = 0; i < len; i++)
+  {
+    buffer[i] = c1[i];
+  }
+  if (len < 5)
+  {
+    for (uint8_t i = len; i < 5; i++)
+    {
+      buffer[i] = '\0';
+    }
+  }
+}
+
 void loop(void)
 {
-
   OpearationMode prevOperationMode = operationMode;
 
   handleWiFi(getText);
+
+  if (prevOperationMode != operationMode)
+  {
+    PRINT("\nOperation Mode: ", operationMode);
+    setStopScroll(false);
+  }
+
   switch (operationMode)
   {
   case MSG:
     scrollText();
     break;
   case CLK:
-    scrollText();
-    if (printTime(prevOperationMode != operationMode, buffer))
+    if (getTime(prevOperationMode != operationMode, buffer))
     {
-      setMessage(buffer);
+      uint8_t *p = rawMessageBuffer;
+      writeChar(buffer[0], p);
+      p += 5;
+      writeChar(buffer[1], p);
+      p += 5;
+      *p++ = 0;
+      writeChar(buffer[3], p);
+      p += 5;
+      writeChar(buffer[4], p);
+      p += 5;
+      *p++ = 0;
+      writeChar(buffer[6], p);
+      p += 5;
+      writeChar(buffer[7], p);
+    }
+    if (getStopScroll())
+    {
+      renderRaw(rawMessageBuffer);
+    }
+    else
+    {
+      setRawMessage(rawMessageBuffer);
+      scrollText();
     }
     break;
   }

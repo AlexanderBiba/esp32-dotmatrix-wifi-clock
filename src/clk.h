@@ -2,6 +2,6 @@
 #define CLK_H
 
 void setupClk();
-bool printTime(bool reset, char *buffer);
+bool getTime(bool reset, char *buffer);
 
 #endif
