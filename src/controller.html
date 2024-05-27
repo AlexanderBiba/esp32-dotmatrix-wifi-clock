@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Wifi Dotmatrix Display</title>
+    <script>
+      strLine = "";
+      function submit() {
+        nocache = "/&nocache=" + Math.random() * 1000000;
+        var request = new XMLHttpRequest();
+        if (document.getElementById("txt_form").msg.checked) {
+          strLine = "&MSG=" + document.getElementById("txt_form").Message.value;
+        } else if (document.getElementById("txt_form").clk.checked) {
+          strLine = "&CLK";
+        }
+        request.open("GET", strLine + nocache, false);
+        request.send(null);
+      }
+    </script>
+  </head>
+
+  <body>
+    <p><b>Wifi Clock Set Function</b></p>
+    <form id="txt_form" name="frmText">
+      <input type="radio" id="msg" name="fn" />
+      <label for="msg"
+        >Message: <input type="text" name="Message" maxlength="255" /></label
+      ><br /><br />
+      <input type="radio" id="clk" name="fn" />
+      <label for="clk">Clock</label><br /><br />
+    </form>
+    <br />
+    <input type="submit" value="Submit" onclick="submit()" />
+  </body>
+</html>
