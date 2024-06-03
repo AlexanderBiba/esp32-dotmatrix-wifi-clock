@@ -2,15 +2,16 @@
 #define MAIN_UTILS_H
 
 #include <stdint.h>
+#include <Arduino.h>
 
 #define PRINT(s, v)     \
   {                     \
     Serial.print(F(s)); \
-    Serial.print(v);    \
+    Serial.println(v);  \
   }
-#define PRINTS(s)       \
-  {                     \
-    Serial.print(F(s)); \
+#define PRINTS(s)         \
+  {                       \
+    Serial.println(F(s)); \
   }
 
 #define MAX_MSG_SIZE 255

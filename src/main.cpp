@@ -11,9 +11,9 @@
 #include <Arduino.h>
 
 #include "clk.h"
-#include "app_wifi.h"
 #include "utils.h"
 #include "renderer.h"
+#include "app_matter.h"
 
 #define PRINT_CALLBACK 0
 #define DEBUG 1
@@ -27,87 +27,13 @@ enum OpearationMode
 
 OpearationMode operationMode = CLK;
 
-uint8_t htoi(char c)
-{
-  c = toupper(c);
-  if ((c >= '0') && (c <= '9'))
-    return (c - '0');
-  if ((c >= 'A') && (c <= 'F'))
-    return (c - 'A' + 0xa);
-  return (0);
-}
-
-void getText(char *szMesg, uint8_t len)
-{
-  static char buffer[MAX_MSG_SIZE];
-
-  bool isValid = false;
-  char *pStart, *pEnd, *psz = buffer;
-
-  // handle message mode
-  pStart = strstr(szMesg, "/&MSG=");
-
-  if (pStart != NULL)
-  {
-    pStart += 6; // skip to start of data
-    pEnd = strstr(pStart, "/&");
-
-    if (pEnd != NULL)
-    {
-      while (pStart != pEnd)
-      {
-        if ((*pStart == '%') && isxdigit(*(pStart + 1)))
-        {
-          // replace %xx hex code with the ASCII character
-          char c = 0;
-          pStart++;
-          c += (htoi(*pStart++) << 4);
-          c += htoi(*pStart++);
-          *psz++ = c;
-        }
-        else
-          *psz++ = *pStart++;
-      }
-
-      *psz = '\0'; // terminate the string
-      operationMode = MSG;
-      isValid = true;
-    }
-  }
-
-  // handle clock mode
-  pStart = strstr(szMesg, "/&CLK");
-
-  if (pStart != NULL)
-  {
-    operationMode = CLK;
-    isValid = true;
-  }
-
-  if (isValid)
-  {
-    setMessage(buffer);
-  }
-}
-
-char buffer[MAX_MSG_SIZE];
-uint8_t rawMessageBuffer[MAX_DEVICES * 8];
-
 void setup(void)
 {
-#if DEBUG
   Serial.begin(115200);
-  PRINTS("\n[MD_MAX72XX WiFi Message Display]\nType a message for the scrolling display from your internet browser");
-#endif
-
-  buffer[0] = '\0';
 
   setupRenderer();
-
-  setupWiFi(buffer);
-  setMessage(buffer);
-
-  setupClk();
+  setupMatter();
+  // setupClk();
 }
 
 void writeChar(char c, uint8_t *buffer)
@@ -129,14 +55,23 @@ void writeChar(char c, uint8_t *buffer)
 
 void loop(void)
 {
+  static char buffer[MAX_MSG_SIZE] = "\0";
+  static uint8_t rawMessageBuffer[MAX_DEVICES * 8];
+
   OpearationMode prevOperationMode = operationMode;
 
-  handleWiFi(getText);
+  operationMode = getMatterSwitchVal() ? MSG : CLK;
 
   if (prevOperationMode != operationMode)
   {
-    PRINT("\nOperation Mode: ", operationMode);
+    PRINT("Operation Mode: ", operationMode);
     setStopScroll(false);
+    switch (operationMode)
+    {
+    case MSG:
+      setMessage("Hello World!");
+      break;
+    }
   }
 
   switch (operationMode)

@@ -16,7 +16,7 @@ Timezone myTZ(myDST, mySTD);
 
 void setupClk()
 {
-  PRINTS("\ngetting time from server");
+  PRINTS("getting time from server");
 
   static WiFiClient wifiClient = WiFiClient();
   HttpClient client = HttpClient(wifiClient, "worldtimeapi.org");
@@ -24,19 +24,19 @@ void setupClk()
   int statusCode = client.responseStatusCode();
   String response = client.responseBody();
 
-  PRINT("\nStatus code: ", statusCode);
-  PRINT("\nResponse: ", response);
+  PRINT("Status code: ", statusCode);
+  PRINT("Response: ", response);
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, response);
   if (error)
   {
-    PRINT("\ndeserializeJson() failed: ", error.f_str());
+    PRINT("deserializeJson() failed: ", error.f_str());
     return;
   }
 
   long unixtime = doc["unixtime"];
-  PRINT("\nUnix time: ", unixtime);
+  PRINT("Unix time: ", unixtime);
   epoch = unixtime - (millis() / 1000);
 }
 
@@ -56,15 +56,12 @@ bool getTime(bool reset, char *buffer)
   switch (state)
   {
   case S_RESET:
-    PRINTS("\nS_RESET");
+    PRINTS("S_RESET");
     if (WiFi.status() == WL_CONNECTED && epoch == 0)
     {
       setupClk();
     }
-    if (epoch)
-    {
-      state = S_IDLE;
-    }
+    state = S_IDLE;
     break;
   case S_IDLE:
     const uint8_t charSize = 5;
