@@ -63,7 +63,7 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     p = curMessage;          // reset the pointer to start of message
     if (newMessageAvailable) // there is a new message waiting
     {
-      PRINTS("\nnewMessageAvailable");
+      PRINTS("newMessageAvailable");
       strcpy(curMessage, newMessage); // copy it in
       newMessageAvailable = false;
       state = S_NEXT_CHAR;
@@ -71,7 +71,7 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     }
     else if (newRawAvailable)
     {
-      PRINTS("\nnewRawAvailable");
+      PRINTS("newRawAvailable");
       memcpy(curRaw, newRaw, sizeof(curRaw));
       newRawAvailable = false;
       state = S_NEXT_RAW;
@@ -92,7 +92,7 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     break;
 
   case S_NEXT_CHAR: // Load the next character from the font table
-    PRINT("\nS_NEXT_CHAR ", *p);
+    PRINT("S_NEXT_CHAR ", *p);
     if (*p == '\0')
       state = S_IDLE;
     else
@@ -104,11 +104,11 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     break;
 
   case S_SHOW_CHAR: // display the next part of the character
-    PRINTS("\nS_SHOW_CHAR");
+    PRINTS("S_SHOW_CHAR");
     colData = cBuf[curLen++];
     static char buffer[8];
     sprintf(buffer, "%02X", colData);
-    PRINT("\nscrollDataIn: ", buffer);
+    PRINT("scrollDataIn: ", buffer);
     if (curLen < showLen)
       break;
 
@@ -119,7 +119,7 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     // fall through
 
   case S_SHOW_SPACE: // display inter-character spacing (blank column)
-    PRINT("\nS_SHOW_SPACE: ", curLen);
+    PRINT("S_SHOW_SPACE: ", curLen);
     PRINT("/", showLen);
     curLen++;
     if (curLen == showLen)
@@ -127,11 +127,11 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     break;
 
   case S_NEXT_RAW:
-    PRINTS("\nS_NEXT_RAW");
+    PRINTS("S_NEXT_RAW");
     colData = curRaw[curLen++];
     if (curLen == showLen)
     {
-      PRINT("\nshowLen ", showLen);
+      PRINT("showLen ", showLen);
       curLen = 0;
       stopScroll = true;
       state = S_IDLE;
@@ -149,7 +149,7 @@ void scrollDataOut(uint8_t dev, MD_MAX72XX::transformType_t t, uint8_t colData)
 {
   // static char buffer[8];
   // sprintf(buffer, "%02X", colData);
-  // PRINT("\nscrollDataOut: ", buffer);
+  // PRINT("scrollDataOut: ", buffer);
 }
 
 uint8_t getChar(char c, size_t size, uint8_t *buffer)
@@ -159,7 +159,7 @@ uint8_t getChar(char c, size_t size, uint8_t *buffer)
 
 void setStopScroll(bool val)
 {
-  PRINT("\nsetStopScroll: ", val);
+  PRINT("setStopScroll: ", val);
   stopScroll = val;
 }
 
@@ -177,7 +177,7 @@ void setMessage(char *message)
 
 void setRawMessage(uint8_t *raw)
 {
-  PRINTS("\nsetRawMessage");
+  PRINTS("setRawMessage");
   memcpy(newRaw, raw, sizeof(newRaw));
   newRawAvailable = true;
   newMessageAvailable = false;
@@ -194,7 +194,7 @@ void renderRaw(uint8_t rawColumns[MAX_DEVICES * 8])
 void setupRenderer()
 {
   // Display initialization
-  PRINTS("\nInitializing Display");
+  PRINTS("Initializing Display");
   mx.begin();
   mx.setShiftDataInCallback(scrollDataIn);
   mx.setShiftDataOutCallback(scrollDataOut);

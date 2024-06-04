@@ -95,12 +95,7 @@ uint8_t rawMessageBuffer[MAX_DEVICES * 8];
 
 void setup(void)
 {
-#if DEBUG
   Serial.begin(115200);
-  PRINTS("\n[MD_MAX72XX WiFi Message Display]\nType a message for the scrolling display from your internet browser");
-#endif
-
-  buffer[0] = '\0';
 
   setupRenderer();
 
@@ -135,8 +130,14 @@ void loop(void)
 
   if (prevOperationMode != operationMode)
   {
-    PRINT("\nOperation Mode: ", operationMode);
+    PRINT("Operation Mode: ", operationMode);
     setStopScroll(false);
+    switch (operationMode)
+    {
+    case MSG:
+      setMessage("Hello World!");
+      break;
+    }
   }
 
   switch (operationMode)
