@@ -1,12 +1,12 @@
 #include <WiFiServer.h>
 #include <WiFi.h>
+#include <WiFiManager.h>
+#include <ESPmDNS.h>
 
 #include "app_wifi.h"
 #include "utils.h"
 
-// WiFi login parameters - network name and password
-const char ssid[] = "Hogwarts";
-const char password[] = "shakshuka";
+OperationMode operationMode;
 
 // WiFi Server object and parameters
 WiFiServer server(80);
@@ -52,7 +52,70 @@ const char WebPage[] =
 </html>
 )html";
 
-void handleWiFi(void (*getText)(char *szMesg, uint8_t len))
+uint8_t htoi(char c)
+{
+  c = toupper(c);
+  if ((c >= '0') && (c <= '9'))
+    return (c - '0');
+  if ((c >= 'A') && (c <= 'F'))
+    return (c - 'A' + 0xa);
+  return (0);
+}
+
+OperationMode extractHttpContent(char *szMesg, char msgBuffer[MAX_MSG_SIZE])
+{
+  bool isValid = false;
+  char *pStart, *pEnd, *psz = msgBuffer;
+
+  // handle message mode
+  pStart = strstr(szMesg, "/&MSG=");
+
+  if (pStart != NULL)
+  {
+    pStart += 6; // skip to start of data
+    pEnd = strstr(pStart, "/&");
+
+    if (pEnd != NULL)
+    {
+      while (pStart != pEnd)
+      {
+        if ((*pStart == '%') && isxdigit(*(pStart + 1)))
+        {
+          // replace %xx hex code with the ASCII character
+          char c = 0;
+          pStart++;
+          c += (htoi(*pStart++) << 4);
+          c += htoi(*pStart++);
+          *psz++ = c;
+        }
+        else
+          *psz++ = *pStart++;
+      }
+
+      *psz = '\0'; // terminate the string
+      operationMode = OperationMode::MSG;
+      isValid = true;
+    }
+  }
+
+  // handle clock mode
+  pStart = strstr(szMesg, "/&CLK");
+
+  if (pStart != NULL)
+  {
+    operationMode = OperationMode::CLK;
+    isValid = true;
+  }
+
+  // if (!isValid)
+  // {
+  //   throw new std::invalid_argument("Invalid message received");
+  // }
+
+  return operationMode;
+}
+
+OperationMode handleWiFi(char msgBuffer[MAX_MSG_SIZE])
 {
   static enum { S_IDLE,
                 S_WAIT_CONN,
@@ -68,7 +131,7 @@ void handleWiFi(void (*getText)(char *szMesg, uint8_t len))
   switch (state)
   {
   case S_IDLE: // initialize
-    PRINTS("\nS_IDLE");
+    PRINTS("S_IDLE");
     idxBuf = 0;
     state = S_WAIT_CONN;
     break;
@@ -84,7 +147,7 @@ void handleWiFi(void (*getText)(char *szMesg, uint8_t len))
 #if DEBUG
     char szTxt[20];
     sprintf(szTxt, "%d:%d:%d:%d", client.remoteIP()[0], client.remoteIP()[1], client.remoteIP()[2], client.remoteIP()[3]);
-    PRINT("\nNew client @ ", szTxt);
+    PRINT("New client @ ", szTxt);
 #endif
 
     timeStart = millis();
@@ -93,7 +156,7 @@ void handleWiFi(void (*getText)(char *szMesg, uint8_t len))
   break;
 
   case S_READ: // get the first line of data
-    PRINTS("\nS_READ");
+    PRINTS("S_READ");
     while (client.available())
     {
       char c = client.read();
@@ -101,7 +164,7 @@ void handleWiFi(void (*getText)(char *szMesg, uint8_t len))
       {
         szBuf[idxBuf] = '\0';
         client.flush();
-        PRINT("\nRecv: ", szBuf);
+        PRINT("Recv: ", szBuf);
         state = S_EXTRACT;
       }
       else
@@ -109,20 +172,20 @@ void handleWiFi(void (*getText)(char *szMesg, uint8_t len))
     }
     if (millis() - timeStart > 1000)
     {
-      PRINTS("\nWait timeout");
+      PRINTS("Wait timeout");
       state = S_DISCONN;
     }
     break;
 
   case S_EXTRACT: // extract data
-    PRINTS("\nS_EXTRACT");
+    PRINTS("S_EXTRACT");
     // Extract the string from the message if there is one
-    getText(szBuf, MAX_MSG_SIZE);
+    operationMode = extractHttpContent(szBuf, msgBuffer);
     state = S_RESPONSE;
     break;
 
   case S_RESPONSE: // send the response to the client
-    PRINTS("\nS_RESPONSE");
+    PRINTS("S_RESPONSE");
     // Return the response to the client (web page)
     client.print(WebResponse);
     client.print(WebPage);
@@ -130,7 +193,7 @@ void handleWiFi(void (*getText)(char *szMesg, uint8_t len))
     break;
 
   case S_DISCONN: // disconnect client
-    PRINTS("\nS_DISCONN");
+    PRINTS("S_DISCONN");
     client.flush();
     client.stop();
     state = S_IDLE;
@@ -139,6 +202,8 @@ void handleWiFi(void (*getText)(char *szMesg, uint8_t len))
   default:
     state = S_IDLE;
   }
+
+  return operationMode;
 }
 
 const char *err2Str(wl_status_t code)
@@ -165,24 +230,39 @@ const char *err2Str(wl_status_t code)
   }
 }
 
+#define MDNS_DOMAIN "esp32"
 void setupWiFi(char *localIp)
 {
-  // Connect to and initialize WiFi network
-  PRINT("\nConnecting to ", ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED)
+  WiFiManager wifiManager;
+  // wifiManager.resetSettings();
+  wifiManager.autoConnect("DotMatrix Clock");
+  PRINTS("WIFI Connected");
+
+  // Initialize mDNS
+  bool mdnsSuccess = MDNS.begin(MDNS_DOMAIN);
+  if (!mdnsSuccess)
   {
-    PRINT("\n", err2Str(WiFi.status()));
-    uint32_t t = millis();
-    while (millis() - t <= 1000)
-      yield();
+    PRINTS("Error setting up MDNS responder!");
   }
-  PRINTS("\nWiFi connected");
 
   // Start the server
-  PRINTS("\nStarting Server");
+  PRINTS("Starting Server");
   server.begin();
 
-  sprintf(localIp, "%d:%d:%d:%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-  PRINT("\nAssigned IP ", localIp);
+  if (mdnsSuccess)
+  {
+    sprintf(localIp, "%d:%d:%d:%d - %s.local", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3], MDNS_DOMAIN);
+    PRINT("Assigned IP ", localIp);
+    PRINT("MDNS ", MDNS_DOMAIN);
+  }
+  else
+  {
+    sprintf(localIp, "%d:%d:%d:%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+    PRINT("Assigned IP ", localIp);
+  }
+}
+
+void setDefaultOperationMode(OperationMode defaultOperationMode)
+{
+  operationMode = defaultOperationMode;
 }

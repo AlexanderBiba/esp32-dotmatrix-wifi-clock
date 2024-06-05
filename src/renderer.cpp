@@ -2,6 +2,7 @@
 
 #include "utils.h"
 #include "renderer.h"
+#include "main.h"
 
 #define HARDWARE_TYPE MD_MAX72XX::DR1CR0RR0_HW
 
@@ -15,13 +16,13 @@ const uint16_t SCROLL_DELAY = 75;
 
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
 
-enum Mode
+enum struct RenderMode
 {
   MSG,
   RAW
 };
+RenderMode mode = RenderMode::MSG;
 
-Mode mode = MSG;
 char curMessage[MAX_MSG_SIZE] = {0};
 char newMessage[MAX_MSG_SIZE] = {0};
 bool newMessageAvailable = false;
@@ -30,17 +31,15 @@ uint8_t curRaw[MAX_DEVICES * 8] = {0};
 uint8_t newRaw[MAX_DEVICES * 8] = {0};
 bool newRawAvailable = false;
 
-bool stopScroll = false;
+bool scrollContent = true;
 
 void scrollText(void)
 {
   static uint32_t prevTime = 0;
-
-  // Is it time to scroll the text?
-  if (millis() - prevTime >= SCROLL_DELAY)
+  if (scrollContent && (millis() - prevTime >= SCROLL_DELAY))
   {
-    mx.transform(MD_MAX72XX::TSL); // scroll along - the callback will load all the data
-    prevTime = millis();           // starting point for next time
+    mx.transform(MD_MAX72XX::TSL);
+    prevTime = millis();
   }
 }
 
@@ -67,7 +66,7 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
       strcpy(curMessage, newMessage); // copy it in
       newMessageAvailable = false;
       state = S_NEXT_CHAR;
-      mode = MSG;
+      mode = RenderMode::MSG;
     }
     else if (newRawAvailable)
     {
@@ -77,14 +76,14 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
       state = S_NEXT_RAW;
       curLen = 0;
       showLen = sizeof(curRaw) / sizeof(curRaw[0]);
-      mode = RAW;
+      mode = RenderMode::RAW;
     }
 
-    if (mode == MSG)
+    if (mode == RenderMode::MSG)
     {
       state = S_NEXT_CHAR;
     }
-    else if (mode == RAW)
+    else if (mode == RenderMode::RAW)
     {
       state = S_NEXT_RAW;
     }
@@ -133,7 +132,7 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     {
       PRINT("showLen ", showLen);
       curLen = 0;
-      stopScroll = true;
+      scrollContent = false;
       state = S_IDLE;
     }
     break;
@@ -145,27 +144,9 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
   return (colData);
 }
 
-void scrollDataOut(uint8_t dev, MD_MAX72XX::transformType_t t, uint8_t colData)
+void setScrollContent(bool val)
 {
-  // static char buffer[8];
-  // sprintf(buffer, "%02X", colData);
-  // PRINT("scrollDataOut: ", buffer);
-}
-
-uint8_t getChar(char c, size_t size, uint8_t *buffer)
-{
-  return mx.getChar(c, size, buffer);
-}
-
-void setStopScroll(bool val)
-{
-  PRINT("setStopScroll: ", val);
-  stopScroll = val;
-}
-
-bool getStopScroll(void)
-{
-  return stopScroll;
+  scrollContent = val;
 }
 
 void setMessage(char *message)
@@ -175,29 +156,62 @@ void setMessage(char *message)
   newRawAvailable = false;
 }
 
-void setRawMessage(uint8_t *raw)
+#define CLK_DIGIT_WIDTH 5
+void writeCharToBuffer(char c, uint8_t *buffer)
 {
-  PRINTS("setRawMessage");
-  memcpy(newRaw, raw, sizeof(newRaw));
-  newRawAvailable = true;
-  newMessageAvailable = false;
+
+  uint8_t c1[CLK_DIGIT_WIDTH];
+  uint8_t len = mx.getChar(c, CLK_DIGIT_WIDTH, c1);
+
+  for (uint8_t i = 0; i < len; i++)
+  {
+    buffer[i] = c1[i];
+  }
+  for (uint8_t i = len; i < CLK_DIGIT_WIDTH; i++)
+  {
+    buffer[i] = '\0';
+  }
 }
 
-void renderRaw(uint8_t rawColumns[MAX_DEVICES * 8])
+void setClock(char timeBuffer[TIME_BUFFER_SIZE])
 {
-  for (uint8_t i = 0; i < MAX_DEVICES * 8; i++)
+  static uint8_t rawClkBuffer[MAX_DEVICES * 8];
+
+  uint8_t *p = rawClkBuffer;
+  writeCharToBuffer(timeBuffer[0], p);
+  p += CLK_DIGIT_WIDTH;
+  writeCharToBuffer(timeBuffer[1], p);
+  p += CLK_DIGIT_WIDTH;
+  *p++ = 0; // empty column between hours and minutes
+  writeCharToBuffer(timeBuffer[3], p);
+  p += CLK_DIGIT_WIDTH;
+  writeCharToBuffer(timeBuffer[4], p);
+  p += CLK_DIGIT_WIDTH;
+  *p++ = 0; // empty column between minutes and seconds
+  writeCharToBuffer(timeBuffer[6], p);
+  p += CLK_DIGIT_WIDTH;
+  writeCharToBuffer(timeBuffer[7], p);
+
+  // render content
+  if (scrollContent)
   {
-    mx.setColumn(MAX_DEVICES * 8 - i - 1, rawColumns[i]);
+    memcpy(newRaw, rawClkBuffer, sizeof(newRaw));
+    newRawAvailable = true;
+    newMessageAvailable = false;
+  }
+  else
+  {
+    for (uint8_t i = 0; i < MAX_DEVICES * 8; i++)
+    {
+      mx.setColumn(MAX_DEVICES * 8 - i - 1, rawClkBuffer[i]);
+    }
   }
 }
 
 void setupRenderer()
 {
-  // Display initialization
   PRINTS("Initializing Display");
   mx.begin();
   mx.setShiftDataInCallback(scrollDataIn);
-  mx.setShiftDataOutCallback(scrollDataOut);
-
   curMessage[0] = newMessage[0] = '\0';
 }

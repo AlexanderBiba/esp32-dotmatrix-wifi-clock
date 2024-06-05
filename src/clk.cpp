@@ -40,48 +40,23 @@ void setupClk()
   epoch = unixtime - (millis() / 1000);
 }
 
-bool getTime(bool reset, char *buffer)
+bool getTime(char timeBuffer[TIME_BUFFER_SIZE])
 {
-  bool newValue = false;
-
-  static enum { S_IDLE,
-                S_RESET } state;
   static long time = epoch + (millis() / 1000);
 
-  if (reset)
+  long newTime = epoch + (millis() / 1000);
+  if (newTime != time)
   {
-    state = S_RESET;
-  }
-
-  switch (state)
-  {
-  case S_RESET:
-    PRINTS("S_RESET");
-    if (WiFi.status() == WL_CONNECTED && epoch == 0)
+    time = newTime;
+    if (WiFi.status() == WL_CONNECTED && (newTime % 3600) == 0) // sync time every hour
     {
       setupClk();
     }
-    state = S_IDLE;
-    break;
-  case S_IDLE:
-    const uint8_t charSize = 5;
 
-    long newTime = epoch + (millis() / 1000);
-    if (newTime != time)
-    {
-      time = newTime;
-      if (WiFi.status() == WL_CONNECTED && (newTime % 3600) == 0) // sync time every hour
-      {
-        setupClk();
-      }
-
-      char timeStr[sizeof("hh:mm:ss")];
-      time_t nyTime = myTZ.toLocal(newTime);
-      strftime((timeStr), sizeof(timeStr), "%T", gmtime(&nyTime));
-      memcpy(buffer, timeStr, sizeof(timeStr));
-      newValue = true;
-    }
-    break;
+    time_t nyTime = myTZ.toLocal(newTime);
+    strftime(timeBuffer, TIME_BUFFER_SIZE, "%T", gmtime(&nyTime));
+    return true;
   }
-  return newValue;
+
+  return false;
 }

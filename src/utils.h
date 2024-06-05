@@ -14,6 +14,4 @@
     Serial.println(F(s)); \
   }
 
-#define MAX_MSG_SIZE 255
-
 #endif

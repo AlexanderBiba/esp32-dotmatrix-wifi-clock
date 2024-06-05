@@ -1,8 +1,10 @@
 #ifndef APP_WIFI_H
 #define APP_WIFI_H
 
+#include "main.h"
 
 void setupWiFi(char *localIp);
-void handleWiFi(void (*getText)(char *szMesg, uint8_t len));
+OperationMode handleWiFi(char msgBuffer[MAX_MSG_SIZE]);
+void setDefaultOperationMode(OperationMode defaultOperationMode);
 
 #endif
