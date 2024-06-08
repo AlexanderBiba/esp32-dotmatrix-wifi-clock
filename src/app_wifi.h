@@ -3,8 +3,15 @@
 
 #include "main.h"
 
+enum struct AppRequestMode
+{
+    NONE,
+    MSG,
+    CLK,
+    CNTL
+};
+
 void setupWiFi(char *localIp);
-OperationMode handleWiFi(char msgBuffer[MAX_MSG_SIZE]);
-void setDefaultOperationMode(OperationMode defaultOperationMode);
+AppRequestMode handleWiFi(char requestBuffer[1024]);
 
 #endif

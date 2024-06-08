@@ -1,26 +1,30 @@
 #include <ArduinoJson.h>
-#include <Timezone.h>
 #include <MD_MAX72xx.h>
 #include <WiFi.h>
 #include <HttpClient.h>
 
 #include "clk.h"
 #include "utils.h"
+#include "app_settings.h"
 
 long epoch = 0;
+char timezone[128] = "America/New_York";
 
-// US Eastern Time Zone (New York, Detroit)
-TimeChangeRule myDST = {"EDT", Second, Sun, Mar, 2, -240}; // Daylight time = UTC - 4 hours
-TimeChangeRule mySTD = {"EST", First, Sun, Nov, 2, -300};  // Standard time = UTC - 5 hours
-Timezone myTZ(myDST, mySTD);
-
-void setupClk()
+void setupClk(AppSettings *settings)
 {
   PRINTS("getting time from server");
 
+  if (settings && settings->timezone[0] != '\0')
+  {
+    strcpy(timezone, settings->timezone);
+  }
+
   static WiFiClient wifiClient = WiFiClient();
   HttpClient client = HttpClient(wifiClient, "worldtimeapi.org");
-  client.get("/api/timezone/America/New_York");
+  char url[128] = "/api/timezone/";
+  strcat(url, timezone);
+  PRINT("url: ", url);
+  client.get(url);
   int statusCode = client.responseStatusCode();
   String response = client.responseBody();
 
@@ -35,9 +39,7 @@ void setupClk()
     return;
   }
 
-  long unixtime = doc["unixtime"];
-  PRINT("Unix time: ", unixtime);
-  epoch = unixtime - (millis() / 1000);
+  epoch = (long)doc["unixtime"] + (long)doc["raw_offset"] + (doc["dst"] ? (long)doc["dst_offset"] : 0) - (millis() / 1000);
 }
 
 bool getTime(char timeBuffer[TIME_BUFFER_SIZE])
@@ -48,15 +50,20 @@ bool getTime(char timeBuffer[TIME_BUFFER_SIZE])
   if (newTime != time)
   {
     time = newTime;
-    if (WiFi.status() == WL_CONNECTED && (newTime % 3600) == 0) // sync time every hour
+    if (WiFi.status() == WL_CONNECTED && (time % 3600) == 0) // sync time every hour
     {
       setupClk();
     }
 
-    time_t nyTime = myTZ.toLocal(newTime);
-    strftime(timeBuffer, TIME_BUFFER_SIZE, "%T", gmtime(&nyTime));
+    strftime(timeBuffer, TIME_BUFFER_SIZE, "%T", gmtime(&time));
     return true;
   }
 
   return false;
+}
+
+void setTimezone(const char *newTimezone)
+{
+  strcpy(timezone, newTimezone);
+  setupClk();
 }

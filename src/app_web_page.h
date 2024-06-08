@@ -1,3 +1,10 @@
+#ifndef APP_WEB_PAGE_H
+#define APP_WEB_PAGE_H
+
+const char WebResponse[] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n";
+
+const char WebPage[] =
+    R"html(
 <!DOCTYPE html>
 <html>
   <head>
@@ -451,3 +458,6 @@
     <br /><br />
   </body>
 </html>
+)html";
+
+#endif

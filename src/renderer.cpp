@@ -1,8 +1,10 @@
 #include <MD_MAX72xx.h>
+#include <algorithm>
 
 #include "utils.h"
 #include "renderer.h"
 #include "main.h"
+#include "app_settings.h"
 
 #define HARDWARE_TYPE MD_MAX72XX::DR1CR0RR0_HW
 
@@ -12,9 +14,11 @@
 #define CS_PIN 12   // VSPI_SS
 
 const uint8_t CHAR_SPACING = 1;
-const uint16_t SCROLL_DELAY = 75;
 
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
+
+#define MIN_SCROLL_DELAY (uint16_t)25
+#define MAX_SCROLL_DELAY (uint16_t)10000
 
 enum struct RenderMode
 {
@@ -32,11 +36,12 @@ uint8_t newRaw[MAX_DEVICES * 8] = {0};
 bool newRawAvailable = false;
 
 bool scrollContent = true;
+uint16_t scrollDelay = 75;
 
 void scrollText(void)
 {
   static uint32_t prevTime = 0;
-  if (scrollContent && (millis() - prevTime >= SCROLL_DELAY))
+  if (scrollContent && (millis() - prevTime >= min(max(scrollDelay, MIN_SCROLL_DELAY), MAX_SCROLL_DELAY)))
   {
     mx.transform(MD_MAX72XX::TSL);
     prevTime = millis();
@@ -208,10 +213,30 @@ void setClock(char timeBuffer[TIME_BUFFER_SIZE])
   }
 }
 
-void setupRenderer()
+void setupRenderer(AppSettings *settings)
 {
   PRINTS("Initializing Display");
   mx.begin();
   mx.setShiftDataInCallback(scrollDataIn);
+  if (settings)
+  {
+    mx.control(MD_MAX72XX::INTENSITY, settings->brightness);
+    scrollDelay = settings->scrollDelay;
+  }
   curMessage[0] = newMessage[0] = '\0';
+}
+
+void controlRenderer(ControlRequest controlRequest, int controlValue)
+{
+  switch (controlRequest)
+  {
+  case ControlRequest::Intensity:
+    mx.control(MD_MAX72XX::INTENSITY, controlValue);
+    break;
+  }
+}
+
+void setScrollDelayMs(uint16_t delay)
+{
+  scrollDelay = delay;
 }
