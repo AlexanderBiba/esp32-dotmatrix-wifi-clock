@@ -37,6 +37,12 @@ bool updateStockData()
   int statusCode = client.responseStatusCode();
   String response = client.responseBody();
 
+  if (statusCode == 429)
+  {
+    PRINTS("Rate limited");
+    return false;
+  }
+
   PRINT("Status code: ", statusCode);
   PRINT("Response: ", response);
 
@@ -62,25 +68,17 @@ bool updateStockData()
 
 bool getQuote(char quoteBuffer[STOCK_BUFFER_SIZE])
 {
-  static long prevTime = 0;
-  if (millis() - prevTime > 5000)
+  static long lastRefresh = 0;
+  if (strlen(apiKey) == 0 || strlen(ticker) == 0)
   {
-    PRINT("apiKey: ", apiKey);
-    PRINT("ticker: ", ticker);
-
-    prevTime = millis();
-    if (strlen(apiKey) == 0 || strlen(ticker) == 0)
-    {
-      strcpy(quoteBuffer, "No API key or ticker set");
-      return true;
-    }
-
-    bool newVal = false;
-    if (millis() - stockData.time > 10000 && updateStockData())
-    {
-      sprintf(quoteBuffer, "%s: h:%.2f l:%.2f o:%.2f c:%.2f v:%ld", stockData.ticker, stockData.high, stockData.low, stockData.open, stockData.close, stockData.volume);
-      return true;
-    }
+    strcpy(quoteBuffer, "No API key or ticker set");
+    return true;
+  }
+  if (millis() - lastRefresh > 10000 && updateStockData())
+  {
+    lastRefresh = millis();
+    sprintf(quoteBuffer, "%s: h:%.2f l:%.2f o:%.2f c:%.2f v:%ld", stockData.ticker, stockData.high, stockData.low, stockData.open, stockData.close, stockData.volume);
+    return true;
   }
   return false;
 }

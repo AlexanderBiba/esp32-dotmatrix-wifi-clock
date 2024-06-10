@@ -12,7 +12,7 @@ enum struct ControlRequest
 
 void setupRenderer(AppSettings *settings = nullptr);
 void scrollText(void);
-void setMessage(char *message);
+void setMessage(const char *message);
 void setScrollContent(bool val);
 void controlRenderer(ControlRequest controlRequest, int controlValue);
 void setScrollDelayMs(uint16_t delay);

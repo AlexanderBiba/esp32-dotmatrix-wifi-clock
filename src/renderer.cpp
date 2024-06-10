@@ -154,7 +154,7 @@ void setScrollContent(bool val)
   scrollContent = val;
 }
 
-void setMessage(char *message)
+void setMessage(const char *message)
 {
   strcpy(newMessage, message);
   newMessageAvailable = true;

@@ -109,6 +109,7 @@ void loop(void)
   case AppRequestMode::STOCK:
     operationMode = OperationMode::STOCK;
     setTicker(requestBuffer);
+    setMessage("Getting data...");
     break;
   case AppRequestMode::CNTL:
     handleControlRequest(requestBuffer);
@@ -122,26 +123,31 @@ void loop(void)
     setScrollContent(true);
   }
 
-  switch (operationMode)
+  static long prevTime = 0;
+  if (millis() - prevTime > 500)
   {
-  case OperationMode::MSG:
-    break;
-  case OperationMode::CLK:
-    if (getTime(timeBuffer))
+    prevTime = millis();
+    switch (operationMode)
     {
-      PRINT("Time: ", timeBuffer);
-      static uint8_t rawClkBuffer[MAX_DEVICES * 8];
-      parseTime(timeBuffer, rawClkBuffer);
-      setRaw(rawClkBuffer);
+    case OperationMode::MSG:
+      break;
+    case OperationMode::CLK:
+      if (getTime(timeBuffer))
+      {
+        PRINT("Time: ", timeBuffer);
+        static uint8_t rawClkBuffer[MAX_DEVICES * 8];
+        parseTime(timeBuffer, rawClkBuffer);
+        setRaw(rawClkBuffer);
+      }
+      break;
+    case OperationMode::STOCK:
+      if (getQuote(stockBuffer))
+      {
+        PRINT("Quote: ", stockBuffer);
+        setMessage(stockBuffer);
+      }
+      break;
     }
-    break;
-  case OperationMode::STOCK:
-    if (getQuote(stockBuffer))
-    {
-      PRINT("Quote: ", stockBuffer);
-      setMessage(stockBuffer);
-    }
-    break;
   }
 
   scrollText();
