@@ -25,15 +25,15 @@ bool updateStockData()
   HttpClient client = HttpClient(wifiClient, "api.finazon.io", 443);
   char url[128] = "/latest/time_series?dataset=us_stocks_essential&interval=1m&page=0&page_size=1&adjust=all&ticker=";
   strcat(url, ticker);
-  // char authHeader[128] = {0};
-  // strcat(authHeader, "apikey ");
-  // strcat(authHeader, apiKey);
-  String authHeader = "apikey ";
-  authHeader += apiKey;
+  char authHeader[128] = {0};
+  strcat(authHeader, "apikey ");
+  strcat(authHeader, apiKey);
   PRINT("url: ", url);
   PRINT("authHeader: ", authHeader);
-  client.sendHeader("Authorization", "apikey fc690b409a944cb5930a5848cae5bc28dh");
+  client.beginRequest();
   client.get(url);
+  client.sendHeader("Authorization", authHeader);
+  client.endRequest();
   int statusCode = client.responseStatusCode();
   String response = client.responseBody();
 
