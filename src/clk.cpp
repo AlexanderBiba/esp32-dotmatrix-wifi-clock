@@ -8,13 +8,13 @@
 #include "app_settings.h"
 
 long epoch = 0;
-char timezone[128] = "America/New_York";
+char timezone[TIMEZONE_BUFFER_SIZE] = "America/New_York";
 
 void setupClk(AppSettings *settings)
 {
   PRINTS("getting time from server");
 
-  if (settings && settings->timezone[0] != '\0')
+  if (settings && strlen(settings->timezone))
   {
     strcpy(timezone, settings->timezone);
   }
@@ -23,7 +23,6 @@ void setupClk(AppSettings *settings)
   HttpClient client = HttpClient(wifiClient, "worldtimeapi.org");
   char url[128] = "/api/timezone/";
   strcat(url, timezone);
-  PRINT("url: ", url);
   client.get(url);
   int statusCode = client.responseStatusCode();
   String response = client.responseBody();
@@ -50,7 +49,7 @@ bool getTime(char timeBuffer[TIME_BUFFER_SIZE])
   if (newTime != time)
   {
     time = newTime;
-    if (WiFi.status() == WL_CONNECTED && (time % 3600) == 0) // sync time every hour
+    if (WiFi.status() == WL_CONNECTED && (time % 3600) == 0)
     {
       setupClk();
     }

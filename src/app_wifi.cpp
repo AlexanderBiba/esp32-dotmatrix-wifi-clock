@@ -42,7 +42,7 @@ void extractPayload(char *pStart, char *pEnd, char *buffer)
   *psz = '\0'; // terminate the string
 }
 
-AppRequestMode extractHttpContent(char *szMesg, char requestBuffer[MAX_MSG_SIZE])
+AppRequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFER_SIZE])
 {
   AppRequestMode requestMode = AppRequestMode::NONE;
 
@@ -74,6 +74,22 @@ AppRequestMode extractHttpContent(char *szMesg, char requestBuffer[MAX_MSG_SIZE]
     isValid = true;
   }
 
+  // handle stock mode
+  pStart = strstr(szMesg, "/&TICKER");
+
+  if (pStart != NULL)
+  {
+    pStart += 9; // skip to start of data
+    pEnd = strstr(pStart, "/&");
+
+    if (pEnd != NULL)
+    {
+      extractPayload(pStart, pEnd, psz);
+      requestMode = AppRequestMode::STOCK;
+      isValid = true;
+    }
+  }
+
   // handle control mode
   pStart = strstr(szMesg, "/&CNTL");
 
@@ -90,15 +106,10 @@ AppRequestMode extractHttpContent(char *szMesg, char requestBuffer[MAX_MSG_SIZE]
     }
   }
 
-  // if (!isValid)
-  // {
-  //   throw new std::invalid_argument("Invalid message received");
-  // }
-
   return requestMode;
 }
 
-AppRequestMode handleWiFi(char requestBuffer[MAX_MSG_SIZE])
+AppRequestMode handleWiFi(char requestBuffer[REQUEST_BUFFER_SIZE])
 {
   static enum { S_IDLE,
                 S_WAIT_CONN,

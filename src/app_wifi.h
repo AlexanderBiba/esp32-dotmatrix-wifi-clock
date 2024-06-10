@@ -8,6 +8,7 @@ enum struct AppRequestMode
     NONE,
     MSG,
     CLK,
+    STOCK,
     CNTL
 };
 

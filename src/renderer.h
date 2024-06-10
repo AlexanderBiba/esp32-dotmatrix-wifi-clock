@@ -13,9 +13,10 @@ enum struct ControlRequest
 void setupRenderer(AppSettings *settings = nullptr);
 void scrollText(void);
 void setMessage(char *message);
-void setClock(char timeBuffer[TIME_BUFFER_SIZE]);
 void setScrollContent(bool val);
 void controlRenderer(ControlRequest controlRequest, int controlValue);
 void setScrollDelayMs(uint16_t delay);
+void setRaw(uint8_t rawBuffer[MAX_DEVICES * 8]);
+void parseTime(char timeBuffer[TIME_BUFFER_SIZE], uint8_t rawClkBuffer[MAX_DEVICES * 8]);
 
 #endif

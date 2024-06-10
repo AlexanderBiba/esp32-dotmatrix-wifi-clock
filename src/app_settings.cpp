@@ -15,11 +15,19 @@ void persistBrightness(uint8_t _brightness)
     EEPROM.commit();
 }
 
-void persistTimezone(const char _tz[32])
+void persistTimezone(const char _timezone[TIMEZONE_BUFFER_SIZE])
 {
-    char tz[32];
-    strcpy(tz, _tz);
+    char tz[TIMEZONE_BUFFER_SIZE];
+    strcpy(tz, _timezone);
     EEPROM.put(BASE_EEPROM_ADDR + offsetof(AppSettings, timezone), tz);
+    EEPROM.commit();
+}
+
+void persistStockApiKey(const char _stockApiKey[STOCK_API_KEY_BUFFER_SIZE])
+{
+    char apiKey[STOCK_API_KEY_BUFFER_SIZE];
+    strcpy(apiKey, _stockApiKey);
+    EEPROM.put(BASE_EEPROM_ADDR + offsetof(AppSettings, stockApiKey), apiKey);
     EEPROM.commit();
 }
 
@@ -27,6 +35,7 @@ void initDefaultSettings(AppSettings *settings)
 {
     settings->magic = MAGIC_NUMBER;
     strcpy(settings->timezone, "America/New_York");
+    strcpy(settings->stockApiKey, "");
     settings->brightness = 0xf;
     settings->scrollDelay = 75;
 }

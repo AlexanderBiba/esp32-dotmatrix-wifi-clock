@@ -7,6 +7,6 @@
 
 void setupClk(AppSettings *settings = nullptr);
 bool getTime(char timeBuffer[TIME_BUFFER_SIZE]);
-void setTimezone(const char *newTimezone);
+void setTimezone(const char newTimezone[TIMEZONE_BUFFER_SIZE]);
 
 #endif

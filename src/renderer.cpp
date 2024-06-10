@@ -27,8 +27,8 @@ enum struct RenderMode
 };
 RenderMode mode = RenderMode::MSG;
 
-char curMessage[MAX_MSG_SIZE] = {0};
-char newMessage[MAX_MSG_SIZE] = {0};
+char curMessage[REQUEST_BUFFER_SIZE] = {0};
+char newMessage[REQUEST_BUFFER_SIZE] = {0};
 bool newMessageAvailable = false;
 
 uint8_t curRaw[MAX_DEVICES * 8] = {0};
@@ -161,6 +161,23 @@ void setMessage(char *message)
   newRawAvailable = false;
 }
 
+void setRaw(uint8_t rawBuffer[MAX_DEVICES * 8])
+{
+  if (scrollContent)
+  {
+    memcpy(newRaw, rawBuffer, sizeof(newRaw));
+    newRawAvailable = true;
+    newMessageAvailable = false;
+  }
+  else
+  {
+    for (uint8_t i = 0; i < MAX_DEVICES * 8; i++)
+    {
+      mx.setColumn(MAX_DEVICES * 8 - i - 1, rawBuffer[i]);
+    }
+  }
+}
+
 #define CLK_DIGIT_WIDTH 5
 void writeCharToBuffer(char c, uint8_t *buffer)
 {
@@ -178,10 +195,8 @@ void writeCharToBuffer(char c, uint8_t *buffer)
   }
 }
 
-void setClock(char timeBuffer[TIME_BUFFER_SIZE])
+void parseTime(char timeBuffer[TIME_BUFFER_SIZE], uint8_t rawClkBuffer[MAX_DEVICES * 8])
 {
-  static uint8_t rawClkBuffer[MAX_DEVICES * 8];
-
   uint8_t *p = rawClkBuffer;
   writeCharToBuffer(timeBuffer[0], p);
   p += CLK_DIGIT_WIDTH;
@@ -196,21 +211,6 @@ void setClock(char timeBuffer[TIME_BUFFER_SIZE])
   writeCharToBuffer(timeBuffer[6], p);
   p += CLK_DIGIT_WIDTH;
   writeCharToBuffer(timeBuffer[7], p);
-
-  // render content
-  if (scrollContent)
-  {
-    memcpy(newRaw, rawClkBuffer, sizeof(newRaw));
-    newRawAvailable = true;
-    newMessageAvailable = false;
-  }
-  else
-  {
-    for (uint8_t i = 0; i < MAX_DEVICES * 8; i++)
-    {
-      mx.setColumn(MAX_DEVICES * 8 - i - 1, rawClkBuffer[i]);
-    }
-  }
 }
 
 void setupRenderer(AppSettings *settings)

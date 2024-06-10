@@ -7,6 +7,7 @@
 
 #include "main.h"
 #include "clk.h"
+#include "stock.h"
 #include "app_wifi.h"
 #include "utils.h"
 #include "renderer.h"
@@ -21,16 +22,17 @@ AppSettings settings;
 void setup(void)
 {
   Serial.begin(115200);
-  EEPROM.begin(0x200);
+  EEPROM.begin(0x400);
 
   readSettings(&settings);
 
   setupRenderer(&settings);
 
-  char buffer[MAX_MSG_SIZE];
+  char buffer[REQUEST_BUFFER_SIZE];
   setupWiFi(buffer);
   // setMessage(buffer);
 
+  setupStocks(&settings);
   setupClk(&settings);
 }
 
@@ -61,6 +63,12 @@ void handleControlRequest(char *requestBuffer)
     setScrollDelayMs(delay);
     persistScrollDelay(delay);
   }
+  if (doc.containsKey("finazonApiKey"))
+  {
+    const char *apiKey = doc["finazonApiKey"];
+    setApiKey(apiKey);
+    persistStockApiKey(apiKey);
+  }
 }
 
 void loop(void)
@@ -68,8 +76,21 @@ void loop(void)
   static OperationMode operationMode = OperationMode::CLK;
 
   static char requestBuffer[1024];
+  static char stockBuffer[STOCK_BUFFER_SIZE];
   static char timeBuffer[TIME_BUFFER_SIZE];
-  static char msgBuffer[MAX_MSG_SIZE];
+  static char msgBuffer[REQUEST_BUFFER_SIZE];
+
+  static bool once = true;
+
+  if (once)
+  {
+    once = false;
+    PRINT("Settings: ", settings.timezone);
+    PRINT("Settings: ", settings.stockApiKey);
+    PRINT("Settings: ", settings.brightness);
+    PRINT("Settings: ", settings.scrollDelay);
+    PRINT("Settings: ", settings.magic);
+  }
 
   OperationMode prevOperationMode = operationMode;
 
@@ -84,7 +105,10 @@ void loop(void)
     break;
   case AppRequestMode::CLK:
     operationMode = OperationMode::CLK;
-    setupClk();
+    break;
+  case AppRequestMode::STOCK:
+    operationMode = OperationMode::STOCK;
+    setTicker(requestBuffer);
     break;
   case AppRequestMode::CNTL:
     handleControlRequest(requestBuffer);
@@ -93,11 +117,9 @@ void loop(void)
     break;
   }
 
-  bool reset = false;
   if (prevOperationMode != operationMode)
   {
     setScrollContent(true);
-    reset = true;
   }
 
   switch (operationMode)
@@ -108,7 +130,16 @@ void loop(void)
     if (getTime(timeBuffer))
     {
       PRINT("Time: ", timeBuffer);
-      setClock(timeBuffer);
+      static uint8_t rawClkBuffer[MAX_DEVICES * 8];
+      parseTime(timeBuffer, rawClkBuffer);
+      setRaw(rawClkBuffer);
+    }
+    break;
+  case OperationMode::STOCK:
+    if (getQuote(stockBuffer))
+    {
+      PRINT("Quote: ", stockBuffer);
+      setMessage(stockBuffer);
     }
     break;
   }

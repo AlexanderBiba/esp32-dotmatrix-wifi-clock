@@ -14,12 +14,25 @@ const char WebPage[] =
         let strLine = "";
         nocache = "/&nocache=" + Math.random() * 1000000;
         var request = new XMLHttpRequest();
-        if (document.getElementById("operation_mode_form").msg.checked) {
+        if (
+          document.getElementById("operation_mode_form")["message-radio"]
+            .checked
+        ) {
           strLine =
             "&MSG=" +
-            document.getElementById("operation_mode_form").message.value;
-        } else if (document.getElementById("operation_mode_form").clk.checked) {
+            document.getElementById("operation_mode_form")["message-input"]
+              .value;
+        } else if (
+          document.getElementById("operation_mode_form")["clk-radio"].checked
+        ) {
           strLine = "&CLK";
+        } else if (
+          document.getElementById("operation_mode_form")["ticker-radio"].checked
+        ) {
+          strLine =
+            "&TICKER=" +
+            document.getElementById("operation_mode_form")["ticker-input"]
+              .value;
         }
         request.open("GET", strLine + nocache, false);
         request.send(null);
@@ -60,6 +73,18 @@ const char WebPage[] =
         request.open("GET", strLine + nocache, false);
         request.send(null);
       }
+
+      function setFinazonApiKey() {
+        let strLine = "";
+        nocache = "/&nocache=" + Math.random() * 1000000;
+        var request = new XMLHttpRequest();
+        const settings = {
+          finazonApiKey: document.getElementById("finazon-api-key").value,
+        };
+        strLine = `&CNTL=${encodeURI(JSON.stringify(settings))}`;
+        request.open("GET", strLine + nocache, false);
+        request.send(null);
+      }
     </script>
   </head>
 
@@ -67,13 +92,18 @@ const char WebPage[] =
     <title>Wifi Dotmatrix Display</title>
     <h1>Set Mode Of Operation</h1>
     <form id="operation_mode_form">
-      <input type="radio" id="msg" name="operation-mode" />
-      <label for="msg"
-        >Message: <input type="text" name="message" maxlength="255"
+      <input type="radio" id="message-radio" name="operation-mode" />
+      <label for="message-radio"
+        >Message: <input type="text" name="message-input" maxlength="255"
       /></label>
       <br /><br />
-      <input type="radio" id="clk" name="operation-mode" />
-      <label for="clk">Clock</label><br /><br />
+      <input type="radio" id="clk-radio" name="operation-mode" />
+      <label for="clk-radio">Clock</label><br /><br />
+      <input type="radio" id="ticker-radio" name="operation-mode" />
+      <label for="ticker-radio"
+        >Ticker: <input type="text" name="ticker-input" maxlength="255"
+      /></label>
+      <br /><br />
     </form>
     <input type="submit" value="Submit" onclick="submitModeOfOperation()" />
 
@@ -455,9 +485,15 @@ const char WebPage[] =
       >Scroll Delay: <input type="number" id="scroll-delay" min="0" max="5000"
     /></label>
     <input type="submit" value="Set" onclick="setScrollDelay()" />
+    <br />
+    <label
+      >Finzaon.io API Key: <input id="finazon-api-key" maxlength="255"
+    /></label>
+    <input type="submit" value="Set" onclick="setFinazonApiKey()" />
     <br /><br />
   </body>
 </html>
+
 )html";
 
 #endif
