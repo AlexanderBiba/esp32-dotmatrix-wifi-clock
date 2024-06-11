@@ -35,7 +35,7 @@ void initDefaultSettings(AppSettings *settings)
 {
     settings->magic = MAGIC_NUMBER;
     strcpy(settings->timezone, "America/New_York");
-    strcpy(settings->stockApiKey, "");
+    strcpy(settings->stockApiKey, "\0");
     settings->brightness = 0xf;
     settings->scrollDelay = 75;
 }

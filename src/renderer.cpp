@@ -187,7 +187,7 @@ int writeCharToBuffer(char c, uint8_t *buffer)
 
   for (uint8_t i = 0; i < len; i++)
   {
-#ifdef BOTTOM_ALIGN_CLOCK
+#if BOTTOM_ALIGN_CLOCK
     buffer[i] = c1[i] * 2;
 #else
     buffer[i] = c1[i];
@@ -218,7 +218,7 @@ int writeSmallCharToBuffer(char c, uint8_t *buffer)
   const uint8_t len = 3;
   for (uint8_t i = 0; i < len; i++)
   {
-#ifdef BOTTOM_ALIGN_CLOCK
+#if BOTTOM_ALIGN_CLOCK
     buffer[i] = smallCharMap[c - '0'][i] * 8;
 #else
     buffer[i] = smallCharMap[c - '0'][i];
@@ -235,7 +235,7 @@ void parseTime(char timeBuffer[TIME_BUFFER_SIZE], uint8_t rawClkBuffer[MAX_DEVIC
 {
   uint8_t *p = rawClkBuffer;
 
-#ifdef SMALL_SECONDS_CLOCK
+#if SMALL_SECONDS_CLOCK
   p += writeCharToBuffer(timeBuffer[0], p);
   p += writeCharToBuffer(timeBuffer[1], p);
   *p++ = 0; // empty column between hours and minutes
