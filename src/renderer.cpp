@@ -179,7 +179,7 @@ void setRaw(uint8_t rawBuffer[MAX_DEVICES * 8])
 }
 
 #define CLK_DIGIT_WIDTH 5
-void writeCharToBuffer(char c, uint8_t *buffer)
+int writeCharToBuffer(char c, uint8_t *buffer)
 {
 
   uint8_t c1[CLK_DIGIT_WIDTH];
@@ -187,30 +187,76 @@ void writeCharToBuffer(char c, uint8_t *buffer)
 
   for (uint8_t i = 0; i < len; i++)
   {
+#ifdef BOTTOM_ALIGN_CLOCK
+    buffer[i] = c1[i] * 2;
+#else
     buffer[i] = c1[i];
+#endif
   }
   for (uint8_t i = len; i < CLK_DIGIT_WIDTH; i++)
   {
     buffer[i] = '\0';
   }
+  return CLK_DIGIT_WIDTH;
+}
+
+const uint8_t smallCharMap[10][3] = {
+    {0x1F, 0x11, 0x1F}, // 0
+    {0x00, 0x00, 0x1F}, // 1
+    {0x1D, 0x15, 0x17}, // 2
+    {0x15, 0x15, 0x1F}, // 3
+    {0x07, 0x04, 0x1F}, // 4
+    {0x17, 0x15, 0x1D}, // 5
+    {0x1F, 0x15, 0x1D}, // 6
+    {0x01, 0x01, 0x1F}, // 7
+    {0x1F, 0x15, 0x1F}, // 8
+    {0x17, 0x15, 0x1F}, // 9
+};
+
+int writeSmallCharToBuffer(char c, uint8_t *buffer)
+{
+  const uint8_t len = 3;
+  for (uint8_t i = 0; i < len; i++)
+  {
+#ifdef BOTTOM_ALIGN_CLOCK
+    buffer[i] = smallCharMap[c - '0'][i] * 8;
+#else
+    buffer[i] = smallCharMap[c - '0'][i];
+#endif
+  }
+  for (uint8_t i = len; i < CLK_DIGIT_WIDTH; i++)
+  {
+    buffer[i] = '\0';
+  }
+  return 3;
 }
 
 void parseTime(char timeBuffer[TIME_BUFFER_SIZE], uint8_t rawClkBuffer[MAX_DEVICES * 8])
 {
   uint8_t *p = rawClkBuffer;
-  writeCharToBuffer(timeBuffer[0], p);
-  p += CLK_DIGIT_WIDTH;
-  writeCharToBuffer(timeBuffer[1], p);
-  p += CLK_DIGIT_WIDTH;
+
+#ifdef SMALL_SECONDS_CLOCK
+  p += writeCharToBuffer(timeBuffer[0], p);
+  p += writeCharToBuffer(timeBuffer[1], p);
   *p++ = 0; // empty column between hours and minutes
-  writeCharToBuffer(timeBuffer[3], p);
-  p += CLK_DIGIT_WIDTH;
-  writeCharToBuffer(timeBuffer[4], p);
-  p += CLK_DIGIT_WIDTH;
+  *p++ = 0; // empty column between hours and minutes
+  p += writeCharToBuffer(timeBuffer[3], p);
+  p += writeCharToBuffer(timeBuffer[4], p);
   *p++ = 0; // empty column between minutes and seconds
-  writeCharToBuffer(timeBuffer[6], p);
-  p += CLK_DIGIT_WIDTH;
-  writeCharToBuffer(timeBuffer[7], p);
+  *p++ = 0; // empty column between minutes and seconds
+  p += writeSmallCharToBuffer(timeBuffer[6], p);
+  *p++ = 0; // empty column
+  p += writeSmallCharToBuffer(timeBuffer[7], p);
+#else
+  p += writeCharToBuffer(timeBuffer[0], p);
+  p += writeCharToBuffer(timeBuffer[1], p);
+  *p++ = 0; // empty column between hours and minutes
+  p += writeCharToBuffer(timeBuffer[3], p);
+  p += writeCharToBuffer(timeBuffer[4], p);
+  *p++ = 0; // empty column between minutes and seconds
+  p += writeCharToBuffer(timeBuffer[6], p);
+  p += writeCharToBuffer(timeBuffer[7], p);
+#endif
 }
 
 void setupRenderer(AppSettings *settings)

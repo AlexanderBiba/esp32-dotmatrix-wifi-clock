@@ -74,10 +74,10 @@ bool getQuote(char quoteBuffer[STOCK_BUFFER_SIZE])
     strcpy(quoteBuffer, "No API key or ticker set");
     return true;
   }
-  if (millis() - lastRefresh > 10000 && updateStockData())
+  if (millis() - lastRefresh > 60000 && updateStockData())
   {
     lastRefresh = millis();
-    sprintf(quoteBuffer, "%s: h:%.2f l:%.2f o:%.2f c:%.2f v:%ld", stockData.ticker, stockData.high, stockData.low, stockData.open, stockData.close, stockData.volume);
+    sprintf(quoteBuffer, "%s: H:%.2f L:%.2f O:%.2f C:%.2f V:%ld", stockData.ticker, stockData.high, stockData.low, stockData.open, stockData.close, stockData.volume);
     return true;
   }
   return false;

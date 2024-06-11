@@ -124,7 +124,7 @@ void loop(void)
   }
 
   static long prevTime = 0;
-  if (millis() - prevTime > 500)
+  if (millis() - prevTime > 200)
   {
     prevTime = millis();
     switch (operationMode)
