@@ -3,12 +3,28 @@
 #include <WiFiManager.h>
 #include <ESPmDNS.h>
 
-#include "app_wifi.h"
-#include "app_web_page.h"
+#include "appserver.h"
+#include "webpage.h"
 #include "utils.h"
 
-// WiFi Server object and parameters
-WiFiServer server(80);
+#define MDNS_DOMAIN "digiclk"
+AppServer::AppServer()
+{
+  server = new WiFiServer(80);
+
+  WiFiManager wifiManager;
+  wifiManager.autoConnect("DotMatrix Clock");
+  PRINTS("WIFI Connected");
+
+  bool mdnsSuccess = MDNS.begin(MDNS_DOMAIN);
+  if (!mdnsSuccess)
+  {
+    PRINTS("Error setting up MDNS responder!");
+  }
+
+  PRINTS("Starting Server");
+  server->begin();
+}
 
 uint8_t htoi(char c)
 {
@@ -42,9 +58,9 @@ void extractPayload(char *pStart, char *pEnd, char *buffer)
   *psz = '\0'; // terminate the string
 }
 
-AppRequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFER_SIZE])
+AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFER_SIZE])
 {
-  AppRequestMode requestMode = AppRequestMode::NONE;
+  AppServer::RequestMode requestMode = AppServer::RequestMode::NONE;
 
   bool isValid = false;
   char *pStart, *pEnd, *psz = requestBuffer;
@@ -60,7 +76,7 @@ AppRequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFE
     if (pEnd != NULL)
     {
       extractPayload(pStart, pEnd, psz);
-      requestMode = AppRequestMode::MSG;
+      requestMode = AppServer::RequestMode::MSG;
       isValid = true;
     }
   }
@@ -70,7 +86,7 @@ AppRequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFE
 
   if (pStart != NULL)
   {
-    requestMode = AppRequestMode::CLK;
+    requestMode = AppServer::RequestMode::CLOCK;
     isValid = true;
   }
 
@@ -85,7 +101,7 @@ AppRequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFE
     if (pEnd != NULL)
     {
       extractPayload(pStart, pEnd, psz);
-      requestMode = AppRequestMode::STOCK;
+      requestMode = AppServer::RequestMode::STOCK;
       isValid = true;
     }
   }
@@ -101,7 +117,7 @@ AppRequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFE
     if (pEnd != NULL)
     {
       extractPayload(pStart, pEnd, psz);
-      requestMode = AppRequestMode::CNTL;
+      requestMode = AppServer::RequestMode::CNTL;
       isValid = true;
     }
   }
@@ -109,7 +125,7 @@ AppRequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFE
   return requestMode;
 }
 
-AppRequestMode handleWiFi(char requestBuffer[REQUEST_BUFFER_SIZE])
+AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_SIZE])
 {
   static enum { S_IDLE,
                 S_WAIT_CONN,
@@ -122,7 +138,7 @@ AppRequestMode handleWiFi(char requestBuffer[REQUEST_BUFFER_SIZE])
   static WiFiClient client;
   static uint32_t timeStart;
 
-  AppRequestMode appRequestMode = AppRequestMode::NONE;
+  RequestMode appRequestMode = RequestMode::NONE;
 
   switch (state)
   {
@@ -134,17 +150,11 @@ AppRequestMode handleWiFi(char requestBuffer[REQUEST_BUFFER_SIZE])
 
   case S_WAIT_CONN: // waiting for connection
   {
-    client = server.accept();
+    client = server->accept();
     if (!client)
       break;
     if (!client.connected())
       break;
-
-#if DEBUG
-    char szTxt[20];
-    sprintf(szTxt, "%d:%d:%d:%d", client.remoteIP()[0], client.remoteIP()[1], client.remoteIP()[2], client.remoteIP()[3]);
-    PRINT("New client @ ", szTxt);
-#endif
 
     timeStart = millis();
     state = S_READ;
@@ -200,60 +210,4 @@ AppRequestMode handleWiFi(char requestBuffer[REQUEST_BUFFER_SIZE])
   }
 
   return appRequestMode;
-}
-
-const char *err2Str(wl_status_t code)
-{
-  switch (code)
-  {
-  case WL_IDLE_STATUS:
-    return ("IDLE");
-    break; // WiFi is in process of changing between statuses
-  case WL_NO_SSID_AVAIL:
-    return ("NO_SSID_AVAIL");
-    break; // case configured SSID cannot be reached
-  case WL_CONNECTED:
-    return ("CONNECTED");
-    break; // successful connection is established
-  case WL_CONNECT_FAILED:
-    return ("CONNECT_FAILED");
-    break; // password is incorrect
-  case WL_DISCONNECTED:
-    return ("CONNECT_FAILED");
-    break; // module is not configured in station mode
-  default:
-    return ("??");
-  }
-}
-
-#define MDNS_DOMAIN "esp32"
-void setupWiFi(char *localIp)
-{
-  WiFiManager wifiManager;
-  // wifiManager.resetSettings();
-  wifiManager.autoConnect("DotMatrix Clock");
-  PRINTS("WIFI Connected");
-
-  // Initialize mDNS
-  bool mdnsSuccess = MDNS.begin(MDNS_DOMAIN);
-  if (!mdnsSuccess)
-  {
-    PRINTS("Error setting up MDNS responder!");
-  }
-
-  // Start the server
-  PRINTS("Starting Server");
-  server.begin();
-
-  if (mdnsSuccess)
-  {
-    sprintf(localIp, "%d:%d:%d:%d - %s.local", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3], MDNS_DOMAIN);
-    PRINT("Assigned IP ", localIp);
-    PRINT("MDNS ", MDNS_DOMAIN);
-  }
-  else
-  {
-    sprintf(localIp, "%d:%d:%d:%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-    PRINT("Assigned IP ", localIp);
-  }
 }

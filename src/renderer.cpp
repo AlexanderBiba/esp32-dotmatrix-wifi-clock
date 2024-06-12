@@ -4,51 +4,49 @@
 #include "utils.h"
 #include "renderer.h"
 #include "main.h"
-#include "app_settings.h"
-
-#define HARDWARE_TYPE MD_MAX72XX::DR1CR0RR0_HW
+#include "settings.h"
 
 // GPIO pins
 #define CLK_PIN 14  // VSPI_SCK
 #define DATA_PIN 13 // VSPI_MOSI
 #define CS_PIN 12   // VSPI_SS
 
-const uint8_t CHAR_SPACING = 1;
-
-MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
-
 #define MIN_SCROLL_DELAY (uint16_t)25
 #define MAX_SCROLL_DELAY (uint16_t)10000
 
-enum struct RenderMode
+static std::function<uint8_t(uint8_t, MD_MAX72XX::transformType_t)> lambdaHolder;
+uint8_t lambdaWrapper(uint8_t dev, MD_MAX72XX::transformType_t t)
 {
-  MSG,
-  RAW
-};
-RenderMode mode = RenderMode::MSG;
+  return lambdaHolder(dev, t);
+}
 
-char curMessage[REQUEST_BUFFER_SIZE] = {0};
-char newMessage[REQUEST_BUFFER_SIZE] = {0};
-bool newMessageAvailable = false;
+Renderer::Renderer(AppSettings *settings)
+{
+  PRINTS("Initializing Display");
+  this->settings = settings;
 
-uint8_t curRaw[MAX_DEVICES * 8] = {0};
-uint8_t newRaw[MAX_DEVICES * 8] = {0};
-bool newRawAvailable = false;
+  lambdaHolder = [this](uint8_t dev, MD_MAX72XX::transformType_t t) -> uint8_t
+  {
+    return this->scrollDataIn(dev, t);
+  };
 
-bool scrollContent = true;
-uint16_t scrollDelay = 75;
+  mx = new MD_MAX72XX(MD_MAX72XX::DR1CR0RR0_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
+  mx->begin();
+  mx->setShiftDataInCallback(lambdaWrapper);
+  mx->control(MD_MAX72XX::INTENSITY, settings->getBrightness());
+}
 
-void scrollText(void)
+void Renderer::scrollText(void)
 {
   static uint32_t prevTime = 0;
-  if (scrollContent && (millis() - prevTime >= min(max(scrollDelay, MIN_SCROLL_DELAY), MAX_SCROLL_DELAY)))
+  if (scrollContent && (millis() - prevTime >= min(max(settings->getScrollDelay(), MIN_SCROLL_DELAY), MAX_SCROLL_DELAY)))
   {
-    mx.transform(MD_MAX72XX::TSL);
+    mx->transform(MD_MAX72XX::TSL);
     prevTime = millis();
   }
 }
 
-uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
+uint8_t Renderer::scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
 {
   static enum { S_IDLE,
                 S_NEXT_CHAR,
@@ -101,7 +99,7 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
       state = S_IDLE;
     else
     {
-      showLen = mx.getChar(*p++, sizeof(cBuf) / sizeof(cBuf[0]), cBuf);
+      showLen = mx->getChar(*p++, sizeof(cBuf) / sizeof(cBuf[0]), cBuf);
       curLen = 0;
       state = S_SHOW_CHAR;
     }
@@ -117,7 +115,7 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
       break;
 
     // set up the inter character spacing
-    showLen = (*p != '\0' ? CHAR_SPACING : (MAX_DEVICES * COL_SIZE) / 2);
+    showLen = (*p != '\0' ? 1 : (MAX_DEVICES * COL_SIZE) / 2);
     curLen = 0;
     state = S_SHOW_SPACE;
     // fall through
@@ -149,20 +147,28 @@ uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
   return (colData);
 }
 
-void setScrollContent(bool val)
+void Renderer::setScrollContent(bool val)
 {
   scrollContent = val;
 }
 
-void setMessage(const char *message)
+void Renderer::setMessage(const char *message)
 {
+  if (message == nullptr)
+  {
+    return;
+  }
   strcpy(newMessage, message);
   newMessageAvailable = true;
   newRawAvailable = false;
 }
 
-void setRaw(uint8_t rawBuffer[MAX_DEVICES * 8])
+void Renderer::setRaw(const uint8_t rawBuffer[MAX_DEVICES * 8])
 {
+  if (rawBuffer == nullptr)
+  {
+    return;
+  }
   if (scrollContent)
   {
     memcpy(newRaw, rawBuffer, sizeof(newRaw));
@@ -173,116 +179,12 @@ void setRaw(uint8_t rawBuffer[MAX_DEVICES * 8])
   {
     for (uint8_t i = 0; i < MAX_DEVICES * 8; i++)
     {
-      mx.setColumn(MAX_DEVICES * 8 - i - 1, rawBuffer[i]);
+      mx->setColumn(MAX_DEVICES * 8 - i - 1, rawBuffer[i]);
     }
   }
 }
 
-#define CLK_DIGIT_WIDTH 5
-int writeCharToBuffer(char c, uint8_t *buffer)
+void Renderer::updateBrightness()
 {
-
-  uint8_t c1[CLK_DIGIT_WIDTH];
-  uint8_t len = mx.getChar(c, CLK_DIGIT_WIDTH, c1);
-
-  for (uint8_t i = 0; i < len; i++)
-  {
-#if BOTTOM_ALIGN_CLOCK
-    buffer[i] = c1[i] * 2;
-#else
-    buffer[i] = c1[i];
-#endif
-  }
-  for (uint8_t i = len; i < CLK_DIGIT_WIDTH; i++)
-  {
-    buffer[i] = '\0';
-  }
-  return CLK_DIGIT_WIDTH;
-}
-
-const uint8_t smallCharMap[10][3] = {
-    {0x1F, 0x11, 0x1F}, // 0
-    {0x00, 0x00, 0x1F}, // 1
-    {0x1D, 0x15, 0x17}, // 2
-    {0x15, 0x15, 0x1F}, // 3
-    {0x07, 0x04, 0x1F}, // 4
-    {0x17, 0x15, 0x1D}, // 5
-    {0x1F, 0x15, 0x1D}, // 6
-    {0x01, 0x01, 0x1F}, // 7
-    {0x1F, 0x15, 0x1F}, // 8
-    {0x17, 0x15, 0x1F}, // 9
-};
-
-int writeSmallCharToBuffer(char c, uint8_t *buffer)
-{
-  const uint8_t len = 3;
-  for (uint8_t i = 0; i < len; i++)
-  {
-#if BOTTOM_ALIGN_CLOCK
-    buffer[i] = smallCharMap[c - '0'][i] * 8;
-#else
-    buffer[i] = smallCharMap[c - '0'][i];
-#endif
-  }
-  for (uint8_t i = len; i < CLK_DIGIT_WIDTH; i++)
-  {
-    buffer[i] = '\0';
-  }
-  return 3;
-}
-
-void parseTime(char timeBuffer[TIME_BUFFER_SIZE], uint8_t rawClkBuffer[MAX_DEVICES * 8])
-{
-  uint8_t *p = rawClkBuffer;
-
-#if SMALL_SECONDS_CLOCK
-  p += writeCharToBuffer(timeBuffer[0], p);
-  p += writeCharToBuffer(timeBuffer[1], p);
-  *p++ = 0; // empty column between hours and minutes
-  *p++ = 0; // empty column between hours and minutes
-  p += writeCharToBuffer(timeBuffer[3], p);
-  p += writeCharToBuffer(timeBuffer[4], p);
-  *p++ = 0; // empty column between minutes and seconds
-  *p++ = 0; // empty column between minutes and seconds
-  p += writeSmallCharToBuffer(timeBuffer[6], p);
-  *p++ = 0; // empty column
-  p += writeSmallCharToBuffer(timeBuffer[7], p);
-#else
-  p += writeCharToBuffer(timeBuffer[0], p);
-  p += writeCharToBuffer(timeBuffer[1], p);
-  *p++ = 0; // empty column between hours and minutes
-  p += writeCharToBuffer(timeBuffer[3], p);
-  p += writeCharToBuffer(timeBuffer[4], p);
-  *p++ = 0; // empty column between minutes and seconds
-  p += writeCharToBuffer(timeBuffer[6], p);
-  p += writeCharToBuffer(timeBuffer[7], p);
-#endif
-}
-
-void setupRenderer(AppSettings *settings)
-{
-  PRINTS("Initializing Display");
-  mx.begin();
-  mx.setShiftDataInCallback(scrollDataIn);
-  if (settings)
-  {
-    mx.control(MD_MAX72XX::INTENSITY, settings->brightness);
-    scrollDelay = settings->scrollDelay;
-  }
-  curMessage[0] = newMessage[0] = '\0';
-}
-
-void controlRenderer(ControlRequest controlRequest, int controlValue)
-{
-  switch (controlRequest)
-  {
-  case ControlRequest::Intensity:
-    mx.control(MD_MAX72XX::INTENSITY, controlValue);
-    break;
-  }
-}
-
-void setScrollDelayMs(uint16_t delay)
-{
-  scrollDelay = delay;
+  mx->control(MD_MAX72XX::INTENSITY, settings->getBrightness());
 }

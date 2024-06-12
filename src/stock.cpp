@@ -6,19 +6,7 @@
 #include "utils.h"
 #include "stock.h"
 
-StockData stockData = {0};
-char ticker[STOCK_BUFFER_SIZE] = {0};
-char apiKey[STOCK_API_KEY_BUFFER_SIZE] = {0};
-
-void setupStocks(AppSettings *settings)
-{
-  if (settings && strlen(settings->stockApiKey))
-  {
-    strcpy(apiKey, settings->stockApiKey);
-  }
-}
-
-bool updateStockData()
+bool Stock::updateStockData()
 {
   WiFiClientSecure wifiClient;
   wifiClient.setInsecure();
@@ -27,7 +15,7 @@ bool updateStockData()
   strcat(url, ticker);
   char authHeader[128] = {0};
   strcat(authHeader, "apikey ");
-  strcat(authHeader, apiKey);
+  strcat(authHeader, settings->getStockApiKey());
   PRINT("url: ", url);
   PRINT("authHeader: ", authHeader);
   client.beginRequest();
@@ -66,29 +54,24 @@ bool updateStockData()
   return true;
 }
 
-bool getQuote(char quoteBuffer[STOCK_BUFFER_SIZE])
+const char *Stock::getQuote()
 {
   static long lastRefresh = 0;
-  if (strlen(apiKey) == 0 || strlen(ticker) == 0)
+  if (strlen(settings->getStockApiKey()) == 0 || strlen(ticker) == 0)
   {
     strcpy(quoteBuffer, "No API key or ticker set");
-    return true;
+    return quoteBuffer;
   }
   if (millis() - lastRefresh > 30000 && updateStockData())
   {
     lastRefresh = millis();
     sprintf(quoteBuffer, "%s: H:%.2f L:%.2f O:%.2f C:%.2f V:%ld", stockData.ticker, stockData.high, stockData.low, stockData.open, stockData.close, stockData.volume);
-    return true;
+    return quoteBuffer;
   }
-  return false;
+  return nullptr;
 }
 
-void setApiKey(const char newApiKey[STOCK_API_KEY_BUFFER_SIZE])
-{
-  strcpy(apiKey, newApiKey);
-}
-
-void setTicker(const char newTicker[STOCK_BUFFER_SIZE])
+void Stock::setTicker(const char newTicker[STOCK_BUFFER_SIZE])
 {
   strcpy(ticker, newTicker);
 }

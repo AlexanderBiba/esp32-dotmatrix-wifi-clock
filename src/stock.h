@@ -1,25 +1,33 @@
 #ifndef STOCK_H
 #define STOCK_H
 
-#include "app_settings.h"
+#include "settings.h"
 
 #define STOCK_API_KEY_BUFFER_SIZE 128
 #define STOCK_BUFFER_SIZE 128
 
-typedef struct
+class Stock
 {
-    char *ticker;
-    long time;
-    float open;
-    float close;
-    float high;
-    float low;
-    long volume;
-} StockData;
+public:
+    Stock(AppSettings *settings) : settings(settings){};
+    const char *getQuote();
+    void setTicker(const char *newTicker);
 
-void setupStocks(AppSettings *settings);
-bool getQuote(char quoteBuffer[STOCK_BUFFER_SIZE]);
-void setApiKey(const char *newApiKey);
-void setTicker(const char *newTicker);
+private:
+    AppSettings *settings;
+    char ticker[STOCK_BUFFER_SIZE] = {0};
+    struct
+    {
+        char *ticker;
+        long time;
+        float open;
+        float close;
+        float high;
+        float low;
+        long volume;
+    } stockData;
+    bool updateStockData();
+    char quoteBuffer[STOCK_BUFFER_SIZE];
+};
 
 #endif // STOCK_H
