@@ -6,7 +6,6 @@
 #define TIME_BUFFER_SIZE sizeof("hh:mm:ss")
 #define RAW_TIME_BUFFER_SIZE 8 * 4
 
-#define BOTTOM_ALIGN_CLOCK 1
 #define SMALL_SECONDS_CLOCK 1
 
 class Clock

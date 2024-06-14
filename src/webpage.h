@@ -27,6 +27,11 @@ const char WebPage[] =
         ) {
           strLine = "&CLK";
         } else if (
+          document.getElementById("operation_mode_form")["weather-radio"]
+            .checked
+        ) {
+          strLine = "&WEATHER";
+        } else if (
           document.getElementById("operation_mode_form")["ticker-radio"].checked
         ) {
           strLine =
@@ -38,49 +43,10 @@ const char WebPage[] =
         request.send(null);
       }
 
-      function setBrightness() {
+      function setCntl(settings) {
         let strLine = "";
         nocache = "/&nocache=" + Math.random() * 1000000;
         var request = new XMLHttpRequest();
-        const settings = {
-          brightness: document.getElementById("brightness").value,
-        };
-        strLine = `&CNTL=${encodeURI(JSON.stringify(settings))}`;
-        request.open("GET", strLine + nocache, false);
-        request.send(null);
-      }
-
-      function setTimezone() {
-        let strLine = "";
-        nocache = "/&nocache=" + Math.random() * 1000000;
-        var request = new XMLHttpRequest();
-        const settings = {
-          timezone: document.getElementById("timezone").value,
-        };
-        strLine = `&CNTL=${encodeURI(JSON.stringify(settings))}`;
-        request.open("GET", strLine + nocache, false);
-        request.send(null);
-      }
-
-      function setScrollDelay() {
-        let strLine = "";
-        nocache = "/&nocache=" + Math.random() * 1000000;
-        var request = new XMLHttpRequest();
-        const settings = {
-          scrollDelay: document.getElementById("scroll-delay").value,
-        };
-        strLine = `&CNTL=${encodeURI(JSON.stringify(settings))}`;
-        request.open("GET", strLine + nocache, false);
-        request.send(null);
-      }
-
-      function setFinazonApiKey() {
-        let strLine = "";
-        nocache = "/&nocache=" + Math.random() * 1000000;
-        var request = new XMLHttpRequest();
-        const settings = {
-          finazonApiKey: document.getElementById("finazon-api-key").value,
-        };
         strLine = `&CNTL=${encodeURI(JSON.stringify(settings))}`;
         request.open("GET", strLine + nocache, false);
         request.send(null);
@@ -99,6 +65,8 @@ const char WebPage[] =
       <br /><br />
       <input type="radio" id="clk-radio" name="operation-mode" />
       <label for="clk-radio">Clock</label><br /><br />
+      <input type="radio" id="weather-radio" name="operation-mode" />
+      <label for="clk-radio">Weather</label><br /><br />
       <input type="radio" id="ticker-radio" name="operation-mode" />
       <label for="ticker-radio"
         >Ticker: <input type="text" name="ticker-input" maxlength="255"
@@ -474,22 +442,64 @@ const char WebPage[] =
         </script>
       </select>
     </label>
-    <input type="submit" value="Set" onclick="setTimezone()" />
+    <input
+      type="submit"
+      value="Set"
+      onclick="setCntl({ timezone: document.getElementById('timezone').value })"
+    />
     <br />
     <label
       >Brightness: <input type="number" id="brightness" min="0" max="15"
     /></label>
-    <input type="submit" value="Set" onclick="setBrightness()" />
+    <input
+      type="submit"
+      value="Set"
+      onclick="setCntl({ brightness: document.getElementById('brightness').value })"
+    />
     <br />
     <label
       >Scroll Delay: <input type="number" id="scroll-delay" min="0" max="5000"
     /></label>
-    <input type="submit" value="Set" onclick="setScrollDelay()" />
+    <input
+      type="submit"
+      value="Set"
+      onclick="setCntl({ scrollDelay: document.getElementById('scroll-delay').value })"
+    />
+    <br />
+    <label
+      >Weather Location:
+      <label>Latitude: <input id="weather-latitude" maxlength="32" /></label>
+      <label>Longitude: <input id="weather-longitude" maxlength="32" /></label>
+    </label>
+    <input
+      type="submit"
+      value="Set"
+      onclick="setCntl({ latitude: document.getElementById('weather-latitude').value, longitude: document.getElementById('weather-longitude').value })"
+    />
+    <br />
+    <label
+      >Weather Units:
+      <input type="radio" id="celsius-radio" name="operation-mode" /><label
+        >Celsius</label
+      >
+      <input type="radio" id="fahrenheit-radio" name="operation-mode" /><label
+        >fahrenheit</label
+      >
+    </label>
+    <input
+      type="submit"
+      value="Set"
+      onclick="setCntl({ weatherUnits: document.getElementById('celsius-radio').checked ? 'c' : 'f'})"
+    />
     <br />
     <label
       >Finzaon.io API Key: <input id="finazon-api-key" maxlength="255"
     /></label>
-    <input type="submit" value="Set" onclick="setFinazonApiKey()" />
+    <input
+      type="submit"
+      value="Set"
+      onclick="setCntl({ finazonApiKey: document.getElementById('finazon-api-key').value })"
+    />
     <br /><br />
   </body>
 </html>

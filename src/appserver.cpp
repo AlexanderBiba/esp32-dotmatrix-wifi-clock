@@ -76,7 +76,7 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     if (pEnd != NULL)
     {
       extractPayload(pStart, pEnd, psz);
-      requestMode = AppServer::RequestMode::MSG;
+      requestMode = AppServer::RequestMode::MESSAGE;
       isValid = true;
     }
   }
@@ -87,6 +87,15 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
   if (pStart != NULL)
   {
     requestMode = AppServer::RequestMode::CLOCK;
+    isValid = true;
+  }
+
+  // handle weather mode
+  pStart = strstr(szMesg, "/&WEATHER");
+
+  if (pStart != NULL)
+  {
+    requestMode = AppServer::RequestMode::WEATHER;
     isValid = true;
   }
 
@@ -143,7 +152,6 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
   switch (state)
   {
   case S_IDLE: // initialize
-    PRINTS("S_IDLE");
     idxBuf = 0;
     state = S_WAIT_CONN;
     break;
@@ -162,7 +170,6 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
   break;
 
   case S_READ: // get the first line of data
-    PRINTS("S_READ");
     while (client.available())
     {
       char c = client.read();
@@ -178,20 +185,17 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
     }
     if (millis() - timeStart > 1000)
     {
-      PRINTS("Wait timeout");
       state = S_DISCONN;
     }
     break;
 
   case S_EXTRACT: // extract data
-    PRINTS("S_EXTRACT");
     // Extract the string from the message if there is one
     appRequestMode = extractHttpContent(szBuf, requestBuffer);
     state = S_RESPONSE;
     break;
 
   case S_RESPONSE: // send the response to the client
-    PRINTS("S_RESPONSE");
     // Return the response to the client (web page)
     client.print(WebResponse);
     client.print(WebPage);
@@ -199,7 +203,6 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
     break;
 
   case S_DISCONN: // disconnect client
-    PRINTS("S_DISCONN");
     client.flush();
     client.stop();
     state = S_IDLE;

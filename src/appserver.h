@@ -11,9 +11,10 @@ public:
     enum struct RequestMode
     {
         NONE,
-        MSG,
+        MESSAGE,
         CLOCK,
         STOCK,
+        WEATHER,
         CNTL
     };
 

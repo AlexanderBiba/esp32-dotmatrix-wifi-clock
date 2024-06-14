@@ -22,7 +22,6 @@ uint8_t lambdaWrapper(uint8_t dev, MD_MAX72XX::transformType_t t)
 
 Renderer::Renderer(AppSettings *settings)
 {
-  PRINTS("Initializing Display");
   this->settings = settings;
 
   lambdaHolder = [this](uint8_t dev, MD_MAX72XX::transformType_t t) -> uint8_t
@@ -65,7 +64,6 @@ uint8_t Renderer::scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     p = curMessage;          // reset the pointer to start of message
     if (newMessageAvailable) // there is a new message waiting
     {
-      PRINTS("newMessageAvailable");
       strcpy(curMessage, newMessage); // copy it in
       newMessageAvailable = false;
       state = S_NEXT_CHAR;
@@ -73,13 +71,17 @@ uint8_t Renderer::scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     }
     else if (newRawAvailable)
     {
-      PRINTS("newRawAvailable");
+      PRINT("newRawAvailable: ", newRawAvailable);
+      PRINT("before newRaw[0]: ", newRaw[0]);
+      PRINT("befoer curRaw[0]: ", curRaw[0]);
       memcpy(curRaw, newRaw, sizeof(curRaw));
       newRawAvailable = false;
       state = S_NEXT_RAW;
       curLen = 0;
       showLen = sizeof(curRaw) / sizeof(curRaw[0]);
       mode = RenderMode::RAW;
+      PRINT("after newRaw[0]: ", newRaw[0]);
+      PRINT("after curRaw[0]: ", curRaw[0]);
     }
 
     if (mode == RenderMode::MSG)
@@ -94,7 +96,6 @@ uint8_t Renderer::scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     break;
 
   case S_NEXT_CHAR: // Load the next character from the font table
-    PRINT("S_NEXT_CHAR ", *p);
     if (*p == '\0')
       state = S_IDLE;
     else
@@ -106,11 +107,9 @@ uint8_t Renderer::scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     break;
 
   case S_SHOW_CHAR: // display the next part of the character
-    PRINTS("S_SHOW_CHAR");
     colData = cBuf[curLen++];
     static char buffer[8];
     sprintf(buffer, "%02X", colData);
-    PRINT("scrollDataIn: ", buffer);
     if (curLen < showLen)
       break;
 
@@ -121,19 +120,15 @@ uint8_t Renderer::scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     // fall through
 
   case S_SHOW_SPACE: // display inter-character spacing (blank column)
-    PRINT("S_SHOW_SPACE: ", curLen);
-    PRINT("/", showLen);
     curLen++;
     if (curLen == showLen)
       state = S_NEXT_CHAR;
     break;
 
   case S_NEXT_RAW:
-    PRINTS("S_NEXT_RAW");
     colData = curRaw[curLen++];
     if (curLen == showLen)
     {
-      PRINT("showLen ", showLen);
       curLen = 0;
       scrollContent = false;
       state = S_IDLE;
@@ -169,6 +164,7 @@ void Renderer::setRaw(const uint8_t rawBuffer[MAX_DEVICES * 8])
   {
     return;
   }
+
   if (scrollContent)
   {
     memcpy(newRaw, rawBuffer, sizeof(newRaw));

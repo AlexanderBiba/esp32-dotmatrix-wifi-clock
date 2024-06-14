@@ -15,34 +15,59 @@ class AppSettings
 {
 public:
     AppSettings();
+
     void setScrollDelay(uint16_t _scrollDelay);
     void setBrightness(uint8_t _brightness);
     void setTimezone(const char _timezone[TIMEZONE_BUFFER_SIZE]);
     void setStockApiKey(const char _stockApiKey[STOCK_API_KEY_BUFFER_SIZE]);
+    void setLatitude(float _latitude);
+    void setLongitude(float _longitude);
+    void setWeatherUnits(char _units);
 
-    uint16_t getScrollDelay() { return settings.scrollDelay; }
-    uint8_t getBrightness() { return settings.brightness; }
-    const char *getTimezone() { return settings.timezone; }
-    const char *getStockApiKey() { return settings.stockApiKey; }
+    uint16_t getScrollDelay() { return settings.display.scrollDelay; }
+    uint8_t getBrightness() { return settings.display.brightness; }
+    const char *getTimezone() { return settings.time.timezone; }
+    const char *getStockApiKey() { return settings.stock.apiKey; }
+    float getLatitude() { return settings.weather.latitude; }
+    float getLongitude() { return settings.weather.longitude; }
+    char getWeatherUnits() { return settings.weather.units; }
 
     void printSettings()
     {
         Serial.println("Settings:");
         Serial.println(settings.magic);
-        Serial.println(settings.timezone);
-        Serial.println(settings.stockApiKey);
-        Serial.println(settings.brightness);
-        Serial.println(settings.scrollDelay);
+        Serial.println(settings.time.timezone);
+        Serial.println(settings.stock.apiKey);
+        Serial.println(settings.display.brightness);
+        Serial.println(settings.display.scrollDelay);
+        Serial.println(settings.weather.latitude);
+        Serial.println(settings.weather.longitude);
+        Serial.println(settings.weather.units);
     }
 
 private:
     struct _AppSettings
     {
         uint8_t magic;
-        char timezone[TIMEZONE_BUFFER_SIZE];
-        char stockApiKey[STOCK_API_KEY_BUFFER_SIZE];
-        uint8_t brightness;
-        uint16_t scrollDelay;
+        struct
+        {
+            char timezone[TIMEZONE_BUFFER_SIZE];
+        } time;
+        struct
+        {
+            char apiKey[STOCK_API_KEY_BUFFER_SIZE];
+        } stock;
+        struct
+        {
+            uint8_t brightness;
+            uint16_t scrollDelay;
+        } display;
+        struct
+        {
+            float latitude;
+            float longitude;
+            char units;
+        } weather;
     } settings;
 };
 
