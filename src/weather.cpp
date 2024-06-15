@@ -3,18 +3,17 @@
 #include <WiFiClientSecure.h>
 #include <HttpClient.h>
 
-#include "utils.h"
 #include "weather.h"
 #include "charmaps.h"
 #include "main.h"
 
 #define WEATHER_UPDATE_INTERVAL 10 * 60 * 1000
 
-void Weather::loadWeatherBitmap(const char *weather)
+void Weather::loadBitmap(const char *weather)
 {
-    uint8_t *rawWeather = weatherBitmap;
+    uint8_t *rawWeather = bitmap;
 
-    PRINT("Weather: ", weather);
+    printf("Weather: %s\n", weather);
     int count = 0;
     for (int i = 0; i < strlen(weather); ++i)
     {
@@ -82,7 +81,7 @@ const uint8_t *Weather::getWeather()
         updateWeatherData();
     }
 
-    return weatherBitmap;
+    return bitmap;
 }
 
 bool Weather::updateWeatherData()
@@ -91,7 +90,7 @@ bool Weather::updateWeatherData()
 
     if (settings->getLatitude() == 0 || settings->getLongitude() == 0)
     {
-        loadWeatherBitmap("No LOC");
+        loadBitmap("No LOC");
     }
 
     WiFiClientSecure wifiClient;
@@ -103,32 +102,31 @@ bool Weather::updateWeatherData()
             settings->getLatitude(),
             settings->getLongitude(),
             settings->getWeatherUnits() == 'c' ? "celsius" : "fahrenheit");
-    PRINT("url: ", url);
     client.get(url);
     int statusCode = client.responseStatusCode();
     String response = client.responseBody();
 
     if (statusCode == 429)
     {
-        PRINTS("Rate limited");
+        Serial.println("Rate limited");
         return false;
     }
 
-    PRINT("Status code: ", statusCode);
-    PRINT("Response: ", response);
+    printf("Status code: %d\n", statusCode);
+    printf("Response: %s\n", response);
 
     JsonDocument doc;
     DeserializationError error = deserializeJson(doc, response);
     if (error)
     {
-        PRINT("deserializeJson() failed: ", error.f_str());
+        printf("deserializeJson() failed: %s\n", error.f_str());
         return false;
     }
 
     weatherData = {doc["current"]["temperature"]};
 
     sprintf(localBuffer, "%.2lf", weatherData.temp);
-    loadWeatherBitmap(localBuffer);
+    loadBitmap(localBuffer);
 
     return true;
 }

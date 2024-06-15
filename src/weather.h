@@ -18,8 +18,8 @@ private:
     {
         float temp;
     } weatherData;
-    uint8_t weatherBitmap[RAW_WEATHER_BITMAP_SIZE];
-    void loadWeatherBitmap(const char *weather);
+    uint8_t bitmap[RAW_WEATHER_BITMAP_SIZE];
+    void loadBitmap(const char *weather);
 };
 
 #endif

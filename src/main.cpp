@@ -9,7 +9,6 @@
 #include "clock.h"
 #include "stock.h"
 #include "appserver.h"
-#include "utils.h"
 #include "renderer.h"
 #include "settings.h"
 #include "weather.h"
@@ -40,12 +39,12 @@ void setup(void)
 
 void handleControlRequest(char *requestBuffer)
 {
-  PRINT("Control request: ", requestBuffer);
+  printf("Control request: %s\n", requestBuffer);
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, requestBuffer);
   if (error)
   {
-    PRINT("Control deserializeJson() failed: ", error.f_str());
+    printf("Control deserializeJson() failed: %s\n", error.f_str());
     return;
   }
 
@@ -91,13 +90,25 @@ void handleControlRequest(char *requestBuffer)
   }
 }
 
+const OperationMode states[] = {OperationMode::CLOCK, OperationMode::WEATHER};
+const int numOfStates = sizeof(states) / sizeof(states[0]);
+
 void loop(void)
 {
-  static OperationMode operationMode = OperationMode::WEATHER;
-  static char requestBuffer[REQUEST_BUFFER_SIZE];
+  static uint8_t currentState = 0;
+  static OperationMode operationMode = states[currentState];
 
   OperationMode prevOperationMode = operationMode;
 
+  static long switchCardTime = 0;
+  if (millis() - switchCardTime > 10000)
+  {
+    switchCardTime = millis();
+    currentState = (currentState + 1) % numOfStates;
+    operationMode = states[currentState];
+  }
+
+  static char requestBuffer[REQUEST_BUFFER_SIZE];
   switch (appServer->handleWiFi(requestBuffer))
   {
   case AppServer::RequestMode::MESSAGE:
@@ -109,7 +120,6 @@ void loop(void)
     break;
   case AppServer::RequestMode::WEATHER:
     operationMode = OperationMode::WEATHER;
-    renderer->setMessage(">>");
     break;
   case AppServer::RequestMode::STOCK:
     operationMode = OperationMode::STOCK;
@@ -123,13 +133,14 @@ void loop(void)
     break;
   }
 
-  if (prevOperationMode != operationMode)
+  bool reset = prevOperationMode != operationMode;
+  if (reset)
   {
     renderer->setScrollContent(true);
   }
 
   static long prevTime = 0;
-  if (millis() - prevTime > 200)
+  if (reset || millis() - prevTime > 200)
   {
     prevTime = millis();
     switch (operationMode)
@@ -140,27 +151,7 @@ void loop(void)
       renderer->setRaw(clk->getTime());
       break;
     case OperationMode::WEATHER:
-      // alternate between showing time and weather
-      static bool showTime = false;
-      static long prevSwitchTime = 0;
-      if (showTime)
-      {
-        renderer->setRaw(clk->getTime());
-      }
-      if (millis() - prevSwitchTime > 5000)
-      {
-        renderer->setScrollContent(true);
-        showTime = !showTime;
-        prevSwitchTime = millis();
-        if (showTime)
-        {
-          renderer->setRaw(clk->getTime());
-        }
-        else
-        {
-          renderer->setRaw(weather->getWeather());
-        }
-      }
+      renderer->setRaw(weather->getWeather());
       break;
     case OperationMode::STOCK:
       renderer->setMessage(stock->getQuote());

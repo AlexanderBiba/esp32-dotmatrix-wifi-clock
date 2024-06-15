@@ -1,6 +1,5 @@
 #include <EEPROM.h>
 
-#include "utils.h"
 #include "settings.h"
 
 AppSettings::AppSettings()
@@ -8,7 +7,7 @@ AppSettings::AppSettings()
     EEPROM.get(BASE_EEPROM_ADDR, settings);
     if (settings.magic != MAGIC_NUMBER)
     {
-        PRINTS("No settings found, using defaults");
+        Serial.println("No settings found, using defaults");
         settings.magic = MAGIC_NUMBER;
         strcpy(settings.time.timezone, "America/New_York");
         strcpy(settings.stock.apiKey, "\0");

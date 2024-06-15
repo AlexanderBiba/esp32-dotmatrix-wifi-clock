@@ -1,7 +1,6 @@
 #include <MD_MAX72xx.h>
 #include <algorithm>
 
-#include "utils.h"
 #include "renderer.h"
 #include "main.h"
 #include "settings.h"
@@ -57,7 +56,6 @@ uint8_t Renderer::scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
   static uint8_t cBuf[8];
   uint8_t colData = 0;
 
-  // finite state machine to control what we do on the callback
   switch (state)
   {
   case S_IDLE:               // reset the message pointer and check for new message to load
@@ -71,17 +69,12 @@ uint8_t Renderer::scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     }
     else if (newRawAvailable)
     {
-      PRINT("newRawAvailable: ", newRawAvailable);
-      PRINT("before newRaw[0]: ", newRaw[0]);
-      PRINT("befoer curRaw[0]: ", curRaw[0]);
       memcpy(curRaw, newRaw, sizeof(curRaw));
       newRawAvailable = false;
       state = S_NEXT_RAW;
       curLen = 0;
       showLen = sizeof(curRaw) / sizeof(curRaw[0]);
       mode = RenderMode::RAW;
-      PRINT("after newRaw[0]: ", newRaw[0]);
-      PRINT("after curRaw[0]: ", curRaw[0]);
     }
 
     if (mode == RenderMode::MSG)
@@ -173,9 +166,11 @@ void Renderer::setRaw(const uint8_t rawBuffer[MAX_DEVICES * 8])
   }
   else
   {
-    for (uint8_t i = 0; i < MAX_DEVICES * 8; i++)
+    uint8_t tmpBuffer[MAX_DEVICES * 8];
+    memcpy(tmpBuffer, rawBuffer, sizeof(tmpBuffer));
+    if (!mx->setBuffer(mx->getColumnCount() - 1, sizeof(tmpBuffer), tmpBuffer))
     {
-      mx->setColumn(MAX_DEVICES * 8 - i - 1, rawBuffer[i]);
+      printf("Failed to set buffer\n");
     }
   }
 }

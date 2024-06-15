@@ -12,495 +12,214 @@ const char WebPage[] =
     <script>
       function submitModeOfOperation() {
         let strLine = "";
-        nocache = "/&nocache=" + Math.random() * 1000000;
-        var request = new XMLHttpRequest();
-        if (
-          document.getElementById("operation_mode_form")["message-radio"]
-            .checked
-        ) {
-          strLine =
-            "&MSG=" +
-            document.getElementById("operation_mode_form")["message-input"]
-              .value;
-        } else if (
-          document.getElementById("operation_mode_form")["clk-radio"].checked
-        ) {
+        const nocache = "/&nocache=" + Math.random() * 1000000;
+        const form = document.getElementById("operation_mode_form");
+        const request = new XMLHttpRequest();
+
+        if (form["message-radio"].checked) {
+          strLine = "&MSG=" + form["message-input"].value;
+        } else if (form["clk-radio"].checked) {
           strLine = "&CLK";
-        } else if (
-          document.getElementById("operation_mode_form")["weather-radio"]
-            .checked
-        ) {
+        } else if (form["weather-radio"].checked) {
           strLine = "&WEATHER";
-        } else if (
-          document.getElementById("operation_mode_form")["ticker-radio"].checked
-        ) {
-          strLine =
-            "&TICKER=" +
-            document.getElementById("operation_mode_form")["ticker-input"]
-              .value;
+        } else if (form["ticker-radio"].checked) {
+          strLine = "&TICKER=" + form["ticker-input"].value;
         }
+
         request.open("GET", strLine + nocache, false);
         request.send(null);
       }
 
       function setCntl(settings) {
-        let strLine = "";
-        nocache = "/&nocache=" + Math.random() * 1000000;
-        var request = new XMLHttpRequest();
-        strLine = `&CNTL=${encodeURI(JSON.stringify(settings))}`;
+        const strLine = `&CNTL=${encodeURI(JSON.stringify(settings))}`;
+        const nocache = "/&nocache=" + Math.random() * 1000000;
+        const request = new XMLHttpRequest();
+
         request.open("GET", strLine + nocache, false);
         request.send(null);
       }
+
+      function populateTimezones() {
+        const timezoneElem = document.getElementById("timezone");
+        fetch("https://worldtimeapi.org/api/timezone")
+          .then((response) => response.json())
+          .then((data) => {
+            data.forEach((timezone) => {
+              const opt = document.createElement("option");
+              opt.value = timezone;
+              opt.innerHTML = timezone;
+              timezoneElem.appendChild(opt);
+            });
+          })
+          .catch((error) => console.error("Error fetching timezones:", error));
+      }
+
+      window.onload = function () {
+        populateTimezones();
+      };
     </script>
   </head>
-
   <body>
-    <title>Wifi Dotmatrix Display</title>
     <h1>Set Mode Of Operation</h1>
     <form id="operation_mode_form">
-      <input type="radio" id="message-radio" name="operation-mode" />
-      <label for="message-radio"
-        >Message: <input type="text" name="message-input" maxlength="255"
-      /></label>
-      <br /><br />
-      <input type="radio" id="clk-radio" name="operation-mode" />
-      <label for="clk-radio">Clock</label><br /><br />
-      <input type="radio" id="weather-radio" name="operation-mode" />
-      <label for="clk-radio">Weather</label><br /><br />
-      <input type="radio" id="ticker-radio" name="operation-mode" />
-      <label for="ticker-radio"
-        >Ticker: <input type="text" name="ticker-input" maxlength="255"
-      /></label>
-      <br /><br />
+      <fieldset>
+        <legend>Select Mode</legend>
+        <input type="radio" id="message-radio" name="operation-mode" />
+        <label for="message-radio">
+          Message:
+          <input
+            type="text"
+            id="message-input"
+            name="message-input"
+            maxlength="255"
+            required
+          />
+        </label>
+        <br /><br />
+        <input type="radio" id="clk-radio" name="operation-mode" />
+        <label for="clk-radio">Clock</label>
+        <br /><br />
+        <input type="radio" id="weather-radio" name="operation-mode" />
+        <label for="weather-radio">Weather</label>
+        <br /><br />
+        <input type="radio" id="ticker-radio" name="operation-mode" />
+        <label for="ticker-radio">
+          Ticker:
+          <input
+            type="text"
+            id="ticker-input"
+            name="ticker-input"
+            maxlength="255"
+            required
+          />
+        </label>
+        <br /><br />
+      </fieldset>
+      <input
+        type="submit"
+        value="Submit"
+        onclick="submitModeOfOperation(); return false;"
+      />
     </form>
-    <input type="submit" value="Submit" onclick="submitModeOfOperation()" />
 
-    <br /><br />
     <h1>Settings</h1>
-    <label
-      >Timezone:
-      <select id="timezone">
-        <script>
-          const timezoneElem = document.getElementById("timezone");
-          [
-            "Africa/Abidjan",
-            "Africa/Algiers",
-            "Africa/Bissau",
-            "Africa/Cairo",
-            "Africa/Casablanca",
-            "Africa/Ceuta",
-            "Africa/El_Aaiun",
-            "Africa/Johannesburg",
-            "Africa/Juba",
-            "Africa/Khartoum",
-            "Africa/Lagos",
-            "Africa/Maputo",
-            "Africa/Monrovia",
-            "Africa/Nairobi",
-            "Africa/Ndjamena",
-            "Africa/Sao_Tome",
-            "Africa/Tripoli",
-            "Africa/Tunis",
-            "Africa/Windhoek",
-            "America/Adak",
-            "America/Anchorage",
-            "America/Araguaina",
-            "America/Argentina/Buenos_Aires",
-            "America/Argentina/Catamarca",
-            "America/Argentina/Cordoba",
-            "America/Argentina/Jujuy",
-            "America/Argentina/La_Rioja",
-            "America/Argentina/Mendoza",
-            "America/Argentina/Rio_Gallegos",
-            "America/Argentina/Salta",
-            "America/Argentina/San_Juan",
-            "America/Argentina/San_Luis",
-            "America/Argentina/Tucuman",
-            "America/Argentina/Ushuaia",
-            "America/Asuncion",
-            "America/Bahia",
-            "America/Bahia_Banderas",
-            "America/Barbados",
-            "America/Belem",
-            "America/Belize",
-            "America/Boa_Vista",
-            "America/Bogota",
-            "America/Boise",
-            "America/Cambridge_Bay",
-            "America/Campo_Grande",
-            "America/Cancun",
-            "America/Caracas",
-            "America/Cayenne",
-            "America/Chicago",
-            "America/Chihuahua",
-            "America/Ciudad_Juarez",
-            "America/Costa_Rica",
-            "America/Cuiaba",
-            "America/Danmarkshavn",
-            "America/Dawson",
-            "America/Dawson_Creek",
-            "America/Denver",
-            "America/Detroit",
-            "America/Edmonton",
-            "America/Eirunepe",
-            "America/El_Salvador",
-            "America/Fort_Nelson",
-            "America/Fortaleza",
-            "America/Glace_Bay",
-            "America/Goose_Bay",
-            "America/Grand_Turk",
-            "America/Guatemala",
-            "America/Guayaquil",
-            "America/Guyana",
-            "America/Halifax",
-            "America/Havana",
-            "America/Hermosillo",
-            "America/Indiana/Indianapolis",
-            "America/Indiana/Knox",
-            "America/Indiana/Marengo",
-            "America/Indiana/Petersburg",
-            "America/Indiana/Tell_City",
-            "America/Indiana/Vevay",
-            "America/Indiana/Vincennes",
-            "America/Indiana/Winamac",
-            "America/Inuvik",
-            "America/Iqaluit",
-            "America/Jamaica",
-            "America/Juneau",
-            "America/Kentucky/Louisville",
-            "America/Kentucky/Monticello",
-            "America/La_Paz",
-            "America/Lima",
-            "America/Los_Angeles",
-            "America/Maceio",
-            "America/Managua",
-            "America/Manaus",
-            "America/Martinique",
-            "America/Matamoros",
-            "America/Mazatlan",
-            "America/Menominee",
-            "America/Merida",
-            "America/Metlakatla",
-            "America/Mexico_City",
-            "America/Miquelon",
-            "America/Moncton",
-            "America/Monterrey",
-            "America/Montevideo",
-            "America/New_York",
-            "America/Nome",
-            "America/Noronha",
-            "America/North_Dakota/Beulah",
-            "America/North_Dakota/Center",
-            "America/North_Dakota/New_Salem",
-            "America/Nuuk",
-            "America/Ojinaga",
-            "America/Panama",
-            "America/Paramaribo",
-            "America/Phoenix",
-            "America/Port-au-Prince",
-            "America/Porto_Velho",
-            "America/Puerto_Rico",
-            "America/Punta_Arenas",
-            "America/Rankin_Inlet",
-            "America/Recife",
-            "America/Regina",
-            "America/Resolute",
-            "America/Rio_Branco",
-            "America/Santarem",
-            "America/Santiago",
-            "America/Santo_Domingo",
-            "America/Sao_Paulo",
-            "America/Scoresbysund",
-            "America/Sitka",
-            "America/St_Johns",
-            "America/Swift_Current",
-            "America/Tegucigalpa",
-            "America/Thule",
-            "America/Tijuana",
-            "America/Toronto",
-            "America/Vancouver",
-            "America/Whitehorse",
-            "America/Winnipeg",
-            "America/Yakutat",
-            "Antarctica/Casey",
-            "Antarctica/Davis",
-            "Antarctica/Macquarie",
-            "Antarctica/Mawson",
-            "Antarctica/Palmer",
-            "Antarctica/Rothera",
-            "Antarctica/Troll",
-            "Asia/Almaty",
-            "Asia/Amman",
-            "Asia/Anadyr",
-            "Asia/Aqtau",
-            "Asia/Aqtobe",
-            "Asia/Ashgabat",
-            "Asia/Atyrau",
-            "Asia/Baghdad",
-            "Asia/Baku",
-            "Asia/Bangkok",
-            "Asia/Barnaul",
-            "Asia/Beirut",
-            "Asia/Bishkek",
-            "Asia/Chita",
-            "Asia/Choibalsan",
-            "Asia/Colombo",
-            "Asia/Damascus",
-            "Asia/Dhaka",
-            "Asia/Dili",
-            "Asia/Dubai",
-            "Asia/Dushanbe",
-            "Asia/Famagusta",
-            "Asia/Gaza",
-            "Asia/Hebron",
-            "Asia/Ho_Chi_Minh",
-            "Asia/Hong_Kong",
-            "Asia/Hovd",
-            "Asia/Irkutsk",
-            "Asia/Jakarta",
-            "Asia/Jayapura",
-            "Asia/Jerusalem",
-            "Asia/Kabul",
-            "Asia/Kamchatka",
-            "Asia/Karachi",
-            "Asia/Kathmandu",
-            "Asia/Khandyga",
-            "Asia/Kolkata",
-            "Asia/Krasnoyarsk",
-            "Asia/Kuching",
-            "Asia/Macau",
-            "Asia/Magadan",
-            "Asia/Makassar",
-            "Asia/Manila",
-            "Asia/Nicosia",
-            "Asia/Novokuznetsk",
-            "Asia/Novosibirsk",
-            "Asia/Omsk",
-            "Asia/Oral",
-            "Asia/Pontianak",
-            "Asia/Pyongyang",
-            "Asia/Qatar",
-            "Asia/Qostanay",
-            "Asia/Qyzylorda",
-            "Asia/Riyadh",
-            "Asia/Sakhalin",
-            "Asia/Samarkand",
-            "Asia/Seoul",
-            "Asia/Shanghai",
-            "Asia/Singapore",
-            "Asia/Srednekolymsk",
-            "Asia/Taipei",
-            "Asia/Tashkent",
-            "Asia/Tbilisi",
-            "Asia/Tehran",
-            "Asia/Thimphu",
-            "Asia/Tokyo",
-            "Asia/Tomsk",
-            "Asia/Ulaanbaatar",
-            "Asia/Urumqi",
-            "Asia/Ust-Nera",
-            "Asia/Vladivostok",
-            "Asia/Yakutsk",
-            "Asia/Yangon",
-            "Asia/Yekaterinburg",
-            "Asia/Yerevan",
-            "Atlantic/Azores",
-            "Atlantic/Bermuda",
-            "Atlantic/Canary",
-            "Atlantic/Cape_Verde",
-            "Atlantic/Faroe",
-            "Atlantic/Madeira",
-            "Atlantic/South_Georgia",
-            "Atlantic/Stanley",
-            "Australia/Adelaide",
-            "Australia/Brisbane",
-            "Australia/Broken_Hill",
-            "Australia/Darwin",
-            "Australia/Eucla",
-            "Australia/Hobart",
-            "Australia/Lindeman",
-            "Australia/Lord_Howe",
-            "Australia/Melbourne",
-            "Australia/Perth",
-            "Australia/Sydney",
-            "CET",
-            "CST6CDT",
-            "EET",
-            "EST",
-            "EST5EDT",
-            "Etc/GMT",
-            "Etc/GMT+1",
-            "Etc/GMT+10",
-            "Etc/GMT+11",
-            "Etc/GMT+12",
-            "Etc/GMT+2",
-            "Etc/GMT+3",
-            "Etc/GMT+4",
-            "Etc/GMT+5",
-            "Etc/GMT+6",
-            "Etc/GMT+7",
-            "Etc/GMT+8",
-            "Etc/GMT+9",
-            "Etc/GMT-1",
-            "Etc/GMT-10",
-            "Etc/GMT-11",
-            "Etc/GMT-12",
-            "Etc/GMT-13",
-            "Etc/GMT-14",
-            "Etc/GMT-2",
-            "Etc/GMT-3",
-            "Etc/GMT-4",
-            "Etc/GMT-5",
-            "Etc/GMT-6",
-            "Etc/GMT-7",
-            "Etc/GMT-8",
-            "Etc/GMT-9",
-            "Etc/UTC",
-            "Europe/Andorra",
-            "Europe/Astrakhan",
-            "Europe/Athens",
-            "Europe/Belgrade",
-            "Europe/Berlin",
-            "Europe/Brussels",
-            "Europe/Bucharest",
-            "Europe/Budapest",
-            "Europe/Chisinau",
-            "Europe/Dublin",
-            "Europe/Gibraltar",
-            "Europe/Helsinki",
-            "Europe/Istanbul",
-            "Europe/Kaliningrad",
-            "Europe/Kirov",
-            "Europe/Kyiv",
-            "Europe/Lisbon",
-            "Europe/London",
-            "Europe/Madrid",
-            "Europe/Malta",
-            "Europe/Minsk",
-            "Europe/Moscow",
-            "Europe/Paris",
-            "Europe/Prague",
-            "Europe/Riga",
-            "Europe/Rome",
-            "Europe/Samara",
-            "Europe/Saratov",
-            "Europe/Simferopol",
-            "Europe/Sofia",
-            "Europe/Tallinn",
-            "Europe/Tirane",
-            "Europe/Ulyanovsk",
-            "Europe/Vienna",
-            "Europe/Vilnius",
-            "Europe/Volgograd",
-            "Europe/Warsaw",
-            "Europe/Zurich",
-            "HST",
-            "Indian/Chagos",
-            "Indian/Maldives",
-            "Indian/Mauritius",
-            "MET",
-            "MST",
-            "MST7MDT",
-            "PST8PDT",
-            "Pacific/Apia",
-            "Pacific/Auckland",
-            "Pacific/Bougainville",
-            "Pacific/Chatham",
-            "Pacific/Easter",
-            "Pacific/Efate",
-            "Pacific/Fakaofo",
-            "Pacific/Fiji",
-            "Pacific/Galapagos",
-            "Pacific/Gambier",
-            "Pacific/Guadalcanal",
-            "Pacific/Guam",
-            "Pacific/Honolulu",
-            "Pacific/Kanton",
-            "Pacific/Kiritimati",
-            "Pacific/Kosrae",
-            "Pacific/Kwajalein",
-            "Pacific/Marquesas",
-            "Pacific/Nauru",
-            "Pacific/Niue",
-            "Pacific/Norfolk",
-            "Pacific/Noumea",
-            "Pacific/Pago_Pago",
-            "Pacific/Palau",
-            "Pacific/Pitcairn",
-            "Pacific/Port_Moresby",
-            "Pacific/Rarotonga",
-            "Pacific/Tahiti",
-            "Pacific/Tarawa",
-            "Pacific/Tongatapu",
-            "WET",
-          ].forEach((timezone) => {
-            var opt = document.createElement("option");
-            opt.value = timezone;
-            opt.innerHTML = timezone;
-            timezoneElem.appendChild(opt);
-          });
-        </script>
-      </select>
-    </label>
-    <input
-      type="submit"
-      value="Set"
-      onclick="setCntl({ timezone: document.getElementById('timezone').value })"
-    />
-    <br />
-    <label
-      >Brightness: <input type="number" id="brightness" min="0" max="15"
-    /></label>
-    <input
-      type="submit"
-      value="Set"
-      onclick="setCntl({ brightness: document.getElementById('brightness').value })"
-    />
-    <br />
-    <label
-      >Scroll Delay: <input type="number" id="scroll-delay" min="0" max="5000"
-    /></label>
-    <input
-      type="submit"
-      value="Set"
-      onclick="setCntl({ scrollDelay: document.getElementById('scroll-delay').value })"
-    />
-    <br />
-    <label
-      >Weather Location:
-      <label>Latitude: <input id="weather-latitude" maxlength="32" /></label>
-      <label>Longitude: <input id="weather-longitude" maxlength="32" /></label>
-    </label>
-    <input
-      type="submit"
-      value="Set"
-      onclick="setCntl({ latitude: document.getElementById('weather-latitude').value, longitude: document.getElementById('weather-longitude').value })"
-    />
-    <br />
-    <label
-      >Weather Units:
-      <input type="radio" id="celsius-radio" name="operation-mode" /><label
-        >Celsius</label
-      >
-      <input type="radio" id="fahrenheit-radio" name="operation-mode" /><label
-        >fahrenheit</label
-      >
-    </label>
-    <input
-      type="submit"
-      value="Set"
-      onclick="setCntl({ weatherUnits: document.getElementById('celsius-radio').checked ? 'c' : 'f'})"
-    />
-    <br />
-    <label
-      >Finzaon.io API Key: <input id="finazon-api-key" maxlength="255"
-    /></label>
-    <input
-      type="submit"
-      value="Set"
-      onclick="setCntl({ finazonApiKey: document.getElementById('finazon-api-key').value })"
-    />
-    <br /><br />
+    <form id="settings_form">
+      <fieldset>
+        <legend>General Settings</legend>
+        <label for="timezone">
+          Timezone:
+          <select id="timezone"></select>
+        </label>
+        <input
+          type="submit"
+          value="Set"
+          onclick="setCntl({ timezone: document.getElementById('timezone').value }); return false;"
+        />
+        <br /><br />
+        <label for="brightness">
+          Brightness:
+          <input
+            type="number"
+            id="brightness"
+            name="brightness"
+            min="0"
+            max="15"
+            required
+          />
+        </label>
+        <input
+          type="submit"
+          value="Set"
+          onclick="setCntl({ brightness: document.getElementById('brightness').value }); return false;"
+        />
+        <br /><br />
+        <label for="scroll-delay">
+          Scroll Delay:
+          <input
+            type="number"
+            id="scroll-delay"
+            name="scroll-delay"
+            min="0"
+            max="5000"
+            required
+          />
+        </label>
+        <input
+          type="submit"
+          value="Set"
+          onclick="setCntl({ scrollDelay: document.getElementById('scroll-delay').value }); return false;"
+        />
+      </fieldset>
+      <br />
+      <fieldset>
+        <legend>Weather Settings</legend>
+        <label for="weather-latitude">
+          Weather Location:
+          <label
+            >Latitude:
+            <input
+              id="weather-latitude"
+              name="weather-latitude"
+              maxlength="32"
+              required
+          /></label>
+          <label
+            >Longitude:
+            <input
+              id="weather-longitude"
+              name="weather-longitude"
+              maxlength="32"
+              required
+          /></label>
+        </label>
+        <input
+          type="submit"
+          value="Set"
+          onclick="setCntl({ latitude: document.getElementById('weather-latitude').value, longitude: document.getElementById('weather-longitude').value }); return false;"
+        />
+        <br /><br />
+        <label>
+          Weather Units:
+          <input
+            type="radio"
+            id="celsius-radio"
+            name="weather-units"
+            value="c"
+            required
+          /><label for="celsius-radio">Celsius</label>
+          <input
+            type="radio"
+            id="fahrenheit-radio"
+            name="weather-units"
+            value="f"
+            required
+          /><label for="fahrenheit-radio">Fahrenheit</label>
+        </label>
+        <input
+          type="submit"
+          value="Set"
+          onclick="setCntl({ weatherUnits: document.querySelector('input[name=weather-units]:checked').value }); return false;"
+        />
+      </fieldset>
+      <br />
+      <fieldset>
+        <legend>API Key</legend>
+        <label for="finazon-api-key">
+          Finazon.io API Key:
+          <input
+            id="finazon-api-key"
+            name="finazon-api-key"
+            maxlength="255"
+            required
+          />
+        </label>
+        <input
+          type="submit"
+          value="Set"
+          onclick="setCntl({ finazonApiKey: document.getElementById('finazon-api-key').value }); return false;"
+        />
+      </fieldset>
+    </form>
   </body>
 </html>
 

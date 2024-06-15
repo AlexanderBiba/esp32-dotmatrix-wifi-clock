@@ -3,7 +3,6 @@
 #include <HttpClient.h>
 #include <WiFiClientSecure.h>
 
-#include "utils.h"
 #include "stock.h"
 
 bool Stock::updateStockData()
@@ -16,8 +15,6 @@ bool Stock::updateStockData()
   char authHeader[128] = {0};
   strcat(authHeader, "apikey ");
   strcat(authHeader, settings->getStockApiKey());
-  PRINT("url: ", url);
-  PRINT("authHeader: ", authHeader);
   client.beginRequest();
   client.get(url);
   client.sendHeader("Authorization", authHeader);
@@ -27,18 +24,18 @@ bool Stock::updateStockData()
 
   if (statusCode == 429)
   {
-    PRINTS("Rate limited");
+    Serial.println("Rate limited");
     return false;
   }
 
-  PRINT("Status code: ", statusCode);
-  PRINT("Response: ", response);
+  printf("Status code: %d\n", statusCode);
+  printf("Response: %s\n", response);
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, response);
   if (error)
   {
-    PRINT("deserializeJson() failed: ", error.f_str());
+    printf("deserializeJson() failed: %s\n", error.f_str());
     return false;
   }
 

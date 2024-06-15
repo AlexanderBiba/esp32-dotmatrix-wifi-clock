@@ -5,7 +5,6 @@
 
 #include "appserver.h"
 #include "webpage.h"
-#include "utils.h"
 
 #define MDNS_DOMAIN "digiclk"
 AppServer::AppServer()
@@ -14,15 +13,15 @@ AppServer::AppServer()
 
   WiFiManager wifiManager;
   wifiManager.autoConnect("DotMatrix Clock");
-  PRINTS("WIFI Connected");
+  Serial.println("WIFI Connected");
 
   bool mdnsSuccess = MDNS.begin(MDNS_DOMAIN);
   if (!mdnsSuccess)
   {
-    PRINTS("Error setting up MDNS responder!");
+    Serial.println("Error setting up MDNS responder!");
   }
 
-  PRINTS("Starting Server");
+  Serial.println("Starting Server");
   server->begin();
 }
 
@@ -177,7 +176,6 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
       {
         szBuf[idxBuf] = '\0';
         client.flush();
-        PRINT("Recv: ", szBuf);
         state = S_EXTRACT;
       }
       else

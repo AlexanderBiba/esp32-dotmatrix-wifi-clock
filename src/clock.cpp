@@ -4,10 +4,11 @@
 #include <HttpClient.h>
 
 #include "clock.h"
-#include "utils.h"
 #include "settings.h"
 #include "charmaps.h"
 #include "main.h"
+
+#define UPDATE_TIME_INTERVAL 3600 * 1000
 
 void Clock::updateTime()
 {
@@ -19,18 +20,21 @@ void Clock::updateTime()
   int statusCode = client.responseStatusCode();
   String response = client.responseBody();
 
-  PRINT("Status code: ", statusCode);
-  PRINT("Response: ", response);
+  printf("Status code: %d\n", statusCode);
+  printf("Response: %s\n", response);
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, response);
   if (error)
   {
-    PRINT("deserializeJson() failed: ", error.f_str());
+    printf("deserializeJson() failed: %s\n", error.f_str());
     return;
   }
 
   epoch = (long)doc["unixtime"] + (long)doc["raw_offset"] + (doc["dst"] ? (long)doc["dst_offset"] : 0) - (millis() / 1000);
+  currentTime = epoch + (millis() / 1000);
+
+  loadBitmap();
 }
 
 int writeCharToBuffer(char c, uint8_t *buffer)
@@ -59,48 +63,51 @@ int writeSmallCharToBuffer(char c, uint8_t *buffer)
   }
   return SMALL_DIGIT_LEN;
 }
-const uint8_t *Clock::getTime()
+
+void Clock::loadBitmap()
 {
-  static long time = epoch + (millis() / 1000);
-
-  long newTime = epoch + (millis() / 1000);
-  if (newTime != time)
-  {
-    time = newTime;
-    if (WiFi.status() == WL_CONNECTED && (time % 3600) == 0)
-    {
-      updateTime();
-    }
-
-    strftime(clockBuffer, TIME_BUFFER_SIZE, "%T", gmtime(&time));
-
-    uint8_t *p = rawClockBuffer;
+  strftime(clockBuffer, TIME_BUFFER_SIZE, "%T", gmtime(&currentTime));
+  uint8_t *p = bitmap;
 
 #if SMALL_SECONDS_CLOCK
-    p += writeCharToBuffer(clockBuffer[0], p);
-    p += writeCharToBuffer(clockBuffer[1], p);
-    *p++ = 0; // empty column between hours and minutes
-    *p++ = 0; // empty column between hours and minutes
-    p += writeCharToBuffer(clockBuffer[3], p);
-    p += writeCharToBuffer(clockBuffer[4], p);
-    *p++ = 0; // empty column between minutes and seconds
-    *p++ = 0; // empty column between minutes and seconds
-    p += writeSmallCharToBuffer(clockBuffer[6], p);
-    *p++ = 0; // empty column
-    p += writeSmallCharToBuffer(clockBuffer[7], p);
+  p += writeCharToBuffer(clockBuffer[0], p);
+  p += writeCharToBuffer(clockBuffer[1], p);
+  *p++ = 0; // empty column between hours and minutes
+  *p++ = 0; // empty column between hours and minutes
+  p += writeCharToBuffer(clockBuffer[3], p);
+  p += writeCharToBuffer(clockBuffer[4], p);
+  *p++ = 0; // empty column between minutes and seconds
+  *p++ = 0; // empty column between minutes and seconds
+  p += writeSmallCharToBuffer(clockBuffer[6], p);
+  *p++ = 0; // empty column
+  p += writeSmallCharToBuffer(clockBuffer[7], p);
 #else
-    p += writeCharToBuffer(clockBuffer[0], p);
-    p += writeCharToBuffer(clockBuffer[1], p);
-    *p++ = 0; // empty column between hours and minutes
-    p += writeCharToBuffer(clockBuffer[3], p);
-    p += writeCharToBuffer(clockBuffer[4], p);
-    *p++ = 0; // empty column between minutes and seconds
-    p += writeCharToBuffer(clockBuffer[6], p);
-    p += writeCharToBuffer(clockBuffer[7], p);
+  p += writeCharToBuffer(clockBuffer[0], p);
+  p += writeCharToBuffer(clockBuffer[1], p);
+  *p++ = 0; // empty column between hours and minutes
+  p += writeCharToBuffer(clockBuffer[3], p);
+  p += writeCharToBuffer(clockBuffer[4], p);
+  *p++ = 0; // empty column between minutes and seconds
+  p += writeCharToBuffer(clockBuffer[6], p);
+  p += writeCharToBuffer(clockBuffer[7], p);
 #endif
+}
 
-    return rawClockBuffer;
+const uint8_t *Clock::getTime()
+{
+  static long prevUpdate = 0;
+  if ((millis() - prevUpdate > UPDATE_TIME_INTERVAL) && WiFi.status() == WL_CONNECTED)
+  {
+    prevUpdate = millis();
+    updateTime();
   }
 
-  return nullptr;
+  long newTime = epoch + (millis() / 1000);
+  if (newTime != currentTime)
+  {
+    currentTime = newTime;
+    loadBitmap();
+  }
+
+  return bitmap;
 }
