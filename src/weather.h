@@ -9,7 +9,7 @@ class Weather
 {
 public:
     Weather(AppSettings *settings) : settings(settings) { updateWeatherData(); };
-    const uint8_t *getWeather();
+    uint8_t *getWeather();
     bool updateWeatherData();
 
 private:

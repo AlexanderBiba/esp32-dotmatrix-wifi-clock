@@ -7,8 +7,11 @@
 #include "settings.h"
 #include "charmaps.h"
 #include "main.h"
+#include "renderer.h"
 
 #define UPDATE_TIME_INTERVAL 3600 * 1000
+
+extern Renderer *renderer;
 
 void Clock::updateTime()
 {
@@ -34,66 +37,64 @@ void Clock::updateTime()
   epoch = (long)doc["unixtime"] + (long)doc["raw_offset"] + (doc["dst"] ? (long)doc["dst_offset"] : 0) - (millis() / 1000);
   currentTime = epoch + (millis() / 1000);
 
-  loadBitmap();
+  loadClockBitmap();
 }
 
-int writeCharToBuffer(char c, uint8_t *buffer)
+void Clock::loadDateBitmap()
 {
-  uint8_t c1[CLOCK_DIGIT_WIDTH];
-  for (uint8_t i = 0; i < CLOCK_DIGIT_WIDTH; i++)
-  {
-#if BOTTOM_ALIGN
-    buffer[i] = digitCharMap[c - '0'][i] * 2;
+  static char timeBuffer[TIME_BUFFER_SIZE] = {0};
+  uint8_t *p = dateBitmap;
+  strftime(timeBuffer, TIME_BUFFER_SIZE, "%a", gmtime(&currentTime));
+  p = renderer->loadStringToBitmap(timeBuffer, p);
+  *p++ = 0;
+  *p++ = 0;
+#ifdef MMDD_DATE_FORMAT
+  strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", gmtime(&currentTime));
+  p = renderer->loadStringToBitmap(timeBuffer, p, true);
+  *p++ = 0x20;
+  strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", gmtime(&currentTime));
+  p = renderer->loadStringToBitmap(timeBuffer, p, true);
 #else
-    buffer[i] = digitCharMap[c - '0'][i];
+  strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", gmtime(&currentTime));
+  p = renderer->loadStringToBitmap(timeBuffer, p, true);
+  *p++ = 0x10;
+  strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", gmtime(&currentTime));
+  p = renderer->loadStringToBitmap(timeBuffer, p, true);
 #endif
-  }
-  return CLOCK_DIGIT_WIDTH;
+  renderer->alightBitmapContentToCenter(dateBitmap, p);
 }
 
-int writeSmallCharToBuffer(char c, uint8_t *buffer)
+void Clock::loadClockBitmap()
 {
-  for (uint8_t i = 0; i < SMALL_DIGIT_LEN; i++)
-  {
-#if BOTTOM_ALIGN
-    buffer[i] = smallDigitCharMap[c - '0'][i] * 8;
-#else
-    buffer[i] = smallDigitCharMap[c - '0'][i];
-#endif
-  }
-  return SMALL_DIGIT_LEN;
-}
-
-void Clock::loadBitmap()
-{
-  strftime(clockBuffer, TIME_BUFFER_SIZE, "%T", gmtime(&currentTime));
-  uint8_t *p = bitmap;
+  static char timeBuffer[TIME_BUFFER_SIZE] = {0};
+  strftime(timeBuffer, TIME_BUFFER_SIZE, "%T", gmtime(&currentTime));
+  uint8_t *p = clockBitmap;
 
 #if SMALL_SECONDS_CLOCK
-  p += writeCharToBuffer(clockBuffer[0], p);
-  p += writeCharToBuffer(clockBuffer[1], p);
+  p += renderer->writeCharToBuffer(timeBuffer[0], p);
+  p += renderer->writeCharToBuffer(timeBuffer[1], p);
   *p++ = 0; // empty column between hours and minutes
   *p++ = 0; // empty column between hours and minutes
-  p += writeCharToBuffer(clockBuffer[3], p);
-  p += writeCharToBuffer(clockBuffer[4], p);
+  p += renderer->writeCharToBuffer(timeBuffer[3], p);
+  p += renderer->writeCharToBuffer(timeBuffer[4], p);
   *p++ = 0; // empty column between minutes and seconds
   *p++ = 0; // empty column between minutes and seconds
-  p += writeSmallCharToBuffer(clockBuffer[6], p);
+  p += renderer->writeSmallCharToBuffer(timeBuffer[6], p);
   *p++ = 0; // empty column
-  p += writeSmallCharToBuffer(clockBuffer[7], p);
+  p += renderer->writeSmallCharToBuffer(timeBuffer[7], p);
 #else
-  p += writeCharToBuffer(clockBuffer[0], p);
-  p += writeCharToBuffer(clockBuffer[1], p);
+  p += renderer->writeCharToBuffer(timeBuffer[0], p);
+  p += renderer->writeCharToBuffer(timeBuffer[1], p);
   *p++ = 0; // empty column between hours and minutes
-  p += writeCharToBuffer(clockBuffer[3], p);
-  p += writeCharToBuffer(clockBuffer[4], p);
+  p += renderer->writeCharToBuffer(timeBuffer[3], p);
+  p += renderer->writeCharToBuffer(timeBuffer[4], p);
   *p++ = 0; // empty column between minutes and seconds
-  p += writeCharToBuffer(clockBuffer[6], p);
-  p += writeCharToBuffer(clockBuffer[7], p);
+  p += renderer->writeCharToBuffer(timeBuffer[6], p);
+  p += renderer->writeCharToBuffer(timeBuffer[7], p);
 #endif
 }
 
-const uint8_t *Clock::getTime()
+uint8_t *Clock::getTime()
 {
   static long prevUpdate = 0;
   if ((millis() - prevUpdate > UPDATE_TIME_INTERVAL) && WiFi.status() == WL_CONNECTED)
@@ -106,8 +107,27 @@ const uint8_t *Clock::getTime()
   if (newTime != currentTime)
   {
     currentTime = newTime;
-    loadBitmap();
+    loadClockBitmap();
   }
 
-  return bitmap;
+  return clockBitmap;
+}
+
+uint8_t *Clock::getDate()
+{
+  static long prevUpdate = 0;
+  if ((millis() - prevUpdate > UPDATE_TIME_INTERVAL) && WiFi.status() == WL_CONNECTED)
+  {
+    prevUpdate = millis();
+    updateTime();
+  }
+
+  long newTime = epoch + (millis() / 1000);
+  if (newTime != currentTime)
+  {
+    currentTime = newTime;
+    loadDateBitmap();
+  }
+
+  return dateBitmap;
 }

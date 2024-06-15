@@ -195,7 +195,7 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
 
   case S_RESPONSE: // send the response to the client
     // Return the response to the client (web page)
-    client.print(WebResponse);
+    client.print("HTTP/1.1 200 OK\nContent-Type: text/html\n\n");
     client.print(WebPage);
     state = S_DISCONN;
     break;

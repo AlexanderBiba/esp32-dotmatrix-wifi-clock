@@ -9,6 +9,7 @@ enum struct OperationMode
 {
     MESSAGE,
     CLOCK,
+    DATE,
     STOCK,
     WEATHER
 };

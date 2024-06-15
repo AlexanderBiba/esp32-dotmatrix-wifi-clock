@@ -16,7 +16,6 @@ class AppSettings
 public:
     AppSettings();
 
-    void setScrollDelay(uint16_t _scrollDelay);
     void setBrightness(uint8_t _brightness);
     void setTimezone(const char _timezone[TIMEZONE_BUFFER_SIZE]);
     void setStockApiKey(const char _stockApiKey[STOCK_API_KEY_BUFFER_SIZE]);
@@ -24,7 +23,6 @@ public:
     void setLongitude(float _longitude);
     void setWeatherUnits(char _units);
 
-    uint16_t getScrollDelay() { return settings.display.scrollDelay; }
     uint8_t getBrightness() { return settings.display.brightness; }
     const char *getTimezone() { return settings.time.timezone; }
     const char *getStockApiKey() { return settings.stock.apiKey; }
@@ -39,7 +37,6 @@ public:
         Serial.println(settings.time.timezone);
         Serial.println(settings.stock.apiKey);
         Serial.println(settings.display.brightness);
-        Serial.println(settings.display.scrollDelay);
         Serial.println(settings.weather.latitude);
         Serial.println(settings.weather.longitude);
         Serial.println(settings.weather.units);
@@ -60,7 +57,6 @@ private:
         struct
         {
             uint8_t brightness;
-            uint16_t scrollDelay;
         } display;
         struct
         {

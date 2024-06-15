@@ -1,11 +1,7 @@
+
 #ifndef APP_WEB_PAGE_H
 #define APP_WEB_PAGE_H
-
-const char WebResponse[] = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n";
-
-const char WebPage[] =
-    R"html(
-<!DOCTYPE html>
+const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
 <html>
   <head>
     <title>Wifi Dotmatrix Display</title>
@@ -132,23 +128,6 @@ const char WebPage[] =
           value="Set"
           onclick="setCntl({ brightness: document.getElementById('brightness').value }); return false;"
         />
-        <br /><br />
-        <label for="scroll-delay">
-          Scroll Delay:
-          <input
-            type="number"
-            id="scroll-delay"
-            name="scroll-delay"
-            min="0"
-            max="5000"
-            required
-          />
-        </label>
-        <input
-          type="submit"
-          value="Set"
-          onclick="setCntl({ scrollDelay: document.getElementById('scroll-delay').value }); return false;"
-        />
       </fieldset>
       <br />
       <fieldset>
@@ -222,7 +201,5 @@ const char WebPage[] =
     </form>
   </body>
 </html>
-
 )html";
-
 #endif

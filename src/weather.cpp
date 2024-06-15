@@ -6,64 +6,18 @@
 #include "weather.h"
 #include "charmaps.h"
 #include "main.h"
+#include "renderer.h"
 
 #define WEATHER_UPDATE_INTERVAL 10 * 60 * 1000
 
-void shiftRight(uint8_t *bitmap, uint8_t size, uint8_t shiftAmount)
-{
-  for (uint8_t i = size - 1; i >= shiftAmount; --i)
-  {
-    bitmap[i] = bitmap[i - shiftAmount];
-  }
-  for (uint8_t i = 0; i < shiftAmount; ++i)
-  {
-    bitmap[i] = 0;
-  }
-}
+extern Renderer *renderer;
 
 void Weather::loadBitmap(const char *weather)
 {
   uint8_t *rawWeather = bitmap;
-
-  printf("Weather: %s\n", weather);
-  int count = 0;
-  for (int i = 0; i < strlen(weather); ++i)
-  {
-    if ('0' <= weather[i] && weather[i] <= '9')
-    {
-      if (rawWeather == &bitmap[RAW_WEATHER_BITMAP_SIZE])
-      {
-        return;
-      }
-      const uint8_t *digit = digitCharMap[weather[i] - '0'];
-      for (int i = 0; i < CLOCK_DIGIT_WIDTH; ++i)
-      {
-#ifdef BOTTOM_ALIGN
-        *rawWeather++ = *digit++ * 2;
-#else
-        *rawWeather++ = *digit++;
-#endif
-      }
-    }
-    else
-    {
-      const uint8_t *charBitmap = appCharMap[weather[i] - '!'];
-      *rawWeather++ = 0;
-      for (int j = 0; j < charBitmap[0]; ++j)
-      {
-        if (rawWeather == &bitmap[RAW_WEATHER_BITMAP_SIZE])
-        {
-          return;
-        }
-#ifdef BOTTOM_ALIGN
-        *rawWeather++ = charBitmap[j + 1] * 2;
-#else
-        *rawWeather++ = charBitmap[j + 1];
-#endif
-      }
-      *rawWeather++ = 0;
-    }
-  }
+  *rawWeather++ = 0;
+  *rawWeather++ = 0;
+  rawWeather = renderer->loadStringToBitmap(weather, rawWeather);
   *rawWeather++ = 0;
   if (settings->getWeatherUnits() == 'c')
   {
@@ -77,15 +31,10 @@ void Weather::loadBitmap(const char *weather)
     *rawWeather++ = 0x50;
     *rawWeather++ = 0x10;
   }
-  const uint8_t whitespace = &bitmap[RAW_WEATHER_BITMAP_SIZE] - rawWeather;
-  shiftRight(bitmap, RAW_WEATHER_BITMAP_SIZE, whitespace / 2);
-  for (int i = 0; i < whitespace / 2; ++i)
-  {
-    bitmap[(RAW_WEATHER_BITMAP_SIZE - whitespace / 2) + i] = 0;
-  }
+  renderer->alightBitmapContentToCenter(bitmap, rawWeather);
 }
 
-const uint8_t *Weather::getWeather()
+uint8_t *Weather::getWeather()
 {
   static long lastRefresh = 0;
 
@@ -139,7 +88,7 @@ bool Weather::updateWeatherData()
 
   weatherData = {doc["current"]["temperature"]};
 
-  sprintf(localBuffer, "%.2lf", weatherData.temp);
+  sprintf(localBuffer, "%.0f", weatherData.temp);
   loadBitmap(localBuffer);
 
   return true;

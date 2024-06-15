@@ -12,20 +12,12 @@ AppSettings::AppSettings()
         strcpy(settings.time.timezone, "America/New_York");
         strcpy(settings.stock.apiKey, "\0");
         settings.display.brightness = 0xf;
-        settings.display.scrollDelay = 75;
         settings.weather.latitude = 0;
         settings.weather.longitude = 0;
-        settings.weather.units = 0;
+        settings.weather.units = 'f';
         EEPROM.put(BASE_EEPROM_ADDR, settings);
         EEPROM.commit();
     }
-}
-
-void AppSettings::setScrollDelay(uint16_t _scrollDelay)
-{
-    settings.display.scrollDelay = _scrollDelay;
-    EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, display.scrollDelay), _scrollDelay);
-    EEPROM.commit();
 }
 
 void AppSettings::setBrightness(uint8_t _brightness)

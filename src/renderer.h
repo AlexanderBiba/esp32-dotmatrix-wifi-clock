@@ -7,6 +7,7 @@
 #include "main.h"
 
 #define MAX_DEVICES 4
+#define SCROLL_DELAY (uint16_t)25
 
 class Renderer
 {
@@ -17,7 +18,11 @@ public:
     void setMessage(const char *message);
     void setScrollContent(bool val);
     void updateBrightness();
-    void setRaw(const uint8_t rawBuffer[MAX_DEVICES * 8]);
+    void setRaw(uint8_t rawBuffer[MAX_DEVICES * 8]);
+    uint8_t *loadStringToBitmap(const char *str, uint8_t *bitmap, bool smallNumbers = false);
+    void alightBitmapContentToCenter(uint8_t *bitmap, uint8_t *endPtr);
+    uint8_t writeCharToBuffer(char c, uint8_t *buffer);
+    uint8_t writeSmallCharToBuffer(char c, uint8_t *buffer);
 
 private:
     enum struct RenderMode
@@ -42,7 +47,6 @@ private:
     uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t);
 
     MD_MAX72XX *mx;
-    int writeCharToBuffer(char c, uint8_t *buffer);
 };
 
 #endif

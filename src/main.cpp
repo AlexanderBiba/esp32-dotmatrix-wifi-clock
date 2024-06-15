@@ -12,6 +12,7 @@
 #include "renderer.h"
 #include "settings.h"
 #include "weather.h"
+#include "card.h"
 
 #define PRINT_CALLBACK 0
 #define DEBUG 1
@@ -60,10 +61,6 @@ void handleControlRequest(char *requestBuffer)
     settings->setTimezone(doc["timezone"]);
     clk->updateTime();
   }
-  if (doc.containsKey("scrollDelay"))
-  {
-    settings->setScrollDelay(doc["scrollDelay"]);
-  }
   if (doc.containsKey("latitude"))
   {
     settings->setLatitude(doc["latitude"]);
@@ -90,42 +87,48 @@ void handleControlRequest(char *requestBuffer)
   }
 }
 
-const OperationMode states[] = {OperationMode::CLOCK, OperationMode::WEATHER};
-const int numOfStates = sizeof(states) / sizeof(states[0]);
-
 void loop(void)
 {
+  static Card *cards[] = {
+      new Card(OperationMode::CLOCK, 10000),
+      new Card(OperationMode::DATE, 5000),
+      new Card(OperationMode::WEATHER, 5000)};
   static uint8_t currentState = 0;
-  static OperationMode operationMode = states[currentState];
+  static OperationMode operationMode = cards[currentState]->getOperationMode();
 
   OperationMode prevOperationMode = operationMode;
 
-  static long switchCardTime = 0;
-  if (millis() - switchCardTime > 10000)
+  static long curCardTime = 0;
+  static long cardSwitchTime = 5000;
+  if (millis() - curCardTime > cardSwitchTime)
   {
-    switchCardTime = millis();
-    currentState = (currentState + 1) % numOfStates;
-    operationMode = states[currentState];
+    printf("Switching card\n");
+    curCardTime = millis();
+    currentState = (currentState + 1) % (sizeof(cards) / sizeof(cards[0]));
+    operationMode = cards[currentState]->getOperationMode();
+    cardSwitchTime = cards[currentState]->getCardSwitchTime();
+    printf("New card: %d\n", operationMode);
+    printf("New card switch time: %ld\n", cardSwitchTime);
   }
 
   static char requestBuffer[REQUEST_BUFFER_SIZE];
   switch (appServer->handleWiFi(requestBuffer))
   {
-  case AppServer::RequestMode::MESSAGE:
-    operationMode = OperationMode::MESSAGE;
-    renderer->setMessage(requestBuffer);
-    break;
-  case AppServer::RequestMode::CLOCK:
-    operationMode = OperationMode::CLOCK;
-    break;
-  case AppServer::RequestMode::WEATHER:
-    operationMode = OperationMode::WEATHER;
-    break;
-  case AppServer::RequestMode::STOCK:
-    operationMode = OperationMode::STOCK;
-    stock->setTicker(requestBuffer);
-    renderer->setMessage(">>");
-    break;
+  // case AppServer::RequestMode::MESSAGE:
+  //   operationMode = OperationMode::MESSAGE;
+  //   renderer->setMessage(requestBuffer);
+  //   break;
+  // case AppServer::RequestMode::CLOCK:
+  //   operationMode = OperationMode::CLOCK;
+  //   break;
+  // case AppServer::RequestMode::WEATHER:
+  //   operationMode = OperationMode::WEATHER;
+  //   break;
+  // case AppServer::RequestMode::STOCK:
+  //   operationMode = OperationMode::STOCK;
+  //   stock->setTicker(requestBuffer);
+  //   renderer->setMessage(">>");
+  //   break;
   case AppServer::RequestMode::CNTL:
     handleControlRequest(requestBuffer);
     break;
@@ -149,6 +152,9 @@ void loop(void)
       break;
     case OperationMode::CLOCK:
       renderer->setRaw(clk->getTime());
+      break;
+    case OperationMode::DATE:
+      renderer->setRaw(clk->getDate());
       break;
     case OperationMode::WEATHER:
       renderer->setRaw(weather->getWeather());

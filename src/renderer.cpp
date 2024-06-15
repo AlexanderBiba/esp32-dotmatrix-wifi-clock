@@ -4,14 +4,12 @@
 #include "renderer.h"
 #include "main.h"
 #include "settings.h"
+#include "charmaps.h"
 
 // GPIO pins
 #define CLK_PIN 14  // VSPI_SCK
 #define DATA_PIN 13 // VSPI_MOSI
 #define CS_PIN 12   // VSPI_SS
-
-#define MIN_SCROLL_DELAY (uint16_t)25
-#define MAX_SCROLL_DELAY (uint16_t)10000
 
 static std::function<uint8_t(uint8_t, MD_MAX72XX::transformType_t)> lambdaHolder;
 uint8_t lambdaWrapper(uint8_t dev, MD_MAX72XX::transformType_t t)
@@ -37,7 +35,7 @@ Renderer::Renderer(AppSettings *settings)
 void Renderer::scrollText(void)
 {
   static uint32_t prevTime = 0;
-  if (scrollContent && (millis() - prevTime >= min(max(settings->getScrollDelay(), MIN_SCROLL_DELAY), MAX_SCROLL_DELAY)))
+  if (scrollContent && (millis() - prevTime >= SCROLL_DELAY))
   {
     mx->transform(MD_MAX72XX::TSL);
     prevTime = millis();
@@ -151,7 +149,7 @@ void Renderer::setMessage(const char *message)
   newRawAvailable = false;
 }
 
-void Renderer::setRaw(const uint8_t rawBuffer[MAX_DEVICES * 8])
+void Renderer::setRaw(uint8_t rawBuffer[MAX_DEVICES * 8])
 {
   if (rawBuffer == nullptr)
   {
@@ -166,9 +164,7 @@ void Renderer::setRaw(const uint8_t rawBuffer[MAX_DEVICES * 8])
   }
   else
   {
-    uint8_t tmpBuffer[MAX_DEVICES * 8];
-    memcpy(tmpBuffer, rawBuffer, sizeof(tmpBuffer));
-    if (!mx->setBuffer(mx->getColumnCount() - 1, sizeof(tmpBuffer), tmpBuffer))
+    if (!mx->setBuffer(mx->getColumnCount() - 1, MAX_DEVICES * 8, rawBuffer))
     {
       printf("Failed to set buffer\n");
     }
@@ -178,4 +174,129 @@ void Renderer::setRaw(const uint8_t rawBuffer[MAX_DEVICES * 8])
 void Renderer::updateBrightness()
 {
   mx->control(MD_MAX72XX::INTENSITY, settings->getBrightness());
+}
+
+void shiftRight(uint8_t *bitmap, uint8_t size, uint8_t shiftAmount)
+{
+  if (shiftAmount == 0)
+  {
+    return;
+  }
+  for (uint8_t i = size - 1; i >= shiftAmount; --i)
+  {
+    bitmap[i] = bitmap[i - shiftAmount];
+  }
+  for (uint8_t i = 0; i < shiftAmount; ++i)
+  {
+    bitmap[i] = 0;
+  }
+}
+
+uint8_t Renderer::writeCharToBuffer(char c, uint8_t *buffer)
+{
+  uint8_t c1[CLOCK_DIGIT_WIDTH];
+  for (uint8_t i = 0; i < CLOCK_DIGIT_WIDTH; i++)
+  {
+#if BOTTOM_ALIGN
+    buffer[i] = digitCharMap[c - '0'][i] * 2;
+#else
+    buffer[i] = digitCharMap[c - '0'][i];
+#endif
+  }
+  return CLOCK_DIGIT_WIDTH;
+}
+
+uint8_t Renderer::writeSmallCharToBuffer(char c, uint8_t *buffer)
+{
+  for (uint8_t i = 0; i < SMALL_DIGIT_LEN; i++)
+  {
+#if BOTTOM_ALIGN
+    buffer[i] = smallDigitCharMap[c - '0'][i] * 8;
+#else
+    buffer[i] = smallDigitCharMap[c - '0'][i];
+#endif
+  }
+  return SMALL_DIGIT_LEN;
+}
+
+#define RAW_BITMAP_SIZE MAX_DEVICES * 8
+uint8_t *Renderer::loadStringToBitmap(const char *str, uint8_t *bitmap, bool smallNumbers)
+{
+  const int length = strlen(str);
+  uint8_t *curr = bitmap;
+  for (int i = 0; i < length; ++i)
+  {
+    if ('0' <= str[i] && str[i] <= '9')
+    {
+      if (smallNumbers)
+      {
+        const uint8_t *digit = smallDigitCharMap[str[i] - '0'];
+        for (int i = 0; i < SMALL_DIGIT_LEN; ++i)
+        {
+          if (curr == &bitmap[RAW_BITMAP_SIZE])
+          {
+            return curr;
+          }
+#ifdef BOTTOM_ALIGN
+          *curr++ = *digit++ * 8;
+#else
+          *curr++ = *digit++;
+#endif
+        }
+        *curr++ = 0;
+      }
+      else
+      {
+        const uint8_t *digit = digitCharMap[str[i] - '0'];
+        for (int i = 0; i < CLOCK_DIGIT_WIDTH; ++i)
+        {
+          if (curr == &bitmap[RAW_BITMAP_SIZE])
+          {
+            return curr;
+          }
+#ifdef BOTTOM_ALIGN
+          *curr++ = *digit++ * 2;
+#else
+          *curr++ = *digit++;
+#endif
+        }
+        *curr++ = 0;
+      }
+    }
+    else
+    {
+      const uint8_t *charBitmap = appCharMap[str[i] - '!'];
+      for (int j = 0; j < charBitmap[0]; ++j)
+      {
+        if (curr == &bitmap[RAW_BITMAP_SIZE])
+        {
+          return curr;
+        }
+#ifdef BOTTOM_ALIGN
+        *curr++ = charBitmap[j + 1] * 2;
+#else
+        *curr++ = charBitmap[j + 1];
+#endif
+      }
+    }
+  }
+  return curr;
+}
+
+void Renderer::alightBitmapContentToCenter(uint8_t *bitmap, uint8_t *endPtr)
+{
+  const uint16_t margin = &bitmap[RAW_BITMAP_SIZE] - endPtr;
+  if (margin == 0)
+  {
+    return;
+  }
+  shiftRight(bitmap, RAW_BITMAP_SIZE, margin - (margin / 2));
+  if (margin / 2 == 0)
+  {
+    return;
+  }
+  for (int i = 0; i < margin / 2; ++i)
+  {
+    bitmap[(RAW_BITMAP_SIZE - margin / 2) + i] = 0;
+  }
 }
