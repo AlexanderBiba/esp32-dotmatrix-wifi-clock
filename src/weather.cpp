@@ -51,9 +51,18 @@ bool Weather::updateWeatherData()
 {
   static char localBuffer[RAW_WEATHER_BITMAP_SIZE] = {0};
 
-  if (settings->getLatitude() == 0 || settings->getLongitude() == 0)
+  printf("Updating weather data\n");
+  printf("Latitude: %lf\n", settings->getLatitude());
+  printf("Longitude: %lf\n", settings->getLongitude());
+  if (
+      !(
+          -90 < settings->getLatitude() && settings->getLatitude() < 90 &&
+          -180 < settings->getLongitude() && settings->getLongitude() < 180))
   {
-    loadBitmap("No LOC");
+    printf("Invalid location\n");
+    renderer->alightBitmapContentToCenter(bitmap, renderer->loadStringToBitmap("No LOC", bitmap));
+    printf("location done\n");
+    return true;
   }
 
   WiFiClientSecure wifiClient;

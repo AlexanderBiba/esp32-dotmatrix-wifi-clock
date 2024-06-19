@@ -30,18 +30,6 @@ public:
     float getLongitude() { return settings.weather.longitude; }
     char getWeatherUnits() { return settings.weather.units; }
 
-    void printSettings()
-    {
-        Serial.println("Settings:");
-        Serial.println(settings.magic);
-        Serial.println(settings.time.timezone);
-        Serial.println(settings.stock.apiKey);
-        Serial.println(settings.display.brightness);
-        Serial.println(settings.weather.latitude);
-        Serial.println(settings.weather.longitude);
-        Serial.println(settings.weather.units);
-    }
-
 private:
     struct _AppSettings
     {

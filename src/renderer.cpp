@@ -226,7 +226,11 @@ uint8_t *Renderer::loadStringToBitmap(const char *str, uint8_t *bitmap, bool sma
   uint8_t *curr = bitmap;
   for (int i = 0; i < length; ++i)
   {
-    if ('0' <= str[i] && str[i] <= '9')
+    if (str[i] == ' ') {
+      *curr++ = 0;
+      *curr++ = 0;
+    }
+    else if ('0' <= str[i] && str[i] <= '9')
     {
       if (smallNumbers)
       {

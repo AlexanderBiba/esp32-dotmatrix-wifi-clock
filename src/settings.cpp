@@ -12,8 +12,8 @@ AppSettings::AppSettings()
         strcpy(settings.time.timezone, "America/New_York");
         strcpy(settings.stock.apiKey, "\0");
         settings.display.brightness = 0xf;
-        settings.weather.latitude = 0;
-        settings.weather.longitude = 0;
+        settings.weather.latitude = INT_MAX;
+        settings.weather.longitude = INT_MAX;
         settings.weather.units = 'f';
         EEPROM.put(BASE_EEPROM_ADDR, settings);
         EEPROM.commit();
