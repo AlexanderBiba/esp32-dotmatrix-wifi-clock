@@ -12,6 +12,10 @@ This repository contains the code and setup instructions for a Digital Weather C
   - [Features](#features)
   - [Components](#components)
   - [Setup Instructions](#setup-instructions)
+  - [Web UI Control Interface](#web-ui-control-interface)
+    - [Features](#features-1)
+    - [Accessing the Web UI](#accessing-the-web-ui)
+    - [Using the Web UI](#using-the-web-ui)
   - [Libraries Used](#libraries-used)
   - [Usage](#usage)
   - [Troubleshooting](#troubleshooting)
@@ -24,6 +28,7 @@ This repository contains the code and setup instructions for a Digital Weather C
 - Shows current date in DAY MM.DD format.
 - Synchronizes the time once an hour using worldtimeapi.
 - Fetches and displays real-time weather information.
+- Web UI for Configuration: A web-based interface allows for configuration of clock settings, including mode of operation, timezone, brightness, weather units and location.
 - Utilizes an ESP32 microcontroller for processing.
 - Uses MAX7219 8x8 dot matrix display modules for output.
 
@@ -84,6 +89,43 @@ This repository contains the code and setup instructions for a Digital Weather C
    - To view the serial output for debugging, click on the `PlatformIO: Serial Monitor` button or use the command `PlatformIO: Monitor` from the command palette.
 
 Your Digital Weather Clock should now be running, displaying the current time, date, and weather information on the MAX7219 8x8 dot matrix display modules.
+
+## Web UI Control Interface
+
+The Digital Weather Clock includes a web-based user interface to control and configure various settings. This interface can be accessed through a browser by navigating to the ESP32's IP address on your local network. Below are the features and settings available through the Web UI:
+
+### Features
+
+- **General Settings:**
+
+  - Timezone: Select the appropriate timezone from a dropdown list.
+  - Brightness: Adjust the display brightness.
+
+- **Weather Settings:**
+
+  - Weather Location: Set the latitude and longitude for the weather data.
+  - Weather Units: Choose between Celsius and Fahrenheit for temperature display.
+
+### Accessing the Web UI
+
+1. Connect the ESP32 to your local WiFi network.
+2. Determine the IP address assigned to the ESP32 (this can typically be found in your router's connected devices list or through serial monitor output).
+3. Open a web browser and navigate to `http://digikey.local`.
+   - If using more than 1 clock, navigate to `http://<ESP32_IP_ADDRESS>``.
+
+### Using the Web UI
+
+- **General Settings:**
+
+  - Select your timezone from the dropdown list and click `Set`.
+  - Enter a brightness level (0-15) and click `Set` to adjust the display brightness.
+
+- **Weather Settings:**
+
+  - Enter the latitude and longitude for your location and click `Set`.
+  - Select either Celsius or Fahrenheit for the temperature units and click `Set`.
+
+This user-friendly interface simplifies the process of configuring and controlling the Digital Weather Clock, making it accessible even to users with minimal technical expertise.
 
 ## Libraries Used
 
