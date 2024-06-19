@@ -29,6 +29,7 @@ This repository contains the code and setup instructions for a Digital Weather C
 - Synchronizes the time once an hour using worldtimeapi.
 - Fetches and displays real-time weather information.
 - Web UI for Configuration: A web-based interface allows for configuration of clock settings, including mode of operation, timezone, brightness, weather units and location.
+- Sticky settings using EEPROM
 - Utilizes an ESP32 microcontroller for processing.
 - Uses MAX7219 8x8 dot matrix display modules for output.
 
