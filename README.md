@@ -93,7 +93,7 @@ Your Digital Weather Clock should now be running, displaying the current time, d
 
 ## Web UI Control Interface
 
-The Digital Weather Clock includes a web-based user interface to control and configure various settings. This interface can be accessed through a browser by navigating to the ESP32's IP address on your local network. Below are the features and settings available through the Web UI:
+The Digital Weather Clock includes a web-based user interface to control and configure various settings. This interface can be accessed through a browser by navigating to http://digiclk.local/ or the ESP32's IP address on your local network. Settings available through the Web UI:
 
 ### Features
 
@@ -111,7 +111,7 @@ The Digital Weather Clock includes a web-based user interface to control and con
 
 1. Connect the ESP32 to your local WiFi network.
 2. Determine the IP address assigned to the ESP32 (this can typically be found in your router's connected devices list or through serial monitor output).
-3. Open a web browser and navigate to `http://digikey.local`.
+3. Open a web browser and navigate to `http://digiclk.local/`.
    - If using more than 1 clock, navigate to `http://<ESP32_IP_ADDRESS>``.
 
 ### Using the Web UI
