@@ -6,21 +6,20 @@ This repository contains the code and setup instructions for a Digital Weather C
 
 ## Table of Contents
 
-- [Digital Weather Clock README](#digital-weather-clock-readme)
-  - [Overview](#overview)
-  - [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [Components](#components)
-  - [Setup Instructions](#setup-instructions)
-  - [Web UI Control Interface](#web-ui-control-interface)
-    - [Features](#features-1)
-    - [Accessing the Web UI](#accessing-the-web-ui)
-    - [Using the Web UI](#using-the-web-ui)
-  - [Libraries Used](#libraries-used)
-  - [Usage](#usage)
-  - [Troubleshooting](#troubleshooting)
-  - [Contributing](#contributing)
-  - [License](#license)
+- [Overview](#overview)
+- [Table of Contents](#table-of-contents)
+- [Features](#features)
+- [Components](#components)
+- [Setup Instructions](#setup-instructions)
+- [Web UI Control Interface](#web-ui-control-interface)
+  - [Features](#features-1)
+  - [Accessing the Web UI](#accessing-the-web-ui)
+  - [Using the Web UI](#using-the-web-ui)
+- [Libraries Used](#libraries-used)
+- [Usage](#usage)
+- [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Features
 
