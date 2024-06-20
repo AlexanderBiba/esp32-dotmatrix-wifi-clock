@@ -7,7 +7,6 @@ This repository contains the code and setup instructions for a Digital Weather C
 ## Table of Contents
 
 - [Overview](#overview)
-- [Table of Contents](#table-of-contents)
 - [Features](#features)
 - [Components](#components)
 - [Setup Instructions](#setup-instructions)
