@@ -11,7 +11,8 @@ enum struct OperationMode
     CLOCK,
     DATE,
     STOCK,
-    WEATHER
+    WEATHER,
+    SNAKE
 };
 
 #endif

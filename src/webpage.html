@@ -9,14 +9,20 @@
         const form = document.getElementById("operation_mode_form");
         const request = new XMLHttpRequest();
 
-        if (form["message-radio"].checked) {
-          strLine = "&MSG=" + form["message-input"].value;
-        } else if (form["clk-radio"].checked) {
-          strLine = "&CLK";
-        } else if (form["weather-radio"].checked) {
-          strLine = "&WEATHER";
-        } else if (form["ticker-radio"].checked) {
-          strLine = "&TICKER=" + form["ticker-input"].value;
+        if (form["message-checkbox"].checked) {
+          strLine += "&MSG=" + form["message-input"].value;
+        }
+        if (form["clk-checkbox"].checked) {
+          strLine += "&CLK";
+        }
+        if (form["weather-checkbox"].checked) {
+          strLine += "&WEATHER";
+        }
+        // if (form["ticker-checkbox"].checked) {
+        //   strLine += "&TICKER=" + form["ticker-input"].value;
+        // }
+        if (form["snake-checkbox"].checked) {
+          strLine += "&SNAKE";
         }
 
         request.open("GET", strLine + nocache, false);
@@ -57,8 +63,8 @@
     <form id="operation_mode_form">
       <fieldset>
         <legend>Select Mode</legend>
-        <input type="radio" id="message-radio" name="operation-mode" />
-        <label for="message-radio">
+        <input type="checkbox" id="message-checkbox" name="operation-mode" />
+        <label for="message-checkbox">
           Message:
           <input
             type="text"
@@ -69,14 +75,14 @@
           />
         </label>
         <br /><br />
-        <input type="radio" id="clk-radio" name="operation-mode" />
-        <label for="clk-radio">Clock</label>
+        <input type="checkbox" id="clk-checkbox" name="operation-mode" />
+        <label for="clk-checkbox">Clock</label>
         <br /><br />
-        <input type="radio" id="weather-radio" name="operation-mode" />
-        <label for="weather-radio">Weather</label>
+        <input type="checkbox" id="weather-checkbox" name="operation-mode" />
+        <label for="weather-checkbox">Weather</label>
         <br /><br />
-        <input type="radio" id="ticker-radio" name="operation-mode" />
-        <label for="ticker-radio">
+        <!-- <input type="checkbox" id="ticker-checkbox" name="operation-mode" />
+        <label for="ticker-checkbox">
           Ticker:
           <input
             type="text"
@@ -86,6 +92,9 @@
             required
           />
         </label>
+        <br /><br /> -->
+        <input type="checkbox" id="snake-checkbox" name="operation-mode" />
+        <label for="snake-checkbox">Snake</label>
         <br /><br />
       </fieldset>
       <input
@@ -177,7 +186,7 @@
           onclick="setCntl({ weatherUnits: document.querySelector('input[name=weather-units]:checked').value }); return false;"
         />
       </fieldset>
-      <br />
+      <!-- <br />
       <fieldset>
         <legend>API Key</legend>
         <label for="finazon-api-key">
@@ -194,7 +203,7 @@
           value="Set"
           onclick="setCntl({ finazonApiKey: document.getElementById('finazon-api-key').value }); return false;"
         />
-      </fieldset>
+      </fieldset> -->
     </form>
   </body>
 </html>

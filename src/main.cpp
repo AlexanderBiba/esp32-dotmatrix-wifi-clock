@@ -13,6 +13,7 @@
 #include "settings.h"
 #include "weather.h"
 #include "card.h"
+#include "snake.h"
 
 #define PRINT_CALLBACK 0
 #define DEBUG 1
@@ -24,6 +25,7 @@ AppServer *appServer;
 Renderer *renderer;
 Stock *stock;
 Weather *weather;
+Snake *snake;
 
 void setup(void)
 {
@@ -36,6 +38,7 @@ void setup(void)
   clk = new Clock(settings);
   weather = new Weather(settings);
   stock = new Stock(settings);
+  snake = new Snake(settings);
 }
 
 void handleControlRequest(char *requestBuffer)
@@ -89,10 +92,13 @@ void handleControlRequest(char *requestBuffer)
 
 void loop(void)
 {
+  // static Card *cards[] = {
+  //     new Card(OperationMode::CLOCK, 10000),
+  //     new Card(OperationMode::DATE, 5000),
+  //     new Card(OperationMode::WEATHER, 5000)};
   static Card *cards[] = {
-      new Card(OperationMode::CLOCK, 10000),
-      new Card(OperationMode::DATE, 5000),
-      new Card(OperationMode::WEATHER, 5000)};
+      new Card(OperationMode::SNAKE, 10000),
+  };
   static uint8_t currentState = 0;
   static OperationMode operationMode = cards[currentState]->getOperationMode();
 
@@ -143,7 +149,7 @@ void loop(void)
   }
 
   static long prevTime = 0;
-  if (reset || millis() - prevTime > 200)
+  if (reset || millis() - prevTime > 100)
   {
     prevTime = millis();
     switch (operationMode)
@@ -158,6 +164,9 @@ void loop(void)
       break;
     case OperationMode::WEATHER:
       renderer->setRaw(weather->getWeather());
+      break;
+    case OperationMode::SNAKE:
+      renderer->setRaw(snake->getSnake());
       break;
     case OperationMode::STOCK:
       renderer->setMessage(stock->getQuote());
