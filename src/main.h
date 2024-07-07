@@ -12,7 +12,10 @@ enum struct OperationMode
     DATE,
     STOCK,
     WEATHER,
-    SNAKE
+    SNAKE,
+    OPERATION_MODE_COUNT // This needs to be the last element because it is used to determine the number of elements in the enum
 };
+
+#define OPERATION_MODE_LENGTH static_cast<int>(OperationMode::OPERATION_MODE_COUNT)
 
 #endif

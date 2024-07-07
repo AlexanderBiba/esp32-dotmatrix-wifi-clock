@@ -57,9 +57,10 @@ void extractPayload(char *pStart, char *pEnd, char *buffer)
   *psz = '\0'; // terminate the string
 }
 
-AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFER_SIZE])
+AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFER_SIZE], boolean activeCards[OPERATION_MODE_LENGTH])
 {
   AppServer::RequestMode requestMode = AppServer::RequestMode::NONE;
+  boolean _activeCards[OPERATION_MODE_LENGTH] = {0};
 
   bool isValid = false;
   char *pStart, *pEnd, *psz = requestBuffer;
@@ -75,7 +76,8 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     if (pEnd != NULL)
     {
       extractPayload(pStart, pEnd, psz);
-      requestMode = AppServer::RequestMode::MESSAGE;
+      requestMode = AppServer::RequestMode::MODE;
+      _activeCards[static_cast<int>(OperationMode::MESSAGE)] = true;
       isValid = true;
     }
   }
@@ -85,7 +87,18 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
 
   if (pStart != NULL)
   {
-    requestMode = AppServer::RequestMode::CLOCK;
+    requestMode = AppServer::RequestMode::MODE;
+    _activeCards[static_cast<int>(OperationMode::CLOCK)] = true;
+    isValid = true;
+  }
+
+  // handle date mode
+  pStart = strstr(szMesg, "/&DATE");
+
+  if (pStart != NULL)
+  {
+    requestMode = AppServer::RequestMode::MODE;
+    _activeCards[static_cast<int>(OperationMode::DATE)] = true;
     isValid = true;
   }
 
@@ -94,24 +107,19 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
 
   if (pStart != NULL)
   {
-    requestMode = AppServer::RequestMode::WEATHER;
+    requestMode = AppServer::RequestMode::MODE;
+    _activeCards[static_cast<int>(OperationMode::WEATHER)] = true;
     isValid = true;
   }
 
-  // handle stock mode
-  pStart = strstr(szMesg, "/&TICKER");
+  // handle snake mode
+  pStart = strstr(szMesg, "/&SNAKE");
 
   if (pStart != NULL)
   {
-    pStart += 9; // skip to start of data
-    pEnd = strstr(pStart, "/&");
-
-    if (pEnd != NULL)
-    {
-      extractPayload(pStart, pEnd, psz);
-      requestMode = AppServer::RequestMode::STOCK;
-      isValid = true;
-    }
+    requestMode = AppServer::RequestMode::MODE;
+    _activeCards[static_cast<int>(OperationMode::SNAKE)] = true;
+    isValid = true;
   }
 
   // handle control mode
@@ -130,10 +138,18 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     }
   }
 
+  if (requestMode == AppServer::RequestMode::MODE)
+  {
+    for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
+    {
+      activeCards[i] = _activeCards[i];
+    }
+  }
+
   return requestMode;
 }
 
-AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_SIZE])
+AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_SIZE], boolean activeCards[OPERATION_MODE_LENGTH])
 {
   static enum { S_IDLE,
                 S_WAIT_CONN,
@@ -189,7 +205,7 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
 
   case S_EXTRACT: // extract data
     // Extract the string from the message if there is one
-    appRequestMode = extractHttpContent(szBuf, requestBuffer);
+    appRequestMode = extractHttpContent(szBuf, requestBuffer, activeCards);
     state = S_RESPONSE;
     break;
 

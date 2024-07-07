@@ -92,13 +92,12 @@ void handleControlRequest(char *requestBuffer)
 
 void loop(void)
 {
-  // static Card *cards[] = {
-  //     new Card(OperationMode::CLOCK, 10000),
-  //     new Card(OperationMode::DATE, 5000),
-  //     new Card(OperationMode::WEATHER, 5000)};
   static Card *cards[] = {
-      new Card(OperationMode::SNAKE, 10000),
-  };
+      new Card(OperationMode::CLOCK, 10000),
+      new Card(OperationMode::DATE, 5000),
+      new Card(OperationMode::WEATHER, 5000),
+      new Card(OperationMode::SNAKE, 5000),
+      new Card(OperationMode::MESSAGE, 5000)};
   static uint8_t currentState = 0;
   static OperationMode operationMode = cards[currentState]->getOperationMode();
 
@@ -108,33 +107,24 @@ void loop(void)
   static long cardSwitchTime = 5000;
   if (millis() - curCardTime > cardSwitchTime)
   {
-    printf("Switching card\n");
     curCardTime = millis();
-    currentState = (currentState + 1) % (sizeof(cards) / sizeof(cards[0]));
+    do
+    {
+      currentState = (currentState + 1) % (sizeof(cards) / sizeof(cards[0]));
+    } while (!settings->getActiveCards()[static_cast<int>(cards[currentState]->getOperationMode())]);
     operationMode = cards[currentState]->getOperationMode();
     cardSwitchTime = cards[currentState]->getCardSwitchTime();
-    printf("New card: %d\n", operationMode);
-    printf("New card switch time: %ld\n", cardSwitchTime);
   }
 
   static char requestBuffer[REQUEST_BUFFER_SIZE];
-  switch (appServer->handleWiFi(requestBuffer))
+  bool activeCards[OPERATION_MODE_LENGTH] = {0};
+  switch (appServer->handleWiFi(requestBuffer, activeCards))
   {
-  // case AppServer::RequestMode::MESSAGE:
-  //   operationMode = OperationMode::MESSAGE;
-  //   renderer->setMessage(requestBuffer);
-  //   break;
-  // case AppServer::RequestMode::CLOCK:
-  //   operationMode = OperationMode::CLOCK;
-  //   break;
-  // case AppServer::RequestMode::WEATHER:
-  //   operationMode = OperationMode::WEATHER;
-  //   break;
-  // case AppServer::RequestMode::STOCK:
-  //   operationMode = OperationMode::STOCK;
-  //   stock->setTicker(requestBuffer);
-  //   renderer->setMessage(">>");
-  //   break;
+  case AppServer::RequestMode::MODE:
+  {
+    settings->setActiveCards(activeCards);
+    break;
+  }
   case AppServer::RequestMode::CNTL:
     handleControlRequest(requestBuffer);
     break;
@@ -155,6 +145,7 @@ void loop(void)
     switch (operationMode)
     {
     case OperationMode::MESSAGE:
+      renderer->setMessage(requestBuffer);
       break;
     case OperationMode::CLOCK:
       renderer->setRaw(clk->getTime());
@@ -167,9 +158,6 @@ void loop(void)
       break;
     case OperationMode::SNAKE:
       renderer->setRaw(snake->getSnake());
-      break;
-    case OperationMode::STOCK:
-      renderer->setMessage(stock->getQuote());
       break;
     }
   }

@@ -15,6 +15,10 @@ AppSettings::AppSettings()
         settings.weather.latitude = INT_MAX;
         settings.weather.longitude = INT_MAX;
         settings.weather.units = 'f';
+        for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
+        {
+            settings.activeCards[i] = true;
+        }
         EEPROM.put(BASE_EEPROM_ADDR, settings);
         EEPROM.commit();
     }
@@ -59,5 +63,15 @@ void AppSettings::setWeatherUnits(char _units)
 {
     settings.weather.units = _units;
     EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, weather.units), settings.weather.units);
+    EEPROM.commit();
+}
+
+void AppSettings::setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH])
+{
+    for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
+    {
+        settings.activeCards[i] = _activeCards[i];
+    }
+    EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, activeCards), settings.activeCards);
     EEPROM.commit();
 }

@@ -12,18 +12,33 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         const form = document.getElementById("operation_mode_form");
         const request = new XMLHttpRequest();
 
-        if (form["message-radio"].checked) {
-          strLine = "&MSG=" + form["message-input"].value;
-        } else if (form["clk-radio"].checked) {
-          strLine = "&CLK";
-        } else if (form["weather-radio"].checked) {
-          strLine = "&WEATHER";
-        } else if (form["ticker-radio"].checked) {
-          strLine = "&TICKER=" + form["ticker-input"].value;
+        if (form["message-checkbox"].checked) {
+          const message = form["message-input"].value;
+          if (message.trim() === "") {
+            alert("Message cannot be empty when selected.");
+            return;
+          }
+          strLine += "/&MSG=" + message;
+        }
+        if (form["clk-checkbox"].checked) {
+          strLine += "/&CLK";
+        }
+        if (form["date-checkbox"].checked) {
+          strLine += "/&DATE";
+        }
+        if (form["weather-checkbox"].checked) {
+          strLine += "/&WEATHER";
+        }
+        if (form["snake-checkbox"].checked) {
+          strLine += "/&SNAKE";
         }
 
         request.open("GET", strLine + nocache, false);
-        request.send(null);
+        try {
+          request.send(null);
+        } catch (e) {
+          console.log(e);
+        }
       }
 
       function setCntl(settings) {
@@ -57,49 +72,41 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
   </head>
   <body>
     <h1>Set Mode Of Operation</h1>
-    <form id="operation_mode_form">
+    <form
+      id="operation_mode_form"
+      onsubmit="submitModeOfOperation(); return false;"
+    >
       <fieldset>
         <legend>Select Mode</legend>
-        <input type="radio" id="message-radio" name="operation-mode" />
-        <label for="message-radio">
+        <input type="checkbox" id="message-checkbox" name="operation-mode" />
+        <label for="message-checkbox">
           Message:
           <input
             type="text"
             id="message-input"
             name="message-input"
             maxlength="255"
-            required
           />
         </label>
         <br /><br />
-        <input type="radio" id="clk-radio" name="operation-mode" />
-        <label for="clk-radio">Clock</label>
+        <input type="checkbox" id="clk-checkbox" name="operation-mode" />
+        <label for="clk-checkbox">Clock</label>
         <br /><br />
-        <input type="radio" id="weather-radio" name="operation-mode" />
-        <label for="weather-radio">Weather</label>
+        <input type="checkbox" id="date-checkbox" name="operation-mode" />
+        <label for="date-checkbox">Date</label>
         <br /><br />
-        <input type="radio" id="ticker-radio" name="operation-mode" />
-        <label for="ticker-radio">
-          Ticker:
-          <input
-            type="text"
-            id="ticker-input"
-            name="ticker-input"
-            maxlength="255"
-            required
-          />
-        </label>
+        <input type="checkbox" id="weather-checkbox" name="operation-mode" />
+        <label for="weather-checkbox">Weather</label>
+        <br /><br />
+        <input type="checkbox" id="snake-checkbox" name="operation-mode" />
+        <label for="snake-checkbox">Snake</label>
         <br /><br />
       </fieldset>
-      <input
-        type="submit"
-        value="Submit"
-        onclick="submitModeOfOperation(); return false;"
-      />
+      <input type="submit" value="Submit" />
     </form>
 
     <h1>Settings</h1>
-    <form id="settings_form">
+    <form id="settings_form" onsubmit="setCntl(); return false;">
       <fieldset>
         <legend>General Settings</legend>
         <label for="timezone">
@@ -109,7 +116,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         <input
           type="submit"
           value="Set"
-          onclick="setCntl({ timezone: document.getElementById('timezone').value }); return false;"
+          onsubmit="setCntl({ timezone: document.getElementById('timezone').value }); return false;"
         />
         <br /><br />
         <label for="brightness">
@@ -126,7 +133,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         <input
           type="submit"
           value="Set"
-          onclick="setCntl({ brightness: document.getElementById('brightness').value }); return false;"
+          onsubmit="setCntl({ brightness: document.getElementById('brightness').value }); return false;"
         />
       </fieldset>
       <br />
@@ -154,7 +161,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         <input
           type="submit"
           value="Set"
-          onclick="setCntl({ latitude: document.getElementById('weather-latitude').value, longitude: document.getElementById('weather-longitude').value }); return false;"
+          onsubmit="setCntl({ latitude: document.getElementById('weather-latitude').value, longitude: document.getElementById('weather-longitude').value }); return false;"
         />
         <br /><br />
         <label>
@@ -177,25 +184,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         <input
           type="submit"
           value="Set"
-          onclick="setCntl({ weatherUnits: document.querySelector('input[name=weather-units]:checked').value }); return false;"
-        />
-      </fieldset>
-      <br />
-      <fieldset>
-        <legend>API Key</legend>
-        <label for="finazon-api-key">
-          Finazon.io API Key:
-          <input
-            id="finazon-api-key"
-            name="finazon-api-key"
-            maxlength="255"
-            required
-          />
-        </label>
-        <input
-          type="submit"
-          value="Set"
-          onclick="setCntl({ finazonApiKey: document.getElementById('finazon-api-key').value }); return false;"
+          onsubmit="setCntl({ weatherUnits: document.querySelector('input[name=weather-units]:checked').value }); return false;"
         />
       </fieldset>
     </form>

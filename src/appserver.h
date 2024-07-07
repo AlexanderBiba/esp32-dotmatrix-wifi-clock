@@ -11,16 +11,13 @@ public:
     enum struct RequestMode
     {
         NONE,
-        MESSAGE,
-        CLOCK,
-        STOCK,
-        WEATHER,
+        MODE,
         CNTL
     };
 
     AppServer();
     void setupWiFi(char *localIp);
-    RequestMode handleWiFi(char requestBuffer[1024]);
+    RequestMode handleWiFi(char requestBuffer[1024], boolean activeCards[OPERATION_MODE_LENGTH]);
     void getLocalIp(char localIp[64]);
 
 private:

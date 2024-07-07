@@ -2,14 +2,13 @@
 #define APP_SETTINGS
 
 #include "Arduino.h"
+#include "main.h"
 
 #define TIMEZONE_BUFFER_SIZE 128
 #define STOCK_API_KEY_BUFFER_SIZE 128
 
 #define MAGIC_NUMBER 0x5A
 #define BASE_EEPROM_ADDR 0
-
-;
 
 class AppSettings
 {
@@ -22,6 +21,7 @@ public:
     void setLatitude(float _latitude);
     void setLongitude(float _longitude);
     void setWeatherUnits(char _units);
+    void setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH]);
 
     uint8_t getBrightness() { return settings.display.brightness; }
     const char *getTimezone() { return settings.time.timezone; }
@@ -29,6 +29,7 @@ public:
     float getLatitude() { return settings.weather.latitude; }
     float getLongitude() { return settings.weather.longitude; }
     char getWeatherUnits() { return settings.weather.units; }
+    bool *getActiveCards() { return settings.activeCards; }
 
 private:
     struct _AppSettings
@@ -52,6 +53,7 @@ private:
             float longitude;
             char units;
         } weather;
+        bool activeCards[OPERATION_MODE_LENGTH];
     } settings;
 };
 
