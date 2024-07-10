@@ -10,7 +10,6 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         let strLine = "";
         const nocache = "/&nocache=" + Math.random() * 1000000;
         const form = document.getElementById("operation_mode_form");
-        const request = new XMLHttpRequest();
 
         if (form["message-checkbox"].checked) {
           const message = form["message-input"].value;
@@ -33,21 +32,13 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
           strLine += "/&SNAKE";
         }
 
-        request.open("GET", strLine + nocache, false);
-        try {
-          request.send(null);
-        } catch (e) {
-          console.log(e);
-        }
+        fetch(strLine + nocache);
       }
 
       function setCntl(settings) {
         const strLine = `&CNTL=${encodeURI(JSON.stringify(settings))}`;
         const nocache = "/&nocache=" + Math.random() * 1000000;
-        const request = new XMLHttpRequest();
-
-        request.open("GET", strLine + nocache, false);
-        request.send(null);
+        fetch(strLine + nocache);
       }
 
       function populateTimezones() {
@@ -137,7 +128,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         <input
           type="submit"
           value="Set"
-          onsubmit="setCntl({ timezone: document.getElementById('timezone').value }); return false;"
+          onclick="setCntl({ timezone: document.getElementById('timezone').value });"
         />
         <br /><br />
         <label for="brightness">
@@ -154,7 +145,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         <input
           type="submit"
           value="Set"
-          onsubmit="setCntl({ brightness: document.getElementById('brightness').value }); return false;"
+          onclick="setCntl({ brightness: document.getElementById('brightness').value });"
         />
       </fieldset>
       <br />
@@ -182,7 +173,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         <input
           type="submit"
           value="Set"
-          onsubmit="setCntl({ latitude: document.getElementById('weather-latitude').value, longitude: document.getElementById('weather-longitude').value }); return false;"
+          onclick="setCntl({ latitude: document.getElementById('weather-latitude').value, longitude: document.getElementById('weather-longitude').value });"
         />
         <br /><br />
         <label>
@@ -205,7 +196,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         <input
           type="submit"
           value="Set"
-          onsubmit="setCntl({ weatherUnits: document.querySelector('input[name=weather-units]:checked').value }); return false;"
+          onclick="setCntl({ weatherUnits: document.querySelector('input[name=weather-units]:checked').value });"
         />
       </fieldset>
     </form>
