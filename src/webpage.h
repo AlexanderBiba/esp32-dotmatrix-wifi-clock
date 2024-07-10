@@ -20,7 +20,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
           }
           strLine += "/&MSG=" + message;
         }
-        if (form["clk-checkbox"].checked) {
+        if (form["clock-checkbox"].checked) {
           strLine += "/&CLK";
         }
         if (form["date-checkbox"].checked) {
@@ -65,8 +65,29 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
           .catch((error) => console.error("Error fetching timezones:", error));
       }
 
+      function getSettings() {
+        fetch("/&SETT")
+          .then((response) => response.json())
+          .then((data) => {
+            document.getElementById("timezone").value = data.timezone;
+            document.getElementById("brightness").value = data.brightness;
+            document.getElementById("weather-latitude").value = data.latitude;
+            document.getElementById("weather-longitude").value = data.longitude;
+            document.querySelector(
+              `input[name=weather-units][value=${data.weatherUnits}]`
+            ).checked = true;
+            data.activeCards.forEach((card) => {
+              document.getElementById(
+                `${card.toLowerCase()}-checkbox`
+              ).checked = true;
+            });
+          })
+          .catch((error) => console.error("Error fetching settings:", error));
+      }
+
       window.onload = function () {
         populateTimezones();
+        getSettings();
       };
     </script>
   </head>
@@ -89,8 +110,8 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
           />
         </label>
         <br /><br />
-        <input type="checkbox" id="clk-checkbox" name="operation-mode" />
-        <label for="clk-checkbox">Clock</label>
+        <input type="checkbox" id="clock-checkbox" name="operation-mode" />
+        <label for="clock-checkbox">Clock</label>
         <br /><br />
         <input type="checkbox" id="date-checkbox" name="operation-mode" />
         <label for="date-checkbox">Date</label>

@@ -2,12 +2,14 @@
 #include <WiFi.h>
 #include <WiFiManager.h>
 #include <ESPmDNS.h>
+#include <ArduinoJson.h>
 
 #include "appserver.h"
 #include "webpage.h"
 
 #define MDNS_DOMAIN "digiclk"
-AppServer::AppServer()
+
+AppServer::AppServer(AppSettings *settings) : settings(settings)
 {
   server = new WiFiServer(80);
 
@@ -62,8 +64,15 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
   AppServer::RequestMode requestMode = AppServer::RequestMode::NONE;
   boolean _activeCards[OPERATION_MODE_LENGTH] = {0};
 
-  bool isValid = false;
   char *pStart, *pEnd, *psz = requestBuffer;
+
+  // handle get settings
+  pStart = strstr(szMesg, "/&SETT");
+
+  if (pStart != NULL)
+  {
+    requestMode = AppServer::RequestMode::SETT;
+  }
 
   // handle message mode
   pStart = strstr(szMesg, "/&MSG=");
@@ -78,7 +87,6 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
       extractPayload(pStart, pEnd, psz);
       requestMode = AppServer::RequestMode::MODE;
       _activeCards[static_cast<int>(OperationMode::MESSAGE)] = true;
-      isValid = true;
     }
   }
 
@@ -89,7 +97,6 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
   {
     requestMode = AppServer::RequestMode::MODE;
     _activeCards[static_cast<int>(OperationMode::CLOCK)] = true;
-    isValid = true;
   }
 
   // handle date mode
@@ -99,7 +106,6 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
   {
     requestMode = AppServer::RequestMode::MODE;
     _activeCards[static_cast<int>(OperationMode::DATE)] = true;
-    isValid = true;
   }
 
   // handle weather mode
@@ -109,7 +115,6 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
   {
     requestMode = AppServer::RequestMode::MODE;
     _activeCards[static_cast<int>(OperationMode::WEATHER)] = true;
-    isValid = true;
   }
 
   // handle snake mode
@@ -119,7 +124,6 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
   {
     requestMode = AppServer::RequestMode::MODE;
     _activeCards[static_cast<int>(OperationMode::SNAKE)] = true;
-    isValid = true;
   }
 
   // handle control mode
@@ -134,7 +138,6 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     {
       extractPayload(pStart, pEnd, psz);
       requestMode = AppServer::RequestMode::CNTL;
-      isValid = true;
     }
   }
 
@@ -161,6 +164,9 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
   static uint16_t idxBuf = 0;
   static WiFiClient client;
   static uint32_t timeStart;
+  static char responseBuffer[1024];
+  static const char *responseHeader;
+  static const char *response = WebPage;
 
   RequestMode appRequestMode = RequestMode::NONE;
 
@@ -206,13 +212,26 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
   case S_EXTRACT: // extract data
     // Extract the string from the message if there is one
     appRequestMode = extractHttpContent(szBuf, requestBuffer, activeCards);
+    if (appRequestMode == RequestMode::NONE)
+    {
+      responseHeader = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n";
+      response = WebPage;
+    }
+    else if (appRequestMode == RequestMode::SETT)
+    {
+      JsonDocument doc;
+      settings->toJson(doc);
+      serializeJson(doc, responseBuffer);
+      responseHeader = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
+      response = responseBuffer;
+    }
     state = S_RESPONSE;
     break;
 
   case S_RESPONSE: // send the response to the client
     // Return the response to the client (web page)
-    client.print("HTTP/1.1 200 OK\nContent-Type: text/html\n\n");
-    client.print(WebPage);
+    client.print(responseHeader);
+    client.print(response);
     state = S_DISCONN;
     break;
 

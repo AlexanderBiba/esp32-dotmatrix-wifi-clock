@@ -1,7 +1,9 @@
 #ifndef APP_SETTINGS
 #define APP_SETTINGS
 
-#include "Arduino.h"
+#include <Arduino.h>
+#include <ArduinoJson.h>
+
 #include "main.h"
 
 #define TIMEZONE_BUFFER_SIZE 128
@@ -30,6 +32,8 @@ public:
     float getLongitude() { return settings.weather.longitude; }
     char getWeatherUnits() { return settings.weather.units; }
     bool *getActiveCards() { return settings.activeCards; }
+
+    void toJson(JsonDocument &doc);
 
 private:
     struct _AppSettings

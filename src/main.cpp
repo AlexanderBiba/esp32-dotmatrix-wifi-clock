@@ -33,7 +33,7 @@ void setup(void)
   EEPROM.begin(0x400);
 
   settings = new AppSettings();
-  appServer = new AppServer();
+  appServer = new AppServer(settings);
   renderer = new Renderer(settings);
   clk = new Clock(settings);
   weather = new Weather(settings);
@@ -79,11 +79,8 @@ void handleControlRequest(char *requestBuffer)
     settings->setWeatherUnits(!strcmp(doc["weatherUnits"], "c") ? 'c' : 'f');
     updateWeather = true;
   }
-  if (doc.containsKey("finazonApiKey"))
-  {
-    settings->setStockApiKey(doc["finazonApiKey"]);
-  }
 
+  // updarte weather if required
   if (updateWeather)
   {
     weather->updateWeatherData();

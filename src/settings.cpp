@@ -1,4 +1,6 @@
 #include <EEPROM.h>
+#include <Arduino.h>
+#include <ArduinoJson.h>
 
 #include "settings.h"
 
@@ -74,4 +76,21 @@ void AppSettings::setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH])
     }
     EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, activeCards), settings.activeCards);
     EEPROM.commit();
+}
+
+void AppSettings::toJson(JsonDocument &doc)
+{
+    doc["timezone"] = settings.time.timezone;
+    doc["brightness"] = settings.display.brightness;
+    doc["latitude"] = settings.weather.latitude;
+    doc["longitude"] = settings.weather.longitude;
+    doc["weatherUnits"] = settings.weather.units == 'f' ? "f" : "c";
+    doc["activeCards"].to<JsonArray>();
+    for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
+    {
+        if (settings.activeCards[i])
+        {
+            doc["activeCards"].add(OperationModeStr[i]);
+        }
+    }
 }
