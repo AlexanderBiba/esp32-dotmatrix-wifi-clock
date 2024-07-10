@@ -14,6 +14,7 @@
 #include "weather.h"
 #include "card.h"
 #include "snake.h"
+#include "buzzer.h"
 
 #define PRINT_CALLBACK 0
 #define DEBUG 1
@@ -26,6 +27,7 @@ Renderer *renderer;
 Stock *stock;
 Weather *weather;
 Snake *snake;
+Buzzer *buzzer;
 
 void setup(void)
 {
@@ -39,6 +41,7 @@ void setup(void)
   weather = new Weather(settings);
   stock = new Stock(settings);
   snake = new Snake(settings);
+  buzzer = new Buzzer(settings);
 }
 
 void handleControlRequest(char *requestBuffer)
@@ -79,6 +82,10 @@ void handleControlRequest(char *requestBuffer)
     settings->setWeatherUnits(!strcmp(doc["weatherUnits"], "c") ? 'c' : 'f');
     updateWeather = true;
   }
+  if (doc.containsKey("alarmHour") && doc.containsKey("alarmMinute") && doc.containsKey("alarmEnabled"))
+  {
+    settings->setAlarm(doc["alarmHour"], doc["alarmMinute"], doc["alarmEnabled"]);
+  }
 
   // updarte weather if required
   if (updateWeather)
@@ -100,6 +107,7 @@ void loop(void)
 
   OperationMode prevOperationMode = operationMode;
 
+  // card switching logic
   static long curCardTime = 0;
   static long cardSwitchTime = 5000;
   if (millis() - curCardTime > cardSwitchTime)
@@ -113,10 +121,16 @@ void loop(void)
     cardSwitchTime = cards[currentState]->getCardSwitchTime();
   }
 
+  // handle control requests
   static char requestBuffer[REQUEST_BUFFER_SIZE];
   bool activeCards[OPERATION_MODE_LENGTH] = {0};
   switch (appServer->handleWiFi(requestBuffer, activeCards))
   {
+  case AppServer::RequestMode::STOP:
+  {
+    buzzer->stop();
+    break;
+  }
   case AppServer::RequestMode::MODE:
   {
     settings->setActiveCards(activeCards);
@@ -129,6 +143,17 @@ void loop(void)
     break;
   }
 
+  // handle buzzer
+  if (settings->getAlarmEnabled())
+  {
+    AlarmTime currentTime = clk->getTimeStruct();
+    if (currentTime.hour == settings->getAlarmHour() && currentTime.minute == settings->getAlarmMinute())
+    {
+      buzzer->beep();
+    }
+  }
+
+  // handle cards
   bool reset = prevOperationMode != operationMode;
   if (reset)
   {
@@ -159,5 +184,6 @@ void loop(void)
     }
   }
 
+  // scroll if required
   renderer->scrollText();
 }

@@ -21,6 +21,9 @@ AppSettings::AppSettings()
         {
             settings.activeCards[i] = true;
         }
+        settings.alarm.hour = 8;
+        settings.alarm.minute = 0;
+        settings.alarm.enabled = false;
         EEPROM.put(BASE_EEPROM_ADDR, settings);
         EEPROM.commit();
     }
@@ -78,6 +81,15 @@ void AppSettings::setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH])
     EEPROM.commit();
 }
 
+void AppSettings::setAlarm(uint8_t _hour, uint8_t _minute, bool _enabled)
+{
+    settings.alarm.hour = _hour;
+    settings.alarm.minute = _minute;
+    settings.alarm.enabled = _enabled;
+    EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, alarm), settings.alarm);
+    EEPROM.commit();
+}
+
 void AppSettings::toJson(JsonDocument &doc)
 {
     doc["timezone"] = settings.time.timezone;
@@ -93,4 +105,7 @@ void AppSettings::toJson(JsonDocument &doc)
             doc["activeCards"].add(OperationModeStr[i]);
         }
     }
+    doc["alarmHour"] = settings.alarm.hour;
+    doc["alarmMinute"] = settings.alarm.minute;
+    doc["alarmEnabled"] = settings.alarm.enabled;
 }

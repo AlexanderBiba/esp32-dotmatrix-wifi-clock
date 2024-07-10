@@ -24,6 +24,7 @@ public:
     void setLongitude(float _longitude);
     void setWeatherUnits(char _units);
     void setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH]);
+    void setAlarm(uint8_t _hour, uint8_t _minute, bool _enabled);
 
     uint8_t getBrightness() { return settings.display.brightness; }
     const char *getTimezone() { return settings.time.timezone; }
@@ -32,6 +33,9 @@ public:
     float getLongitude() { return settings.weather.longitude; }
     char getWeatherUnits() { return settings.weather.units; }
     bool *getActiveCards() { return settings.activeCards; }
+    uint8_t getAlarmHour() { return settings.alarm.hour; }
+    uint8_t getAlarmMinute() { return settings.alarm.minute; }
+    bool getAlarmEnabled() { return settings.alarm.enabled; }
 
     void toJson(JsonDocument &doc);
 
@@ -58,6 +62,12 @@ private:
             char units;
         } weather;
         bool activeCards[OPERATION_MODE_LENGTH];
+        struct
+        {
+            uint8_t hour;
+            uint8_t minute;
+            bool enabled;
+        } alarm;
     } settings;
 };
 

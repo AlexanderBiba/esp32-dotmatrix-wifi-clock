@@ -66,6 +66,14 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
 
   char *pStart, *pEnd, *psz = requestBuffer;
 
+  // handle stop alarm
+  pStart = strstr(szMesg, "/&STOP");
+
+  if (pStart != NULL)
+  {
+    requestMode = AppServer::RequestMode::STOP;
+  }
+
   // handle get settings
   pStart = strstr(szMesg, "/&SETT");
 

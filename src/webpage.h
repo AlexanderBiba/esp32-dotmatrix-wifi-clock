@@ -36,6 +36,16 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
       }
 
       function setCntl(settings) {
+        for (const key in settings) {
+          if (
+            settings[key] === "" ||
+            settings[key] === undefined ||
+            settings[key] === null
+          ) {
+            alert("Please fill out all fields.");
+            return;
+          }
+        }
         const strLine = `&CNTL=${encodeURI(JSON.stringify(settings))}`;
         const nocache = "/&nocache=" + Math.random() * 1000000;
         fetch(strLine + nocache);
@@ -72,6 +82,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 `${card.toLowerCase()}-checkbox`
               ).checked = true;
             });
+            document.getElementById("alarm-hour").value = data.alarmHour;
+            document.getElementById("alarm-minute").value = data.alarmMinute;
+            document.getElementById("alarm-enabled").checked =
+              data.alarmEnabled;
           })
           .catch((error) => console.error("Error fetching settings:", error));
       }
@@ -139,7 +153,6 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             name="brightness"
             min="0"
             max="15"
-            required
           />
         </label>
         <input
@@ -155,11 +168,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
           Weather Location:
           <label
             >Latitude:
-            <input
-              id="weather-latitude"
-              name="weather-latitude"
-              maxlength="32"
-              required
+            <input id="weather-latitude" name="weather-latitude" maxlength="32"
           /></label>
           <label
             >Longitude:
@@ -167,7 +176,6 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
               id="weather-longitude"
               name="weather-longitude"
               maxlength="32"
-              required
           /></label>
         </label>
         <input
@@ -183,14 +191,12 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             id="celsius-radio"
             name="weather-units"
             value="c"
-            required
           /><label for="celsius-radio">Celsius</label>
           <input
             type="radio"
             id="fahrenheit-radio"
             name="weather-units"
             value="f"
-            required
           /><label for="fahrenheit-radio">Fahrenheit</label>
         </label>
         <input
@@ -198,6 +204,42 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
           value="Set"
           onclick="setCntl({ weatherUnits: document.querySelector('input[name=weather-units]:checked').value });"
         />
+      </fieldset>
+      <br />
+      <fieldset>
+        <legend>Alarm Settings</legend>
+        <label for="alarm-hour">Alarm Hour:</label>
+        <input
+          type="number"
+          id="alarm-hour"
+          name="alarm-hour"
+          min="0"
+          max="23"
+        />
+        <br /><br />
+        <label for="alarm-minute">Alarm Minute:</label>
+        <input
+          type="number"
+          id="alarm-minute"
+          name="alarm-minute"
+          min="0"
+          max="59"
+        />
+        <br /><br />
+        <input type="checkbox" id="alarm-enabled" name="alarm-enabled" />
+        <label for="alarm-enabled">Enable Alarm</label>
+        <br /><br />
+        <input
+          type="submit"
+          value="Set Alarm"
+          onclick="setCntl({
+            alarmHour: document.getElementById('alarm-hour').value,
+            alarmMinute: document.getElementById('alarm-minute').value,
+            alarmEnabled: document.getElementById('alarm-enabled').checked
+          });"
+        />
+        <br /><br />
+        <input type="button" value="Stop Alarm" onclick="fetch('/&STOP');" />
       </fieldset>
     </form>
   </body>

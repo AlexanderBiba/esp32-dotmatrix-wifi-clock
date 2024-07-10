@@ -40,6 +40,18 @@ void Clock::updateTime()
   loadClockBitmap();
 }
 
+AlarmTime Clock::getTimeStruct()
+{
+  static unsigned long currTime = millis();
+  if (millis() - currTime > 1000)
+  {
+    currTime = millis();
+    static char timeBuffer[TIME_BUFFER_SIZE] = {0};
+    tm *timeStruct = gmtime(&currentTime);
+    return {timeStruct->tm_hour, timeStruct->tm_min};
+  }
+}
+
 void Clock::loadDateBitmap()
 {
   static char timeBuffer[TIME_BUFFER_SIZE] = {0};

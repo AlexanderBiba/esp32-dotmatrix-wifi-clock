@@ -14,7 +14,8 @@ public:
         NONE,
         MODE,
         CNTL,
-        SETT
+        SETT,
+        STOP
     };
 
     AppServer(AppSettings *settings);
