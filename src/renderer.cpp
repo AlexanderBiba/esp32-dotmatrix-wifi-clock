@@ -6,10 +6,20 @@
 #include "settings.h"
 #include "charmaps.h"
 
+#define ESP32S2_PINOUT 1
+
 // GPIO pins
+#ifdef ESP32_PINOUT
 #define CLK_PIN 14  // VSPI_SCK
 #define DATA_PIN 13 // VSPI_MOSI
 #define CS_PIN 12   // VSPI_SS
+#endif
+
+#ifdef ESP32S2_PINOUT
+#define CLK_PIN 33  // VSPI_SCK
+#define DATA_PIN 16 // VSPI_MOSI
+#define CS_PIN 18   // VSPI_SS
+#endif
 
 static std::function<uint8_t(uint8_t, MD_MAX72XX::transformType_t)> lambdaHolder;
 uint8_t lambdaWrapper(uint8_t dev, MD_MAX72XX::transformType_t t)
@@ -226,7 +236,8 @@ uint8_t *Renderer::loadStringToBitmap(const char *str, uint8_t *bitmap, bool sma
   uint8_t *curr = bitmap;
   for (int i = 0; i < length; ++i)
   {
-    if (str[i] == ' ') {
+    if (str[i] == ' ')
+    {
       *curr++ = 0;
       *curr++ = 0;
     }

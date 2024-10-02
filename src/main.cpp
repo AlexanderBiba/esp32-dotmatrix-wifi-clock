@@ -31,6 +31,7 @@ Buzzer *buzzer;
 
 void setup(void)
 {
+  // No printf here. For some reason nothing is printed during setup.
   Serial.begin(115200);
   EEPROM.begin(0x400);
 
