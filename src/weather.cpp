@@ -67,13 +67,24 @@ bool Weather::updateWeatherData()
 
   WiFiClientSecure wifiClient;
   wifiClient.setInsecure();
+  
+  // Set timeout for the client
+  wifiClient.setTimeout(10000); // 10 second timeout
+  
   HttpClient client = HttpClient(wifiClient, "api.open-meteo.com", 443);
   char url[128] = {0};
-  sprintf(url,
+  int urlLen = snprintf(url, sizeof(url),
           "/v1/forecast?latitude=%lf&longitude=%lf&temperature_unit=%s&current=temperature",
           settings->getLatitude(),
           settings->getLongitude(),
           settings->getWeatherUnits() == 'c' ? "celsius" : "fahrenheit");
+  
+  // Check if URL was truncated
+  if (urlLen >= sizeof(url)) {
+    printf("URL too long, truncated\n");
+    return false;
+  }
+  
   client.get(url);
   int statusCode = client.responseStatusCode();
   String response = client.responseBody();
@@ -81,6 +92,11 @@ bool Weather::updateWeatherData()
   if (statusCode == 429)
   {
     Serial.println("Rate limited");
+    return false;
+  }
+  
+  if (statusCode != 200) {
+    printf("Weather API error: %d\n", statusCode);
     return false;
   }
 
@@ -92,6 +108,12 @@ bool Weather::updateWeatherData()
   if (error)
   {
     printf("deserializeJson() failed: %s\n", error.f_str());
+    return false;
+  }
+
+  // Validate response structure
+  if (!doc.containsKey("current") || !doc["current"].containsKey("temperature")) {
+    printf("Invalid weather data structure\n");
     return false;
   }
 

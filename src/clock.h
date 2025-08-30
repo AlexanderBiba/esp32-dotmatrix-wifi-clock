@@ -9,11 +9,7 @@
 #define MMDD_DATE_FORMAT 1
 #define SMALL_SECONDS_CLOCK 1
 
-typedef struct
-{
-    uint8_t hour;
-    uint8_t minute;
-} AlarmTime;
+// AlarmTime struct removed - was tied to buzzer functionality
 
 class Clock
 {
@@ -24,7 +20,7 @@ public:
     void updateTime();
     void loadClockBitmap();
     void loadDateBitmap();
-    AlarmTime getTimeStruct();
+    // getTimeStruct() method removed - was tied to buzzer functionality
 
 private:
     AppSettings *settings;

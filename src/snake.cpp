@@ -3,14 +3,20 @@
 void Snake::initBitmap()
 {
     memset(occupied, false, sizeof(occupied));
-
-    uint8_t head_x;
-    uint8_t head_y;
+    
+    // Initialize food position first
+    food_x = random(0, RAW_SNAKE_BITMAP_SIZE);
+    food_y = random(0, 8);
+    
+    // Initialize head position, ensuring it's different from food
+    uint8_t head_x = random(0, RAW_SNAKE_BITMAP_SIZE);
+    uint8_t head_y = random(0, 8);
     while (head_x == food_x && head_y == food_y)
     {
-        uint8_t head_x = random(0, RAW_SNAKE_BITMAP_SIZE);
-        uint8_t head_y = random(0, 8);
+        head_x = random(0, RAW_SNAKE_BITMAP_SIZE);
+        head_y = random(0, 8);
     }
+    
     head = new Node(head_x, head_y);
     tail = head;
 
@@ -25,11 +31,28 @@ void Snake::initBitmap()
     bitmap[head->x] = 1 << head->y;
 }
 
+void Snake::cleanupSnake()
+{
+    Node* current = head;
+    while (current != nullptr)
+    {
+        Node* next = current->next;
+        delete current;
+        current = next;
+    }
+    head = nullptr;
+    tail = nullptr;
+}
+
 boolean Snake::moveSnake(Direction direction)
 {
     printf("direction: %d, head->x: %d, head->y: %d\n", direction, head->x, head->y);
     printf("direction: %d, tail->x: %d, tail->y: %d\n", direction, tail->x, tail->y);
-    occupied[tail->x][tail->y] = false;
+    
+    // Check bounds and collisions first
+    uint8_t new_x = head->x;
+    uint8_t new_y = head->y;
+    
     switch (direction)
     {
     case UP:
@@ -37,62 +60,60 @@ boolean Snake::moveSnake(Direction direction)
         {
             return false;
         }
+        new_y = head->y + 1;
         break;
     case DOWN:
         if (head->y == 0 || occupied[head->x][head->y - 1])
         {
             return false;
         }
+        new_y = head->y - 1;
         break;
     case LEFT:
         if (head->x == 0 || occupied[head->x - 1][head->y])
         {
             return false;
         }
+        new_x = head->x - 1;
         break;
     case RIGHT:
         if (head->x == (RAW_SNAKE_BITMAP_SIZE - 1) || occupied[head->x + 1][head->y])
         {
             return false;
         }
+        new_x = head->x + 1;
         break;
     }
 
-    Node *temp = head;
-    head = new Node(head->x, head->y);
-    head->next = temp;
-    head->next->prev = head;
-
-    switch (direction)
-    {
-    case UP:
-        head->y++;
-        break;
-    case DOWN:
-        head->y--;
-        break;
-    case LEFT:
-        head->x--;
-        break;
-    case RIGHT:
-        head->x++;
-        break;
+    // Create new head
+    Node *newHead = new Node(new_x, new_y);
+    newHead->next = head;
+    if (head) {
+        head->prev = newHead;
     }
+    head = newHead;
+
+    // Update bitmap and occupied array
+    bitmap[head->x] |= 1 << head->y;
+    occupied[head->x][head->y] = true;
+
     if (grow)
     {
         grow = false;
     }
     else
     {
+        // Remove tail
         bitmap[tail->x] &= ~(1 << tail->y);
-        temp = tail;
-        tail = tail->prev;
-        tail->next = nullptr;
-        delete temp;
+        occupied[tail->x][tail->y] = false;
+        
+        if (tail->prev) {
+            tail->prev->next = nullptr;
+            Node* oldTail = tail;
+            tail = tail->prev;
+            delete oldTail;
+        }
     }
-    bitmap[head->x] |= 1 << head->y;
-
-    occupied[head->x][head->y] = true;
 
     return true;
 }
@@ -164,13 +185,8 @@ uint8_t *Snake::getSnake()
         }
 
         printf("failed to move at all\n");
-        while (head->next)
-        {
-            Node *temp = head;
-            head = head->next;
-            delete temp;
-        }
-        delete head;
+        // Clean up and restart
+        cleanupSnake();
         initBitmap();
     }
 

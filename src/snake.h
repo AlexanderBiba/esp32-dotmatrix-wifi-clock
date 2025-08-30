@@ -20,6 +20,7 @@ class Snake
 {
 public:
     Snake(AppSettings *settings) : settings(settings) { initBitmap(); };
+    ~Snake() { cleanupSnake(); }; // Add destructor to prevent memory leaks
     uint8_t *getSnake();
 
 private:
@@ -27,7 +28,7 @@ private:
     uint8_t bitmap[RAW_SNAKE_BITMAP_SIZE];
 
     // uint8_t food_x = 0;
-    // uint8_t food_y = 0;
+    // uint8_t food_x = random(0, RAW_SNAKE_BITMAP_SIZE);
     uint8_t food_x = random(0, RAW_SNAKE_BITMAP_SIZE);
     uint8_t food_y = random(0, 8);
 
@@ -46,6 +47,7 @@ private:
     boolean grow = false;
 
     void initBitmap();
+    void cleanupSnake(); // Add cleanup method
     boolean occupied[RAW_SNAKE_BITMAP_SIZE][8] = {0};
 };
 

@@ -40,10 +40,12 @@ uint8_t htoi(char c)
 void extractPayload(char *pStart, char *pEnd, char *buffer)
 {
   char *psz = buffer;
+  size_t bufferSize = REQUEST_BUFFER_SIZE;
+  size_t remainingSpace = bufferSize;
 
-  while (pStart != pEnd)
+  while (pStart != pEnd && remainingSpace > 1)
   {
-    if ((*pStart == '%') && isxdigit(*(pStart + 1)))
+    if ((*pStart == '%') && isxdigit(*(pStart + 1)) && remainingSpace > 2)
     {
       // replace %xx hex code with the ASCII character
       char c = 0;
@@ -51,12 +53,40 @@ void extractPayload(char *pStart, char *pEnd, char *buffer)
       c += (htoi(*pStart++) << 4);
       c += htoi(*pStart++);
       *psz++ = c;
+      remainingSpace--;
+    }
+    else if (remainingSpace > 1)
+    {
+      *psz++ = *pStart++;
+      remainingSpace--;
     }
     else
-      *psz++ = *pStart++;
+    {
+      break; // Buffer full, stop processing
+    }
   }
 
   *psz = '\0'; // terminate the string
+}
+
+const char* formatUptime(unsigned long uptime) {
+  static char uptimeString[32];
+  unsigned long seconds = uptime / 1000;
+  unsigned long minutes = seconds / 60;
+  unsigned long hours = minutes / 60;
+  unsigned long days = hours / 24;
+  
+  if (days > 0) {
+    snprintf(uptimeString, sizeof(uptimeString), "%ldd %ldh %ldm", days, hours % 24, minutes % 60);
+  } else if (hours > 0) {
+    snprintf(uptimeString, sizeof(uptimeString), "%ldh %ldm %lds", hours, minutes % 60, seconds % 60);
+  } else if (minutes > 0) {
+    snprintf(uptimeString, sizeof(uptimeString), "%ldm %lds", minutes, seconds % 60);
+  } else {
+    snprintf(uptimeString, sizeof(uptimeString), "%lds", seconds);
+  }
+  
+  return uptimeString;
 }
 
 AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFER_SIZE], boolean activeCards[OPERATION_MODE_LENGTH])
@@ -66,13 +96,7 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
 
   char *pStart, *pEnd, *psz = requestBuffer;
 
-  // handle stop alarm
-  pStart = strstr(szMesg, "/&STOP");
-
-  if (pStart != NULL)
-  {
-    requestMode = AppServer::RequestMode::STOP;
-  }
+  // STOP request handling removed - was tied to buzzer functionality
 
   // handle get settings
   pStart = strstr(szMesg, "/&SETT");
@@ -80,6 +104,14 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
   if (pStart != NULL)
   {
     requestMode = AppServer::RequestMode::SETT;
+  }
+
+  // handle get system info
+  pStart = strstr(szMesg, "/&SYSINFO");
+
+  if (pStart != NULL)
+  {
+    requestMode = AppServer::RequestMode::SYSINFO;
   }
 
   // handle message mode
@@ -99,7 +131,7 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
   }
 
   // handle clock mode
-  pStart = strstr(szMesg, "/&CLK");
+  pStart = strstr(szMesg, "/&CLOCK");
 
   if (pStart != NULL)
   {
@@ -134,9 +166,17 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     _activeCards[static_cast<int>(OperationMode::SNAKE)] = true;
   }
 
+  // handle ip address mode
+  pStart = strstr(szMesg, "/&IP");
+
+  if (pStart != NULL)
+  {
+    requestMode = AppServer::RequestMode::MODE;
+    _activeCards[static_cast<int>(OperationMode::IP_ADDRESS)] = true;
+  }
+
   // handle control mode
   pStart = strstr(szMesg, "/&CNTL");
-
   if (pStart != NULL)
   {
     pStart += 7; // skip to start of data
@@ -145,6 +185,12 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     if (pEnd != NULL)
     {
       extractPayload(pStart, pEnd, psz);
+      requestMode = AppServer::RequestMode::CNTL;
+    }
+    else
+    {
+      // If no /& found, extract to end of string
+      extractPayload(pStart, pStart + strlen(pStart), psz);
       requestMode = AppServer::RequestMode::CNTL;
     }
   }
@@ -207,6 +253,7 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
         szBuf[idxBuf] = '\0';
         client.flush();
         state = S_EXTRACT;
+        break;
       }
       else
         szBuf[idxBuf++] = (char)c;
@@ -229,6 +276,40 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
     {
       JsonDocument doc;
       settings->toJson(doc);
+      serializeJson(doc, responseBuffer);
+      responseHeader = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
+      response = responseBuffer;
+    }
+    else if (appRequestMode == RequestMode::SYSINFO)
+    {
+      JsonDocument doc;
+      
+      // WiFi info
+      doc["wifi_connected"] = WiFi.status() == WL_CONNECTED;
+      doc["ip_address"] = WiFi.localIP().toString();
+      doc["wifi_rssi"] = WiFi.RSSI();
+      doc["wifi_ssid"] = WiFi.SSID();
+      
+      // System info
+      doc["uptime_seconds"] = millis() / 1000;
+      doc["uptime_formatted"] = formatUptime(millis());
+      
+      // Memory info
+      doc["free_heap"] = ESP.getFreeHeap();
+      doc["total_heap"] = ESP.getHeapSize();
+      doc["min_free_heap"] = ESP.getMinFreeHeap();
+      doc["max_alloc_heap"] = ESP.getMaxAllocHeap();
+      
+      // Storage info
+      doc["free_psram"] = ESP.getFreePsram();
+      doc["flash_size"] = ESP.getFlashChipSize();
+      
+      // Chip info
+      doc["chip_model"] = ESP.getChipModel();
+      doc["chip_revision"] = ESP.getChipRevision();
+      doc["cpu_freq_mhz"] = ESP.getCpuFreqMHz();
+      doc["sdk_version"] = ESP.getSdkVersion();
+      
       serializeJson(doc, responseBuffer);
       responseHeader = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
       response = responseBuffer;

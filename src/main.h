@@ -7,21 +7,23 @@
 
 enum struct OperationMode
 {
-    MESSAGE,
-    CLOCK,
-    DATE,
-    WEATHER,
-    SNAKE,
-    OPERATION_MODE_COUNT // This needs to be the last element because it is used to determine the number of elements in the enum
+    CLOCK,         // Index 0
+    DATE,          // Index 1
+    WEATHER,       // Index 2
+    SNAKE,         // Index 3
+    MESSAGE,       // Index 4
+    IP_ADDRESS,    // Index 5 - Renamed from SYSTEM_STATUS
+    OPERATION_MODE_COUNT
 };
 
 #define OPERATION_MODE_LENGTH static_cast<int>(OperationMode::OPERATION_MODE_COUNT)
 
 const char OperationModeStr[OPERATION_MODE_LENGTH][8] = {
-    "MESSAGE",
     "CLOCK",
     "DATE",
     "WEATHER",
-    "SNAKE"};
+    "SNAKE",
+    "MESSAGE",
+    "IP"}; // Renamed from SYSTEM
 
 #endif

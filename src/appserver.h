@@ -15,7 +15,7 @@ public:
         MODE,
         CNTL,
         SETT,
-        STOP
+        SYSINFO
     };
 
     AppServer(AppSettings *settings);

@@ -232,24 +232,36 @@ uint8_t Renderer::writeSmallCharToBuffer(char c, uint8_t *buffer)
 #define RAW_BITMAP_SIZE MAX_DEVICES * 8
 uint8_t *Renderer::loadStringToBitmap(const char *str, uint8_t *bitmap, bool smallNumbers)
 {
+  if (!str || !bitmap) {
+    return bitmap; // Return original pointer if invalid parameters
+  }
+  
   const int length = strlen(str);
   uint8_t *curr = bitmap;
+  const uint8_t *bitmapEnd = bitmap + RAW_BITMAP_SIZE;
+  
   for (int i = 0; i < length; ++i)
   {
+    if (curr >= bitmapEnd) {
+      printf("Buffer overflow prevented in loadStringToBitmap\n");
+      return curr;
+    }
+    
     if (str[i] == ' ')
     {
       *curr++ = 0;
-      *curr++ = 0;
+      if (curr < bitmapEnd) *curr++ = 0;
     }
     else if ('0' <= str[i] && str[i] <= '9')
     {
       if (smallNumbers)
       {
         const uint8_t *digit = smallDigitCharMap[str[i] - '0'];
-        for (int i = 0; i < SMALL_DIGIT_LEN; ++i)
+        for (int j = 0; j < SMALL_DIGIT_LEN; ++j)
         {
-          if (curr == &bitmap[RAW_BITMAP_SIZE])
+          if (curr >= bitmapEnd)
           {
+            printf("Buffer overflow prevented in loadStringToBitmap (small numbers)\n");
             return curr;
           }
 #ifdef BOTTOM_ALIGN
@@ -258,15 +270,16 @@ uint8_t *Renderer::loadStringToBitmap(const char *str, uint8_t *bitmap, bool sma
           *curr++ = *digit++;
 #endif
         }
-        *curr++ = 0;
+        if (curr < bitmapEnd) *curr++ = 0;
       }
       else
       {
         const uint8_t *digit = digitCharMap[str[i] - '0'];
-        for (int i = 0; i < CLOCK_DIGIT_WIDTH; ++i)
+        for (int j = 0; j < CLOCK_DIGIT_WIDTH; ++j)
         {
-          if (curr == &bitmap[RAW_BITMAP_SIZE])
+          if (curr >= bitmapEnd)
           {
+            printf("Buffer overflow prevented in loadStringToBitmap (regular numbers)\n");
             return curr;
           }
 #ifdef BOTTOM_ALIGN
@@ -275,7 +288,7 @@ uint8_t *Renderer::loadStringToBitmap(const char *str, uint8_t *bitmap, bool sma
           *curr++ = *digit++;
 #endif
         }
-        *curr++ = 0;
+        if (curr < bitmapEnd) *curr++ = 0;
       }
     }
     else
@@ -283,8 +296,9 @@ uint8_t *Renderer::loadStringToBitmap(const char *str, uint8_t *bitmap, bool sma
       const uint8_t *charBitmap = appCharMap[str[i] - '!'];
       for (int j = 0; j < charBitmap[0]; ++j)
       {
-        if (curr == &bitmap[RAW_BITMAP_SIZE])
+        if (curr >= bitmapEnd)
         {
+          printf("Buffer overflow prevented in loadStringToBitmap (characters)\n");
           return curr;
         }
 #ifdef BOTTOM_ALIGN

@@ -9,12 +9,30 @@ bool Stock::updateStockData()
 {
   WiFiClientSecure wifiClient;
   wifiClient.setInsecure();
+  
+  // Set timeout for the client
+  wifiClient.setTimeout(10000); // 10 second timeout
+  
   HttpClient client = HttpClient(wifiClient, "api.finazon.io", 443);
   char url[128] = "/latest/time_series?dataset=us_stocks_essential&interval=1m&page=0&page_size=1&adjust=all&ticker=";
+  
+  // Check if adding ticker would exceed buffer size
+  if (strlen(url) + strlen(ticker) >= sizeof(url)) {
+    printf("URL too long with ticker\n");
+    return false;
+  }
   strcat(url, ticker);
+  
   char authHeader[128] = {0};
   strcat(authHeader, "apikey ");
+  
+  // Check if adding API key would exceed buffer size
+  if (strlen(authHeader) + strlen(settings->getStockApiKey()) >= sizeof(authHeader)) {
+    printf("Auth header too long\n");
+    return false;
+  }
   strcat(authHeader, settings->getStockApiKey());
+  
   client.beginRequest();
   client.get(url);
   client.sendHeader("Authorization", authHeader);
@@ -25,6 +43,11 @@ bool Stock::updateStockData()
   if (statusCode == 429)
   {
     Serial.println("Rate limited");
+    return false;
+  }
+  
+  if (statusCode != 200) {
+    printf("Stock API error: %d\n", statusCode);
     return false;
   }
 
@@ -39,14 +62,28 @@ bool Stock::updateStockData()
     return false;
   }
 
+  // Validate response structure
+  if (!doc.containsKey("data") || !doc["data"].is<JsonArray>() || doc["data"].size() == 0) {
+    printf("Invalid stock data structure\n");
+    return false;
+  }
+  
+  JsonObject dataItem = doc["data"][0];
+  if (!dataItem.containsKey("t") || !dataItem.containsKey("o") || 
+      !dataItem.containsKey("c") || !dataItem.containsKey("h") || 
+      !dataItem.containsKey("l") || !dataItem.containsKey("v")) {
+    printf("Missing required stock data fields\n");
+    return false;
+  }
+
   stockData = {
       ticker,
-      doc["data"][0]["t"],
-      doc["data"][0]["o"],
-      doc["data"][0]["c"],
-      doc["data"][0]["h"],
-      doc["data"][0]["l"],
-      doc["data"][0]["v"]};
+      dataItem["t"],
+      dataItem["o"],
+      dataItem["c"],
+      dataItem["h"],
+      dataItem["l"],
+      dataItem["v"]};
 
   return true;
 }

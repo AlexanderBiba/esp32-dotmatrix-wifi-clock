@@ -16,8 +16,25 @@ extern Renderer *renderer;
 void Clock::updateTime()
 {
   static WiFiClient wifiClient = WiFiClient();
+  
+  // Set timeout for the client
+  wifiClient.setTimeout(10000); // 10 second timeout
+  
   HttpClient client = HttpClient(wifiClient, "worldtimeapi.org");
   char url[128] = "/api/timezone/";
+  
+  // Check if timezone is valid
+  if (strlen(settings->getTimezone()) == 0) {
+    printf("No timezone set, using default\n");
+    return;
+  }
+  
+  // Check if adding timezone would exceed buffer size
+  if (strlen(url) + strlen(settings->getTimezone()) >= sizeof(url)) {
+    printf("URL too long with timezone\n");
+    return;
+  }
+  
   strcat(url, settings->getTimezone());
   client.get(url);
   int statusCode = client.responseStatusCode();
@@ -25,6 +42,11 @@ void Clock::updateTime()
 
   printf("Status code: %d\n", statusCode);
   printf("Response: %s\n", response);
+
+  if (statusCode != 200) {
+    printf("Failed to get time data, status: %d\n", statusCode);
+    return;
+  }
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, response);
@@ -34,23 +56,19 @@ void Clock::updateTime()
     return;
   }
 
+  // Validate the response data
+  if (!doc.containsKey("unixtime") || !doc.containsKey("raw_offset")) {
+    printf("Invalid time data received\n");
+    return;
+  }
+
   epoch = (long)doc["unixtime"] + (long)doc["raw_offset"] + (doc["dst"] ? (long)doc["dst_offset"] : 0) - (millis() / 1000);
   currentTime = epoch + (millis() / 1000);
 
   loadClockBitmap();
 }
 
-AlarmTime Clock::getTimeStruct()
-{
-  static unsigned long currTime = millis();
-  if (millis() - currTime > 1000)
-  {
-    currTime = millis();
-    static char timeBuffer[TIME_BUFFER_SIZE] = {0};
-    tm *timeStruct = gmtime(&currentTime);
-    return {timeStruct->tm_hour, timeStruct->tm_min};
-  }
-}
+// getTimeStruct() method removed - was tied to buzzer functionality
 
 void Clock::loadDateBitmap()
 {
