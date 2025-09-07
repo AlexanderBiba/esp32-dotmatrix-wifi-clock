@@ -16,31 +16,41 @@ AppServer::AppServer(AppSettings *settings) : settings(settings)
   server = new WiFiServer(80);
 
   WiFiManager wifiManager;
-  wifiManager.autoConnect("DotMatrix Clock");
-  Serial.println("WIFI Connected");
-
-  const char* mdnsDomain = settings->getMdnsDomain();
-  if (strlen(mdnsDomain) == 0) {
-    mdnsDomain = DEFAULT_MDNS_DOMAIN;
-    Serial.println("MDNS domain empty, using default");
-  }
+  wifiManager.setConfigPortalTimeout(180); // 3 minutes timeout for config portal
+  wifiManager.setConnectTimeout(20); // 20 seconds timeout for connection attempts
   
-  Serial.print("Starting MDNS with domain: ");
-  Serial.println(mdnsDomain);
-  
-  bool mdnsSuccess = MDNS.begin(mdnsDomain);
-  if (!mdnsSuccess)
-  {
-    Serial.println("Error setting up MDNS responder!");
-    Serial.println("Falling back to default domain...");
-    mdnsSuccess = MDNS.begin(DEFAULT_MDNS_DOMAIN);
-    if (!mdnsSuccess) {
-      Serial.println("Failed to start MDNS even with default domain!");
-    } else {
-      Serial.println("MDNS started successfully with default domain");
-    }
+  // Try to connect to WiFi, or start config portal if no credentials
+  if (!wifiManager.autoConnect("DotMatrix Clock")) {
+    Serial.println("Failed to connect to WiFi and config portal timed out");
+    Serial.println("Device will continue running in AP mode");
+    // Don't return here - continue with server setup even if WiFi failed
   } else {
-    Serial.println("MDNS started successfully");
+    Serial.println("WIFI Connected");
+    
+    // Only start MDNS if WiFi is connected
+    const char* mdnsDomain = settings->getMdnsDomain();
+    if (strlen(mdnsDomain) == 0) {
+      mdnsDomain = DEFAULT_MDNS_DOMAIN;
+      Serial.println("MDNS domain empty, using default");
+    }
+    
+    Serial.print("Starting MDNS with domain: ");
+    Serial.println(mdnsDomain);
+    
+    bool mdnsSuccess = MDNS.begin(mdnsDomain);
+    if (!mdnsSuccess)
+    {
+      Serial.println("Error setting up MDNS responder!");
+      Serial.println("Falling back to default domain...");
+      mdnsSuccess = MDNS.begin(DEFAULT_MDNS_DOMAIN);
+      if (!mdnsSuccess) {
+        Serial.println("Failed to start MDNS even with default domain!");
+      } else {
+        Serial.println("MDNS started successfully with default domain");
+      }
+    } else {
+      Serial.println("MDNS started successfully");
+    }
   }
 
   Serial.println("Starting Server");

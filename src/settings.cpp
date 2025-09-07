@@ -181,12 +181,13 @@ void AppSettings::setDefaultValues()
     settings.weather.longitude = -74.0060f; // New York City longitude
     settings.weather.units = 'f';
     
-    // Enable only IP address card by default
+    // Disable all cards by default - this will trigger the WiFi configuration message
+    // when WiFi is not connected, or show IP address when WiFi is connected
     for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
     {
         settings.activeCards[i] = false;
     }
-    settings.activeCards[static_cast<int>(OperationMode::IP_ADDRESS)] = true;
+    // Don't enable any cards by default - let the main loop handle the display logic
 }
 
 void AppSettings::toJson(JsonDocument &doc)

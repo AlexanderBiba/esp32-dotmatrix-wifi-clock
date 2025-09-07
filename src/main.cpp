@@ -129,6 +129,22 @@ void loop(void)
   // Feed watchdog timer to prevent reset
   esp_task_wdt_reset();
 
+  // CRITICAL: Check WiFi status first to prevent crashes
+  // If WiFi is not connected, show configuration message and skip all other operations
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    static long lastWiFiCheck = 0;
+    if (millis() - lastWiFiCheck > 1000) // Check every second
+    {
+      lastWiFiCheck = millis();
+      renderer->setMessage("Connect to DotMatrix Clock Wifi Network to configure device");
+    }
+    
+    // Skip all other operations when WiFi is not connected
+    renderer->scrollText();
+    return;
+  }
+
   static Card *cards[] = {
       new Card(OperationMode::CLOCK, 10000),
       new Card(OperationMode::DATE, 5000),
@@ -164,22 +180,11 @@ void loop(void)
       }
     }
 
-    // If no cards are active, check WiFi status
+    // If no cards are active, show IP address
     if (activeCardCount == 0)
     {
-      // If WiFi is not connected, show configuration message
-      if (WiFi.status() != WL_CONNECTED)
-      {
-        operationMode = OperationMode::MESSAGE;
-        cardSwitchTime = 0; // Don't switch away from this message
-      }
-      else
-      {
-        // WiFi is connected but no cards active, default to clock
-        currentState = 0;
-        operationMode = cards[currentState]->getOperationMode();
-        cardSwitchTime = cards[currentState]->getCardSwitchTime();
-      }
+      operationMode = OperationMode::IP_ADDRESS;
+      cardSwitchTime = 5000; // Switch every 5 seconds
     }
     // If only one card is active, stay on it
     else if (activeCardCount == 1)
@@ -256,15 +261,11 @@ void loop(void)
       switch (operationMode)
       {
        case OperationMode::MESSAGE:
-         // Check if WiFi is connected
-         if (WiFi.status() != WL_CONNECTED)
+         // WiFi status is already checked at the top of the loop
+         // This only handles custom messages when WiFi is connected
+         if (strlen(requestBuffer) == 0)
          {
-           // Show configuration message when no WiFi
-           renderer->setMessage("Connect to DotMatrix Clock Wifi Network to configure device");
-         }
-         else if (strlen(requestBuffer) == 0)
-         {
-           // Use default message if requestBuffer is empty and WiFi is connected
+           // Use default message if requestBuffer is empty
            renderer->setMessage("Hello World!");
          }
          else
