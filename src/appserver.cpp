@@ -213,6 +213,13 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     }
   }
 
+  // handle reboot request
+  pStart = strstr(szMesg, "/&REBOOT");
+  if (pStart != NULL)
+  {
+    requestMode = AppServer::RequestMode::REBOOT;
+  }
+
   if (requestMode == AppServer::RequestMode::MODE)
   {
     for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
@@ -331,6 +338,15 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
       serializeJson(doc, responseBuffer);
       responseHeader = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
       response = responseBuffer;
+    }
+    else if (appRequestMode == RequestMode::REBOOT)
+    {
+      responseHeader = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
+      response = "{\"status\":\"rebooting\"}";
+      
+      // Schedule reboot after sending response
+      delay(1000); // Give time for response to be sent
+      ESP.restart();
     }
     state = S_RESPONSE;
     break;

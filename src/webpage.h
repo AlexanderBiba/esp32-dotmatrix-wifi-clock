@@ -627,7 +627,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 </div>
             </div>
             
-            <button type="button" class="btn btn-secondary" onclick="refreshSystemInfo()">Refresh System Info</button>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button type="button" class="btn btn-secondary" onclick="refreshSystemInfo()">Refresh System Info</button>
+                <button type="button" class="btn" style="background: var(--error-color);" onclick="rebootDevice()">Reboot Device</button>
+            </div>
         </div>
     </div>
 
@@ -1221,6 +1224,31 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             }
             
             showStatus('System information refreshed!', 'success');
+        }
+        
+        function rebootDevice() {
+            // Show confirmation dialog
+            if (confirm('Are you sure you want to reboot the device? This will disconnect you from the web interface.')) {
+                showLoading('Rebooting device...');
+                
+                // Send reboot request
+                fetch('/&REBOOT')
+                    .then(response => {
+                        if (response.ok) {
+                            showStatus('Device is rebooting...', 'success');
+                            // Redirect to a waiting page or show message
+                            setTimeout(() => {
+                                showStatus('Device is rebooting. Please wait and refresh the page in a few moments.', 'success');
+                            }, 2000);
+                        } else {
+                            showStatus('Failed to reboot device.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showStatus('Error rebooting device.', 'error');
+                    });
+            }
         }
         
         // New automatic update functions

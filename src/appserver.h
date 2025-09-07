@@ -15,7 +15,8 @@ public:
         MODE,
         CNTL,
         SETT,
-        SYSINFO
+        SYSINFO,
+        REBOOT
     };
 
     AppServer(AppSettings *settings);
