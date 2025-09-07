@@ -1003,6 +1003,17 @@
                 });
             });
             
+            // MDNS domain input - update when losing focus (blur event)
+            const mdnsDomainInput = document.getElementById('mdns-domain');
+            if (mdnsDomainInput) {
+                mdnsDomainInput.addEventListener('blur', function() {
+                    const domainValue = this.value.trim();
+                    if (domainValue) {
+                        updateSingleSetting('mdnsDomain', domainValue);
+                    }
+                });
+            }
+            
             // Initialize theme
             document.documentElement.setAttribute('data-theme', currentTheme);
             updateThemeIcon();

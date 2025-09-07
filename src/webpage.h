@@ -6,7 +6,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 Dot Matrix Controller</title>
+    <title>Dotmatrix Digital Clock</title>
     <style>
         :root {
             --primary-color: #6366f1;
@@ -477,7 +477,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
 <body>
     <div class="container">
         <header class="header">
-            <h1>ESP32 Dot Matrix Controller</h1>
+            <h1>Dotmatrix Digital Clock</h1>
             <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
                 <svg class="icon" id="theme-icon" viewBox="0 0 24 24">
                     <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -1005,6 +1005,17 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                     updateSingleSetting('weatherUnits', this.value);
                 });
             });
+            
+            // MDNS domain input - update when losing focus (blur event)
+            const mdnsDomainInput = document.getElementById('mdns-domain');
+            if (mdnsDomainInput) {
+                mdnsDomainInput.addEventListener('blur', function() {
+                    const domainValue = this.value.trim();
+                    if (domainValue) {
+                        updateSingleSetting('mdnsDomain', domainValue);
+                    }
+                });
+            }
             
             // Initialize theme
             document.documentElement.setAttribute('data-theme', currentTheme);
