@@ -560,6 +560,11 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                         </label>
                     </div>
                 </div>
+                <div class="form-group">
+                    <label for="mdns-domain">Network Name (MDNS Domain)</label>
+                    <input type="text" id="mdns-domain" class="form-control" placeholder="digiclk" maxlength="63">
+                    <small class="form-text">Used for accessing the device via http://[name].local/ (requires restart to take effect)</small>
+                </div>
             </form>
         </div>
         
@@ -805,6 +810,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             const cityInput = document.getElementById('city-input');
             const brightnessSlider = document.getElementById('brightness');
             const celsiusRadio = document.getElementById('celsius-radio');
+            const mdnsDomainInput = document.getElementById('mdns-domain');
             
             // Get city coordinates from the city info data attributes
             const cityInfo = document.getElementById('city-info');
@@ -820,6 +826,11 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 brightness: parseInt(brightnessSlider.value),
                 weatherUnits: celsiusRadio.checked ? 'c' : 'f'
             };
+            
+            // Add MDNS domain if provided
+            if (mdnsDomainInput.value.trim()) {
+                settings.mdnsDomain = mdnsDomainInput.value.trim();
+            }
             
             // Only add coordinates if we have them
             if (latitude !== null && longitude !== null) {
@@ -1090,6 +1101,12 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                         celsiusRadio.checked = true;
                     } else if (settings.weatherUnits === 'f' && fahrenheitRadio) {
                         fahrenheitRadio.checked = true;
+                    }
+                    
+                    // Set MDNS domain
+                    const mdnsDomainInput = document.getElementById('mdns-domain');
+                    if (mdnsDomainInput && settings.mdnsDomain) {
+                        mdnsDomainInput.value = settings.mdnsDomain;
                     }
                     
                     // Set city info if available - use the correct field names from ESP32

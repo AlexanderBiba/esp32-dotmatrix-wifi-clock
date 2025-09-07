@@ -8,6 +8,7 @@
 
 #define TIMEZONE_BUFFER_SIZE 128
 #define STOCK_API_KEY_BUFFER_SIZE 128
+#define MDNS_DOMAIN_BUFFER_SIZE 64
 
 #define MAGIC_NUMBER 0x5A
 #define BASE_EEPROM_ADDR 0
@@ -24,6 +25,7 @@ public:
     void setLongitude(float _longitude);
     void setWeatherUnits(char _units);
     void setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH]);
+    void setMdnsDomain(const char _mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE]);
 
     uint8_t getBrightness() { return settings.display.brightness; }
     const char *getTimezone() { return settings.time.timezone; }
@@ -32,6 +34,7 @@ public:
     float getLongitude() { return settings.weather.longitude; }
     char getWeatherUnits() { return settings.weather.units; }
     bool *getActiveCards() { return settings.activeCards; }
+    const char *getMdnsDomain() { return settings.network.mdnsDomain; }
 
     void toJson(JsonDocument &doc);
 
@@ -57,6 +60,10 @@ private:
             float longitude;
             char units;
         } weather;
+        struct
+        {
+            char mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE];
+        } network;
         bool activeCards[OPERATION_MODE_LENGTH];
         // Alarm struct removed - was tied to buzzer functionality
     } settings;

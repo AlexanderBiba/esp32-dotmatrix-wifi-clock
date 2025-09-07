@@ -13,6 +13,7 @@ AppSettings::AppSettings()
         settings.magic = MAGIC_NUMBER;
         strcpy(settings.time.timezone, "America/New_York");
         strcpy(settings.stock.apiKey, "\0");
+        strcpy(settings.network.mdnsDomain, "digiclk");
         settings.display.brightness = 0xf;
         settings.weather.latitude = INT_MAX;
         settings.weather.longitude = INT_MAX;
@@ -32,6 +33,30 @@ AppSettings::AppSettings()
     
     // Validate loaded settings
     if (settings.display.brightness > 0xf) settings.display.brightness = 0xf;
+    
+    // Validate MDNS domain - ensure it's not empty or contains invalid characters
+    bool mdnsDomainValid = true;
+    if (strlen(settings.network.mdnsDomain) == 0) {
+        mdnsDomainValid = false;
+    } else {
+        // Check for invalid characters in MDNS domain
+        for (int i = 0; i < strlen(settings.network.mdnsDomain); i++) {
+            char c = settings.network.mdnsDomain[i];
+            if (!isalnum(c) && c != '-' && c != '_') {
+                mdnsDomainValid = false;
+                break;
+            }
+        }
+    }
+    
+    if (!mdnsDomainValid) {
+        Serial.println("Invalid MDNS domain found, resetting to default");
+        strcpy(settings.network.mdnsDomain, "digiclk");
+        EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, network.mdnsDomain), settings.network.mdnsDomain);
+        if (!EEPROM.commit()) {
+            Serial.println("Failed to commit MDNS domain fix");
+        }
+    }
 }
 
 void AppSettings::setBrightness(uint8_t _brightness)
@@ -123,6 +148,19 @@ void AppSettings::setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH])
     }
 }
 
+void AppSettings::setMdnsDomain(const char _mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE])
+{
+    if (strlen(_mdnsDomain) >= MDNS_DOMAIN_BUFFER_SIZE) {
+        Serial.println("MDNS domain too long, truncated");
+    }
+    strncpy(settings.network.mdnsDomain, _mdnsDomain, MDNS_DOMAIN_BUFFER_SIZE - 1);
+    settings.network.mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE - 1] = '\0'; // Ensure null termination
+    EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, network.mdnsDomain), settings.network.mdnsDomain);
+    if (!EEPROM.commit()) {
+        Serial.println("Failed to commit MDNS domain setting");
+    }
+}
+
 void AppSettings::toJson(JsonDocument &doc)
 {
     doc["timezone"] = settings.time.timezone;
@@ -130,6 +168,15 @@ void AppSettings::toJson(JsonDocument &doc)
     doc["latitude"] = settings.weather.latitude;
     doc["longitude"] = settings.weather.longitude;
     doc["weatherUnits"] = settings.weather.units == 'f' ? "f" : "c";
+    
+    // Ensure MDNS domain is valid for JSON output
+    const char* mdnsDomain = settings.network.mdnsDomain;
+    if (strlen(mdnsDomain) == 0) {
+        doc["mdnsDomain"] = "digiclk";
+    } else {
+        doc["mdnsDomain"] = mdnsDomain;
+    }
+    
     doc["activeCards"].to<JsonArray>();
     for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
     {

@@ -91,7 +91,7 @@ Your Digital Weather Clock should now be running, displaying the current time, d
 
 ## Web UI Control Interface
 
-The Digital Weather Clock includes a web-based user interface to control and configure various settings. This interface can be accessed through a browser by navigating to http://digiclk.local/ or the ESP32's IP address on your local network. Settings available through the Web UI:
+The Digital Weather Clock includes a web-based user interface to control and configure various settings. This interface can be accessed through a browser by navigating to http://digiclk.local/ (or your custom domain) or the ESP32's IP address on your local network. Settings available through the Web UI:
 
 ### Features
 
@@ -99,6 +99,7 @@ The Digital Weather Clock includes a web-based user interface to control and con
 
   - Timezone: Select the appropriate timezone from a dropdown list.
   - Brightness: Adjust the display brightness.
+  - Network Name (MDNS Domain): Set a custom domain name for accessing the device via http://[name].local/ (requires restart to take effect).
 
 - **Weather Settings:**
 
@@ -110,7 +111,8 @@ The Digital Weather Clock includes a web-based user interface to control and con
 1. Connect the ESP32 to your local WiFi network.
 2. Determine the IP address assigned to the ESP32 (this can typically be found in your router's connected devices list or through serial monitor output).
 3. Open a web browser and navigate to `http://digiclk.local/`.
-   - If using more than 1 clock, navigate to `http://<ESP32_IP_ADDRESS>``.
+   - If using more than 1 clock, you can set custom domain names in the General Settings to avoid conflicts (e.g., `http://digiclk1.local/`, `http://digiclk2.local/`).
+   - Alternatively, navigate to `http://<ESP32_IP_ADDRESS>`.
 
 ### Using the Web UI
 
@@ -143,6 +145,18 @@ This user-friendly interface simplifies the process of configuring and controlli
 
 3. **Refresh Rate:**
    The time, date and weather information is updated every hour by default.
+
+## Multiple Clocks on the Same Network
+
+When running multiple Digital Weather Clocks on the same network, you can avoid conflicts by setting unique MDNS domain names for each device:
+
+1. **Access the Web UI** of each clock using its IP address initially
+2. **Navigate to General Settings** in the web interface
+3. **Set a unique Network Name** for each clock (e.g., "digiclk1", "digiclk2", "kitchen-clock", etc.)
+4. **Restart each device** for the new domain name to take effect
+5. **Access each clock** using its custom domain: `http://[custom-name].local/`
+
+This allows you to have multiple clocks running simultaneously without conflicts, and each can be accessed with its own memorable domain name.
 
 ## Troubleshooting
 

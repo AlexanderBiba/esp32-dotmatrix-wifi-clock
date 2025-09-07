@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 Dot Matrix Controller</title>
+    <title>Dotmatrix Digital Clock</title>
     <style>
         :root {
             --primary-color: #6366f1;
@@ -474,7 +474,7 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>ESP32 Dot Matrix Controller</h1>
+            <h1>Dotmatrix Digital Clock</h1>
             <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
                 <svg class="icon" id="theme-icon" viewBox="0 0 24 24">
                     <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
@@ -556,6 +556,11 @@
                             Fahrenheit
                         </label>
                     </div>
+                </div>
+                <div class="form-group">
+                    <label for="mdns-domain">Network Name (MDNS Domain)</label>
+                    <input type="text" id="mdns-domain" class="form-control" placeholder="digiclk" maxlength="63">
+                    <small class="form-text">Used for accessing the device via http://[name].local/ (requires restart to take effect)</small>
                 </div>
             </form>
         </div>
@@ -802,6 +807,7 @@
             const cityInput = document.getElementById('city-input');
             const brightnessSlider = document.getElementById('brightness');
             const celsiusRadio = document.getElementById('celsius-radio');
+            const mdnsDomainInput = document.getElementById('mdns-domain');
             
             // Get city coordinates from the city info data attributes
             const cityInfo = document.getElementById('city-info');
@@ -817,6 +823,11 @@
                 brightness: parseInt(brightnessSlider.value),
                 weatherUnits: celsiusRadio.checked ? 'c' : 'f'
             };
+            
+            // Add MDNS domain if provided
+            if (mdnsDomainInput.value.trim()) {
+                settings.mdnsDomain = mdnsDomainInput.value.trim();
+            }
             
             // Only add coordinates if we have them
             if (latitude !== null && longitude !== null) {
@@ -1087,6 +1098,12 @@
                         celsiusRadio.checked = true;
                     } else if (settings.weatherUnits === 'f' && fahrenheitRadio) {
                         fahrenheitRadio.checked = true;
+                    }
+                    
+                    // Set MDNS domain
+                    const mdnsDomainInput = document.getElementById('mdns-domain');
+                    if (mdnsDomainInput && settings.mdnsDomain) {
+                        mdnsDomainInput.value = settings.mdnsDomain;
                     }
                     
                     // Set city info if available - use the correct field names from ESP32

@@ -102,6 +102,12 @@ void handleControlRequest(char *requestBuffer)
     settings->setWeatherUnits(!strcmp(doc["weatherUnits"], "c") ? 'c' : 'f');
     updateWeather = true;
   }
+  if (doc.containsKey("mdnsDomain"))
+  {
+    settings->setMdnsDomain(doc["mdnsDomain"]);
+    // Note: MDNS restart would require WiFi restart, which is complex
+    // For now, the new domain will take effect on next reboot
+  }
   // Alarm control removed - was tied to buzzer functionality
 
   // update weather if required

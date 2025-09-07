@@ -7,7 +7,7 @@
 #include "appserver.h"
 #include "webpage.h"
 
-#define MDNS_DOMAIN "digiclk"
+#define DEFAULT_MDNS_DOMAIN "digiclk"
 
 AppServer::AppServer(AppSettings *settings) : settings(settings)
 {
@@ -17,10 +17,28 @@ AppServer::AppServer(AppSettings *settings) : settings(settings)
   wifiManager.autoConnect("DotMatrix Clock");
   Serial.println("WIFI Connected");
 
-  bool mdnsSuccess = MDNS.begin(MDNS_DOMAIN);
+  const char* mdnsDomain = settings->getMdnsDomain();
+  if (strlen(mdnsDomain) == 0) {
+    mdnsDomain = DEFAULT_MDNS_DOMAIN;
+    Serial.println("MDNS domain empty, using default");
+  }
+  
+  Serial.print("Starting MDNS with domain: ");
+  Serial.println(mdnsDomain);
+  
+  bool mdnsSuccess = MDNS.begin(mdnsDomain);
   if (!mdnsSuccess)
   {
     Serial.println("Error setting up MDNS responder!");
+    Serial.println("Falling back to default domain...");
+    mdnsSuccess = MDNS.begin(DEFAULT_MDNS_DOMAIN);
+    if (!mdnsSuccess) {
+      Serial.println("Failed to start MDNS even with default domain!");
+    } else {
+      Serial.println("MDNS started successfully with default domain");
+    }
+  } else {
+    Serial.println("MDNS started successfully");
   }
 
   Serial.println("Starting Server");
