@@ -1,6 +1,7 @@
 #include <EEPROM.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <string.h>
 
 #include "settings.h"
 
@@ -10,19 +11,7 @@ AppSettings::AppSettings()
     if (settings.magic != MAGIC_NUMBER)
     {
         Serial.println("No settings found, using defaults");
-        settings.magic = MAGIC_NUMBER;
-        strcpy(settings.time.timezone, "America/New_York");
-        strcpy(settings.stock.apiKey, "\0");
-        strcpy(settings.network.mdnsDomain, "digiclk");
-        settings.display.brightness = 0xf;
-        settings.weather.latitude = INT_MAX;
-        settings.weather.longitude = INT_MAX;
-        settings.weather.units = 'f';
-        for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
-        {
-            settings.activeCards[i] = true;
-        }
-        // Alarm settings removed - was tied to buzzer functionality
+        setDefaultValues();
         
         // Validate settings before writing
         EEPROM.put(BASE_EEPROM_ADDR, settings);
@@ -159,6 +148,45 @@ void AppSettings::setMdnsDomain(const char _mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE])
     if (!EEPROM.commit()) {
         Serial.println("Failed to commit MDNS domain setting");
     }
+}
+
+
+void AppSettings::factoryReset()
+{
+    Serial.println("Performing factory reset - clearing all settings");
+    
+    // Clear the entire EEPROM settings structure
+    memset(&settings, 0, sizeof(_AppSettings));
+    
+    // Set default values
+    setDefaultValues();
+    
+    // Write the reset settings to EEPROM
+    EEPROM.put(BASE_EEPROM_ADDR, settings);
+    if (!EEPROM.commit()) {
+        Serial.println("Failed to commit factory reset settings to EEPROM");
+    } else {
+        Serial.println("Factory reset completed successfully");
+    }
+}
+
+void AppSettings::setDefaultValues()
+{
+    settings.magic = MAGIC_NUMBER;
+    strcpy(settings.time.timezone, "America/New_York");
+    strcpy(settings.stock.apiKey, "\0");
+    strcpy(settings.network.mdnsDomain, "digiclk");
+    settings.display.brightness = 0xf;
+    settings.weather.latitude = 40.7128f;  // New York City latitude
+    settings.weather.longitude = -74.0060f; // New York City longitude
+    settings.weather.units = 'f';
+    
+    // Enable only IP address card by default
+    for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
+    {
+        settings.activeCards[i] = false;
+    }
+    settings.activeCards[static_cast<int>(OperationMode::IP_ADDRESS)] = true;
 }
 
 void AppSettings::toJson(JsonDocument &doc)

@@ -525,7 +525,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                         <label for="message-checkbox">Message</label>
                     </div>
                     <div class="form-group">
-                        <input type="text" id="message-input" class="form-control" placeholder="Enter your message..." maxlength="255">
+                        <input type="text" id="message-input" class="form-control" placeholder="Enter message here" maxlength="255">
                     </div>
                 </form>
             </div>
@@ -628,8 +628,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             </div>
             
             <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <button type="button" class="btn btn-secondary" onclick="refreshSystemInfo()">Refresh System Info</button>
-                <button type="button" class="btn" style="background: var(--error-color);" onclick="rebootDevice()">Reboot Device</button>
+                <button type="button" class="btn" onclick="refreshSystemInfo()">Refresh System Info</button>
+                <button type="button" class="btn" style="background: var(--warning-color);" onclick="rebootDevice()">Reboot Device</button>
+                <button type="button" class="btn" style="background: var(--warning-color);" onclick="clearSettingsDevice()">Clear Settings</button>
+                <button type="button" class="btn" style="background: var(--error-color);" onclick="factoryResetDevice()">Factory Reset</button>
             </div>
         </div>
     </div>
@@ -1020,6 +1022,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 });
             }
             
+            
             // Initialize theme
             document.documentElement.setAttribute('data-theme', currentTheme);
             updateThemeIcon();
@@ -1122,6 +1125,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                     if (mdnsDomainInput && settings.mdnsDomain) {
                         mdnsDomainInput.value = settings.mdnsDomain;
                     }
+                    
                     
                     // Set city info if available - use the correct field names from ESP32
                     if (settings.latitude !== undefined && settings.longitude !== undefined && 
@@ -1247,6 +1251,52 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                     .catch(error => {
                         console.error('Error:', error);
                         showStatus('Error rebooting device.', 'error');
+                    });
+            }
+        }
+
+        function clearSettingsDevice() {
+            // Show confirmation dialog
+            if (confirm('WARNING: This will clear ALL settings and restore the device to defaults!\n\nThis action cannot be undone. The device will reboot after clearing.\n\nAre you sure you want to continue?')) {
+                showLoading('Clearing settings...');
+                
+                // Send clear settings request
+                fetch('/&CLEAR_SETTINGS')
+                    .then(response => {
+                        if (response.ok) {
+                            showStatus('Settings cleared. Device is rebooting...', 'success');
+                            // Show additional message after delay
+                            setTimeout(() => {
+                                showStatus('Settings cleared! Device is rebooting with default settings. Please wait and refresh the page in a few moments.', 'success');
+                            }, 2000);
+                        } else {
+                            showStatus('Failed to clear settings.', 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showStatus('Error clearing settings.', 'error');
+                    });
+            }
+        }
+
+        function factoryResetDevice() {
+            // Show confirmation dialog with strongest warning
+            if (confirm('DANGER: This will COMPLETELY ERASE the EEPROM and restore the device to factory state!\n\nThis will:\n- Erase ALL stored data\n- Reset to absolute factory defaults\n- Require complete reconfiguration\n\nThis action cannot be undone!\n\nAre you absolutely certain you want to continue?')) {
+                showLoading('Performing factory reset...');
+                
+                // Send factory reset request - no error handling since WiFi will disconnect
+                fetch('/&FACTORY_RESET')
+                    .then(response => {
+                        // This will likely not execute due to WiFi disconnection
+                        if (response.ok) {
+                            showStatus('Factory reset completed. Device is rebooting...', 'success');
+                        }
+                    })
+                    .catch(error => {
+                        // Expected behavior - WiFi disconnects during factory reset
+                        console.log('Factory reset initiated - WiFi disconnected as expected');
+                        showStatus('Factory reset initiated. Device is rebooting and will start WiFi setup mode.', 'success');
                     });
             }
         }

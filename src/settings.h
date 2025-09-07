@@ -26,6 +26,7 @@ public:
     void setWeatherUnits(char _units);
     void setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH]);
     void setMdnsDomain(const char _mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE]);
+    void factoryReset();
 
     uint8_t getBrightness() { return settings.display.brightness; }
     const char *getTimezone() { return settings.time.timezone; }
@@ -39,6 +40,7 @@ public:
     void toJson(JsonDocument &doc);
 
 private:
+    void setDefaultValues();
     struct _AppSettings
     {
         uint8_t magic;

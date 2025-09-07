@@ -112,7 +112,7 @@ bool Weather::updateWeatherData()
   }
 
   // Validate response structure
-  if (!doc.containsKey("current") || !doc["current"].containsKey("temperature")) {
+  if (!doc["current"] || !doc["current"]["temperature"]) {
     printf("Invalid weather data structure\n");
     return false;
   }

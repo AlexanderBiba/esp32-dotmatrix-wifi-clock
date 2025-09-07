@@ -57,7 +57,7 @@ void Clock::updateTime()
   }
 
   // Validate the response data
-  if (!doc.containsKey("unixtime") || !doc.containsKey("raw_offset")) {
+  if (!doc["unixtime"] || !doc["raw_offset"]) {
     printf("Invalid time data received\n");
     return;
   }

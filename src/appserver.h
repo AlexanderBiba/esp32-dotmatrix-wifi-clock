@@ -16,7 +16,9 @@ public:
         CNTL,
         SETT,
         SYSINFO,
-        REBOOT
+        REBOOT,
+        CLEAR_SETTINGS,
+        FACTORY_RESET
     };
 
     AppServer(AppSettings *settings);

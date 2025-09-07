@@ -63,15 +63,15 @@ bool Stock::updateStockData()
   }
 
   // Validate response structure
-  if (!doc.containsKey("data") || !doc["data"].is<JsonArray>() || doc["data"].size() == 0) {
+  if (!doc["data"] || !doc["data"].is<JsonArray>() || doc["data"].size() == 0) {
     printf("Invalid stock data structure\n");
     return false;
   }
   
   JsonObject dataItem = doc["data"][0];
-  if (!dataItem.containsKey("t") || !dataItem.containsKey("o") || 
-      !dataItem.containsKey("c") || !dataItem.containsKey("h") || 
-      !dataItem.containsKey("l") || !dataItem.containsKey("v")) {
+  if (!dataItem["t"] || !dataItem["o"] || 
+      !dataItem["c"] || !dataItem["h"] || 
+      !dataItem["l"] || !dataItem["v"]) {
     printf("Missing required stock data fields\n");
     return false;
   }

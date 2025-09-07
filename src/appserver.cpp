@@ -3,6 +3,8 @@
 #include <WiFiManager.h>
 #include <ESPmDNS.h>
 #include <ArduinoJson.h>
+#include <esp_wifi.h>
+#include <nvs_flash.h>
 
 #include "appserver.h"
 #include "webpage.h"
@@ -220,6 +222,20 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     requestMode = AppServer::RequestMode::REBOOT;
   }
 
+  // handle clear settings request
+  pStart = strstr(szMesg, "/&CLEAR_SETTINGS");
+  if (pStart != NULL)
+  {
+    requestMode = AppServer::RequestMode::CLEAR_SETTINGS;
+  }
+
+  // handle factory reset request
+  pStart = strstr(szMesg, "/&FACTORY_RESET");
+  if (pStart != NULL)
+  {
+    requestMode = AppServer::RequestMode::FACTORY_RESET;
+  }
+
   if (requestMode == AppServer::RequestMode::MODE)
   {
     for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
@@ -346,6 +362,41 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
       
       // Schedule reboot after sending response
       delay(1000); // Give time for response to be sent
+      ESP.restart();
+    }
+    else if (appRequestMode == RequestMode::CLEAR_SETTINGS)
+    {
+      responseHeader = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
+      response = "{\"status\":\"settings_cleared\"}";
+      
+      // Clear settings only (preserve WiFi)
+      settings->factoryReset();
+      
+      // Schedule reboot after sending response
+      delay(1000);
+      ESP.restart();
+    }
+    else if (appRequestMode == RequestMode::FACTORY_RESET)
+    {
+      responseHeader = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
+      response = "{\"status\":\"factory_reset_complete\"}";
+      
+      // Complete factory reset with WiFi clearing
+      Serial.println("Starting complete factory reset...");
+      
+      // Clear WiFi credentials first
+      WiFi.disconnect(true);
+      WiFi.mode(WIFI_OFF);
+      esp_wifi_restore();
+      nvs_flash_erase();
+      
+      // Reset settings
+      settings->factoryReset();
+      
+      Serial.println("Factory reset completed - rebooting...");
+      
+      // Schedule reboot after sending response
+      delay(1000);
       ESP.restart();
     }
     state = S_RESPONSE;
