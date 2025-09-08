@@ -223,6 +223,9 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             z-index: 1000;
             display: none;
             animation: slideUp 0.3s ease-out;
+            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 0.75rem;
         }
 
         .popup {
