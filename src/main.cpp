@@ -16,6 +16,7 @@
 #include "weather.h"
 #include "card.h"
 #include "snake.h"
+#include "rain.h"
 
 #define PRINT_CALLBACK 0
 #define DEBUG 1
@@ -29,6 +30,7 @@ Renderer *renderer;
 Stock *stock;
 Weather *weather;
 Snake *snake;
+Rain *rain;
 
 void setup(void)
 {
@@ -48,6 +50,7 @@ void setup(void)
   weather = nullptr;
   stock = nullptr;
   snake = nullptr;
+  rain = nullptr;
 
   esp_task_wdt_reset();
 }
@@ -55,6 +58,8 @@ void setup(void)
 // Cleanup function to prevent memory leaks
 void cleanup(void)
 {
+  if (rain)
+    delete rain;
   if (snake)
     delete snake;
   if (stock)
@@ -160,6 +165,7 @@ void loop(void)
     weather = new Weather(settings);
     stock = new Stock(settings);
     snake = new Snake(settings);
+    rain = new Rain(settings);
     componentsCreated = true;
   }
 
@@ -169,7 +175,8 @@ void loop(void)
       new Card(OperationMode::WEATHER, 5000),
       new Card(OperationMode::SNAKE, 5000),
       new Card(OperationMode::MESSAGE, 5000),
-      new Card(OperationMode::IP_ADDRESS, 5000)};
+      new Card(OperationMode::IP_ADDRESS, 5000),
+      new Card(OperationMode::RAIN, 5000)};
   static const size_t numCards = sizeof(cards) / sizeof(cards[0]);
   static uint8_t currentState = 0;
   static OperationMode operationMode = cards[currentState]->getOperationMode();
@@ -318,6 +325,13 @@ void loop(void)
           renderer->setRaw(snake->getSnake());
         } else {
           renderer->setMessage("Snake not available");
+        }
+        break;
+      case OperationMode::RAIN:
+        if (rain != nullptr) {
+          renderer->setRaw(rain->getRain());
+        } else {
+          renderer->setMessage("Rain not available");
         }
         break;
       case OperationMode::IP_ADDRESS:

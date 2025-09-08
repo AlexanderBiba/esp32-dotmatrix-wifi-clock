@@ -13,17 +13,19 @@ enum struct OperationMode
     SNAKE,         // Index 3
     MESSAGE,       // Index 4
     IP_ADDRESS,    // Index 5 - Renamed from SYSTEM_STATUS
+    RAIN,          // Index 6
     OPERATION_MODE_COUNT
 };
 
 #define OPERATION_MODE_LENGTH static_cast<int>(OperationMode::OPERATION_MODE_COUNT)
 
-const char OperationModeStr[OPERATION_MODE_LENGTH][8] = {
+const char OperationModeStr[OPERATION_MODE_LENGTH][32] = {
     "CLOCK",
     "DATE",
     "WEATHER",
     "SNAKE",
     "MESSAGE",
-    "IP"}; // Renamed from SYSTEM
+    "IP", // Renamed from SYSTEM
+    "RAIN"};
 
 #endif

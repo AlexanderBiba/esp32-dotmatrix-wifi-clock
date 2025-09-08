@@ -671,6 +671,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                         <label for="snake-checkbox">Snake Game</label>
                     </div>
                     <div class="checkbox-group">
+                        <input type="checkbox" id="rain-checkbox" name="operation-mode">
+                        <label for="rain-checkbox">Rain Effect</label>
+                    </div>
+                    <div class="checkbox-group">
                         <input type="checkbox" id="ip-checkbox" name="operation-mode">
                         <label for="ip-checkbox">IP Address</label>
                     </div>
@@ -891,6 +895,9 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             }
             if (form["snake-checkbox"].checked) {
                 strLine += "/&SNAKE";
+            }
+            if (form["rain-checkbox"].checked) {
+                strLine += "/&RAIN";
             }
             if (form["ip-checkbox"].checked) {
                 strLine += "/&IP";
@@ -1224,6 +1231,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                         document.getElementById('date-checkbox').checked = false;
                         document.getElementById('weather-checkbox').checked = false;
                         document.getElementById('snake-checkbox').checked = false;
+                        document.getElementById('rain-checkbox').checked = false;
                         document.getElementById('ip-checkbox').checked = false;
                         document.getElementById('message-checkbox').checked = false;
                         
@@ -1241,6 +1249,9 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                                     break;
                                 case 'SNAKE':
                                     document.getElementById('snake-checkbox').checked = true;
+                                    break;
+                                case 'RAIN':
+                                    document.getElementById('rain-checkbox').checked = true;
                                     break;
                                 case 'IP':
                                     document.getElementById('ip-checkbox').checked = true;
@@ -1472,6 +1483,9 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             }
             if (form["snake-checkbox"].checked) {
                 strLine += "/&SNAKE";
+            }
+            if (form["rain-checkbox"].checked) {
+                strLine += "/&RAIN";
             }
             if (form["ip-checkbox"].checked) {
                 strLine += "/&IP";

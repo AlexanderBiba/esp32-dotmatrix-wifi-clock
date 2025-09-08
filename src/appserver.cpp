@@ -186,6 +186,15 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     _activeCards[static_cast<int>(OperationMode::SNAKE)] = true;
   }
 
+  // handle rain mode
+  pStart = strstr(szMesg, "/&RAIN");
+
+  if (pStart != NULL)
+  {
+    requestMode = AppServer::RequestMode::MODE;
+    _activeCards[static_cast<int>(OperationMode::RAIN)] = true;
+  }
+
   // handle ip address mode
   pStart = strstr(szMesg, "/&IP");
 
