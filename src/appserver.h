@@ -20,7 +20,8 @@ public:
         REBOOT,
         FACTORY_RESET,
         CARD_ORDER,
-        CARD_DURATIONS
+        CARD_DURATIONS,
+        FLIP_DISPLAY
     };
 
     AppServer(AppSettings *settings);

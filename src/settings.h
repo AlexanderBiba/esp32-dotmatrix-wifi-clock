@@ -19,6 +19,7 @@ public:
     AppSettings();
 
     void setBrightness(uint8_t _brightness);
+    void setFlipped(bool _flipped);
     void setTimezone(const char _timezone[TIMEZONE_BUFFER_SIZE]);
     void setStockApiKey(const char _stockApiKey[STOCK_API_KEY_BUFFER_SIZE]);
     void setLatitude(float _latitude);
@@ -31,6 +32,7 @@ public:
     void factoryReset();
 
     uint8_t getBrightness() { return settings.display.brightness; }
+    bool getFlipped() { return settings.display.flipped; }
     const char *getTimezone() { return settings.time.timezone; }
     const char *getStockApiKey() { return settings.stock.apiKey; }
     float getLatitude() { return settings.weather.latitude; }
@@ -59,6 +61,7 @@ private:
         struct
         {
             uint8_t brightness;
+            bool flipped;
         } display;
         struct
         {

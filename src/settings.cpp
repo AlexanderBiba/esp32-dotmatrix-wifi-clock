@@ -163,6 +163,15 @@ void AppSettings::setBrightness(uint8_t _brightness)
     }
 }
 
+void AppSettings::setFlipped(bool _flipped)
+{
+    settings.display.flipped = _flipped;
+    EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, display.flipped), _flipped);
+    if (!EEPROM.commit()) {
+        Serial.println("Failed to commit flipped setting");
+    }
+}
+
 void AppSettings::setTimezone(const char _timezone[TIMEZONE_BUFFER_SIZE])
 {
     if (strlen(_timezone) >= TIMEZONE_BUFFER_SIZE) {
@@ -311,6 +320,7 @@ void AppSettings::setDefaultValues()
     strcpy(settings.stock.apiKey, "\0");
     strcpy(settings.network.mdnsDomain, "digiclk");
     settings.display.brightness = 0xf;
+    settings.display.flipped = false;
     settings.weather.latitude = 40.7128f;  // New York City latitude
     settings.weather.longitude = -74.0060f; // New York City longitude
     settings.weather.units = 'f';
@@ -357,6 +367,7 @@ void AppSettings::toJson(JsonDocument &doc)
 {
     doc["timezone"] = settings.time.timezone;
     doc["brightness"] = settings.display.brightness;
+    doc["flipped"] = settings.display.flipped;
     doc["latitude"] = settings.weather.latitude;
     doc["longitude"] = settings.weather.longitude;
     doc["weatherUnits"] = settings.weather.units == 'f' ? "f" : "c";

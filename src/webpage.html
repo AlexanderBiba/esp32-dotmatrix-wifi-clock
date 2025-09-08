@@ -1140,6 +1140,15 @@
                         <input type="text" id="mdns-domain" class="form-control" placeholder="digiclk" maxlength="63">
                         <small class="form-text">Used for accessing the device via http://[name].local/ (requires restart to take effect)</small>
                     </div>
+                    <div class="form-group">
+                        <label>Display Orientation</label>
+                        <div class="button-group">
+                            <button type="button" class="btn" id="flip-display-btn" onclick="flipDisplay()" style="background: var(--primary-color);">
+                                <span id="flip-btn-text">Flip Display</span>
+                            </button>
+                        </div>
+                        <small class="form-text">Flip the display orientation (requires reboot)</small>
+                    </div>
                 </form>
             </div>
         </div>
@@ -2092,6 +2101,12 @@
                         mdnsDomainInput.value = settings.mdnsDomain;
                     }
                     
+                    // Set flip display button state
+                    const flipBtnText = document.getElementById('flip-btn-text');
+                    if (flipBtnText && settings.flipped !== undefined) {
+                        flipBtnText.textContent = settings.flipped ? 'Unflip Display' : 'Flip Display';
+                    }
+                    
                     
                     // Set city info if available - use the correct field names from ESP32
                     if (settings.latitude !== undefined && settings.longitude !== undefined && 
@@ -2241,6 +2256,30 @@
                         // Expected behavior - WiFi disconnects during factory reset
                         console.log('Factory reset initiated - WiFi disconnected as expected');
                         showStatus('Factory reset initiated. Device is rebooting and will start WiFi setup mode.', 'success');
+                    });
+            }
+        }
+
+        function flipDisplay() {
+            // Show confirmation dialog
+            if (confirm('Are you sure you want to flip the display orientation? The device will reboot after this change.')) {
+                showLoading('Flipping display orientation...');
+                
+                // Send flip request
+                fetch('/&FLIP_DISPLAY')
+                    .then(response => {
+                        if (response.ok) {
+                            showStatus('Display orientation flipped. Device is rebooting...', 'success');
+                            // The device will reboot automatically after the request
+                        } else {
+                            showStatus('Failed to flip display orientation.', 'error');
+                            hideLoading();
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error flipping display:', error);
+                        showStatus('Error flipping display orientation.', 'error');
+                        hideLoading();
                     });
             }
         }

@@ -36,7 +36,7 @@ Renderer::Renderer(AppSettings *settings)
     return this->scrollDataIn(dev, t);
   };
 
-  mx = new MD_MAX72XX(flipped ? MD_MAX72XX::DR1CR0RR1_HW : MD_MAX72XX::DR1CR0RR0_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
+  mx = new MD_MAX72XX(settings->getFlipped() ? MD_MAX72XX::DR1CR0RR1_HW : MD_MAX72XX::DR1CR0RR0_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
   mx->begin();
   mx->setShiftDataInCallback(lambdaWrapper);
   mx->control(MD_MAX72XX::INTENSITY, settings->getBrightness());
@@ -47,7 +47,7 @@ void Renderer::scrollText(void)
   static uint32_t prevTime = 0;
   if (scrollContent && (millis() - prevTime >= SCROLL_DELAY))
   {
-    mx->transform(flipped ? MD_MAX72XX::TSR : MD_MAX72XX::TSL);
+    mx->transform(settings->getFlipped() ? MD_MAX72XX::TSR : MD_MAX72XX::TSL);
     prevTime = millis();
   }
 }
@@ -96,7 +96,7 @@ uint8_t Renderer::scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     {
       uint8_t temp[MAX_DEVICES * 8];
       memcpy(temp, newRaw, sizeof(newRaw));
-      if (flipped)
+      if (settings->getFlipped())
       {
         horizontalFlip(temp, MAX_DEVICES * 8);
       }
@@ -189,7 +189,7 @@ void Renderer::setRaw(uint8_t rawBuffer[MAX_DEVICES * 8])
 
     uint8_t temp[MAX_DEVICES * 8];
     memcpy(temp, rawBuffer, sizeof(temp));
-    if (flipped)
+    if (settings->getFlipped())
     {
         horizontalFlip(temp, MAX_DEVICES * 8);
     }

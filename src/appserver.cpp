@@ -296,6 +296,13 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     }
   }
 
+  // handle flip display request
+  pStart = strstr(szMesg, "/&FLIP_DISPLAY");
+  if (pStart != NULL)
+  {
+    requestMode = AppServer::RequestMode::FLIP_DISPLAY;
+  }
+
   if (requestMode == AppServer::RequestMode::MODE)
   {
     for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
@@ -574,6 +581,21 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
           response = "{\"status\":\"error\",\"message\":\"Missing cardDurations field\"}";
         }
       }
+    }
+    else if (appRequestMode == RequestMode::FLIP_DISPLAY)
+    {
+      responseHeader = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
+      response = "{\"status\":\"display_flipped\"}";
+      
+      // Toggle the flipped setting
+      bool currentFlipped = settings->getFlipped();
+      settings->setFlipped(!currentFlipped);
+      
+      Serial.printf("Display orientation flipped to: %s\n", !currentFlipped ? "flipped" : "normal");
+      
+      // Schedule reboot after sending response
+      delay(1000); // Give time for response to be sent
+      ESP.restart();
     }
     state = S_RESPONSE;
     break;
