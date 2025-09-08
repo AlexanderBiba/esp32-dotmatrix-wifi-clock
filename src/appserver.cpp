@@ -238,12 +238,6 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     requestMode = AppServer::RequestMode::REBOOT;
   }
 
-  // handle clear settings request
-  pStart = strstr(szMesg, "/&CLEAR_SETTINGS");
-  if (pStart != NULL)
-  {
-    requestMode = AppServer::RequestMode::CLEAR_SETTINGS;
-  }
 
   // handle factory reset request
   pStart = strstr(szMesg, "/&FACTORY_RESET");
@@ -428,18 +422,6 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
       
       // Schedule reboot after sending response
       delay(1000); // Give time for response to be sent
-      ESP.restart();
-    }
-    else if (appRequestMode == RequestMode::CLEAR_SETTINGS)
-    {
-      responseHeader = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
-      response = "{\"status\":\"settings_cleared\"}";
-      
-      // Clear settings only (preserve WiFi)
-      settings->factoryReset();
-      
-      // Schedule reboot after sending response
-      delay(1000);
       ESP.restart();
     }
     else if (appRequestMode == RequestMode::FACTORY_RESET)

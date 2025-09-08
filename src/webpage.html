@@ -1048,7 +1048,6 @@
             <div class="button-group">
                 <button type="button" class="btn" onclick="refreshSystemInfo()">Refresh System Info</button>
                 <button type="button" class="btn" style="background: var(--warning-color);" onclick="rebootDevice()">Reboot Device</button>
-                <button type="button" class="btn" style="background: var(--warning-color);" onclick="clearSettingsDevice()">Clear Settings</button>
                 <button type="button" class="btn" style="background: var(--error-color);" onclick="factoryResetDevice()">Factory Reset</button>
             </div>
         </div>
@@ -2066,30 +2065,6 @@
             }
         }
 
-        function clearSettingsDevice() {
-            // Show confirmation dialog
-            if (confirm('WARNING: This will clear ALL settings and restore the device to defaults!\n\nThis action cannot be undone. The device will reboot after clearing.\n\nAre you sure you want to continue?')) {
-                showLoading('Clearing settings...');
-                
-                // Send clear settings request
-                fetch('/&CLEAR_SETTINGS')
-                    .then(response => {
-                        if (response.ok) {
-                            showStatus('Settings cleared. Device is rebooting...', 'success');
-                            // Show additional message after delay
-                            setTimeout(() => {
-                                showStatus('Settings cleared! Device is rebooting with default settings. Please wait and refresh the page in a few moments.', 'success');
-                            }, 2000);
-                        } else {
-                            showStatus('Failed to clear settings.', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showStatus('Error clearing settings.', 'error');
-                    });
-            }
-        }
 
         function factoryResetDevice() {
             // Show confirmation dialog with strongest warning

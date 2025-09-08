@@ -18,7 +18,6 @@ public:
         SETT,
         SYSINFO,
         REBOOT,
-        CLEAR_SETTINGS,
         FACTORY_RESET,
         CARD_ORDER,
         CARD_DURATIONS
