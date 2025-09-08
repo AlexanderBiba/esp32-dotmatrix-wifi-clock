@@ -231,8 +231,8 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             border-radius: 0.75rem;
             box-shadow: var(--shadow-lg);
             padding: 1rem 1.5rem;
-            min-width: 300px;
-            max-width: 400px;
+            min-width: 280px;
+            max-width: calc(100vw - 2rem);
             text-align: center;
             position: relative;
         }
@@ -314,6 +314,28 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             }
         }
 
+        @keyframes slideUpMobile {
+            from {
+                opacity: 0;
+                transform: translateY(1rem);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDownMobile {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(1rem);
+            }
+        }
+
         .popup-overlay.hiding {
             animation: slideDown 0.3s ease-in;
         }
@@ -362,7 +384,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         /* System Information Styles */
         .system-info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 20px;
         }
@@ -451,18 +473,147 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             transform: none !important;
         }
 
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
             }
             
-            .grid {
-                grid-template-columns: 1fr;
-            }
-            
             .header {
                 flex-direction: column;
                 gap: 1rem;
+                text-align: center;
+                margin-bottom: 2rem;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+            }
+            
+            .card h2 {
+                font-size: 1.25rem;
+                margin-bottom: 1rem;
+            }
+            
+            .system-info-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .info-card {
+                padding: 1rem;
+            }
+            
+            .info-icon {
+                font-size: 1.5em;
+                width: 40px;
+            }
+            
+            .btn {
+                padding: 0.75rem 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .button-group {
+                gap: 0.75rem;
+            }
+            
+            .popup-overlay {
+                bottom: 1rem;
+                left: 1rem;
+                right: 1rem;
+                transform: none;
+                animation: slideUpMobile 0.3s ease-out;
+            }
+            
+            .popup-overlay.hiding {
+                animation: slideDownMobile 0.3s ease-in;
+            }
+            
+            .popup {
+                min-width: auto;
+                max-width: none;
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 0.75rem;
+            }
+            
+            .header h1 {
+                font-size: 1.25rem;
+            }
+            
+            .card {
+                padding: 1rem;
+            }
+            
+            .form-control {
+                padding: 0.75rem;
+                font-size: 16px; /* Prevent zoom on iOS */
+            }
+            
+            .checkbox-group {
+                margin-bottom: 0.75rem;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .info-card {
+                padding: 0.75rem;
+                gap: 12px;
+            }
+            
+            .info-icon {
+                font-size: 1.25em;
+                width: 35px;
+            }
+            
+            .info-label {
+                font-size: 0.8em;
+            }
+            
+            .info-value {
+                font-size: 1em;
+            }
+            
+            .info-sub {
+                font-size: 0.75em;
+            }
+            
+            .btn {
+                padding: 0.625rem 0.875rem;
+                font-size: 0.875rem;
+            }
+            
+            /* Stack buttons vertically on very small screens */
+            .button-group {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .button-group .btn {
+                width: 100%;
                 text-align: center;
             }
         }
@@ -496,7 +647,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         </div>
 
         <div class="grid">
-            <!-- Display Options -->
+            <!-- Left Column: Display Options -->
             <div class="card">
                 <h2>Display Options</h2>
                 <form id="operation_mode_form">
@@ -530,45 +681,46 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 </form>
             </div>
         
-        <!-- General Settings -->
-        <div class="card">
-            <h2>General Settings</h2>
-            <form id="general_settings_form">
-                <input type="hidden" id="timezone" value="">
-                <div class="form-group">
-                    <label for="city-input">Location</label>
-                    <div class="autocomplete-container">
-                        <input type="text" id="city-input" class="form-control" placeholder="Enter city name..." autocomplete="off">
-                        <div id="city-dropdown" class="autocomplete-dropdown"></div>
+            <!-- Right Column: General Settings -->
+            <div class="card">
+                <h2>General Settings</h2>
+                <form id="general_settings_form">
+                    <input type="hidden" id="timezone" value="">
+                    <div class="form-group">
+                        <label for="city-input">Location</label>
+                        <div class="autocomplete-container">
+                            <input type="text" id="city-input" class="form-control" placeholder="Enter city name..." autocomplete="off">
+                            <div id="city-dropdown" class="autocomplete-dropdown"></div>
+                        </div>
+                        <div id="city-info" class="city-info"></div>
                     </div>
-                    <div id="city-info" class="city-info"></div>
-                </div>
-                <div class="form-group">
-                    <label for="brightness">Display Brightness</label>
-                    <input type="range" id="brightness" class="form-control" min="1" max="15" value="15">
-                </div>
-                <div class="form-group">
-                    <label>Temperature Units</label>
-                    <div class="radio-group">
-                        <label>
-                            <input type="radio" id="celsius-radio" name="weather-units" value="c">
-                            Celsius
-                        </label>
-                        <label>
-                            <input type="radio" id="fahrenheit-radio" name="weather-units" value="f">
-                            Fahrenheit
-                        </label>
+                    <div class="form-group">
+                        <label for="brightness">Display Brightness</label>
+                        <input type="range" id="brightness" class="form-control" min="1" max="15" value="15">
                     </div>
-                </div>
-                <div class="form-group">
-                    <label for="mdns-domain">Network Name (MDNS Domain)</label>
-                    <input type="text" id="mdns-domain" class="form-control" placeholder="digiclk" maxlength="63">
-                    <small class="form-text">Used for accessing the device via http://[name].local/ (requires restart to take effect)</small>
-                </div>
-            </form>
+                    <div class="form-group">
+                        <label>Temperature Units</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" id="celsius-radio" name="weather-units" value="c">
+                                Celsius
+                            </label>
+                            <label>
+                                <input type="radio" id="fahrenheit-radio" name="weather-units" value="f">
+                                Fahrenheit
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="mdns-domain">Network Name (MDNS Domain)</label>
+                        <input type="text" id="mdns-domain" class="form-control" placeholder="digiclk" maxlength="63">
+                        <small class="form-text">Used for accessing the device via http://[name].local/ (requires restart to take effect)</small>
+                    </div>
+                </form>
+            </div>
         </div>
         
-        <!-- System Information Section -->
+        <!-- System Information Section (Full Width) -->
         <div class="card">
             <h2>System Information</h2>
             <div class="system-info-grid">
@@ -627,7 +779,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 </div>
             </div>
             
-            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <div class="button-group">
                 <button type="button" class="btn" onclick="refreshSystemInfo()">Refresh System Info</button>
                 <button type="button" class="btn" style="background: var(--warning-color);" onclick="rebootDevice()">Reboot Device</button>
                 <button type="button" class="btn" style="background: var(--warning-color);" onclick="clearSettingsDevice()">Clear Settings</button>
