@@ -19,6 +19,13 @@ AppServer::AppServer(AppSettings *settings) : settings(settings)
   wifiManager.setConfigPortalBlocking(false);
   wifiManager.setBreakAfterConfig(true);
 
+  // Set up WiFi connection callback to reboot after configuration
+  wifiManager.setSaveConfigCallback([]() {
+    Serial.println("WiFi configuration saved - rebooting device");
+    delay(2000); // Give time for the response to be sent
+    ESP.restart();
+  });
+
   // Try to connect to WiFi, or start config portal if no credentials
   if (!wifiManager.autoConnect("DotMatrix Clock")) {
     Serial.println("Config portal running - connect to 'DotMatrix Clock' AP");
