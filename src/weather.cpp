@@ -51,17 +51,17 @@ bool Weather::updateWeatherData()
 {
   static char localBuffer[RAW_WEATHER_BITMAP_SIZE] = {0};
 
-  printf("Updating weather data\n");
-  printf("Latitude: %lf\n", settings->getLatitude());
-  printf("Longitude: %lf\n", settings->getLongitude());
+  Serial.println("Updating weather data");
+  Serial.printf("Latitude: %lf\n", settings->getLatitude());
+  Serial.printf("Longitude: %lf\n", settings->getLongitude());
   if (
       !(
           -90 < settings->getLatitude() && settings->getLatitude() < 90 &&
           -180 < settings->getLongitude() && settings->getLongitude() < 180))
   {
-    printf("Invalid location\n");
+    Serial.println("Invalid location");
     renderer->alightBitmapContentToCenter(bitmap, renderer->loadStringToBitmap("No LOC", bitmap));
-    printf("location done\n");
+    Serial.println("location done");
     return true;
   }
 
@@ -81,7 +81,7 @@ bool Weather::updateWeatherData()
   
   // Check if URL was truncated
   if (urlLen >= sizeof(url)) {
-    printf("URL too long, truncated\n");
+    Serial.println("URL too long, truncated");
     return false;
   }
   
@@ -96,24 +96,24 @@ bool Weather::updateWeatherData()
   }
   
   if (statusCode != 200) {
-    printf("Weather API error: %d\n", statusCode);
+    Serial.printf("Weather API error: %d\n", statusCode);
     return false;
   }
 
-  printf("Status code: %d\n", statusCode);
-  printf("Response: %s\n", response);
+  Serial.printf("Status code: %d\n", statusCode);
+  Serial.printf("Response: %s\n", response);
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, response);
   if (error)
   {
-    printf("deserializeJson() failed: %s\n", error.f_str());
+    Serial.printf("deserializeJson() failed: %s\n", error.f_str());
     return false;
   }
 
   // Validate response structure
   if (!doc["current"] || !doc["current"]["temperature"]) {
-    printf("Invalid weather data structure\n");
+    Serial.println("Invalid weather data structure");
     return false;
   }
 

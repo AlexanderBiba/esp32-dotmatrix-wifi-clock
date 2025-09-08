@@ -73,12 +73,12 @@ void cleanup(void)
 
 void handleControlRequest(char *requestBuffer)
 {
-  printf("Control request: %s\n", requestBuffer);
+  Serial.printf("Control request: %s\n", requestBuffer);
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, requestBuffer);
   if (error)
   {
-    printf("Control deserializeJson() failed: %s\n", error.f_str());
+    Serial.printf("Control deserializeJson() failed: %s\n", error.f_str());
     return;
   }
 
@@ -258,7 +258,7 @@ void loop(void)
   }
   catch (...)
   {
-    printf("Error handling WiFi request\n");
+    Serial.println("Error handling WiFi request");
   }
 
   // Alarm handling removed - was tied to buzzer functionality
@@ -333,7 +333,7 @@ void loop(void)
     }
     catch (...)
     {
-      printf("Error handling operation mode: %d\n", static_cast<int>(operationMode));
+      Serial.printf("Error handling operation mode: %d\n", static_cast<int>(operationMode));
       // Fallback to clock mode on error
       operationMode = OperationMode::CLOCK;
     }
@@ -346,6 +346,6 @@ void loop(void)
   }
   catch (...)
   {
-    printf("Error in text scrolling\n");
+    Serial.println("Error in text scrolling");
   }
 }

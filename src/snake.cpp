@@ -46,8 +46,8 @@ void Snake::cleanupSnake()
 
 boolean Snake::moveSnake(Direction direction)
 {
-    printf("direction: %d, head->x: %d, head->y: %d\n", direction, head->x, head->y);
-    printf("direction: %d, tail->x: %d, tail->y: %d\n", direction, tail->x, tail->y);
+    Serial.printf("direction: %d, head->x: %d, head->y: %d\n", direction, head->x, head->y);
+    Serial.printf("direction: %d, tail->x: %d, tail->y: %d\n", direction, tail->x, tail->y);
     
     // Check bounds and collisions first
     uint8_t new_x = head->x;
@@ -166,7 +166,7 @@ uint8_t *Snake::getSnake()
     }
     if (!success)
     {
-        printf("failed to move to food\n");
+        Serial.println("failed to move to food");
         if (moveSnake(Direction::LEFT))
         {
             return bitmap;
@@ -184,7 +184,7 @@ uint8_t *Snake::getSnake()
             return bitmap;
         }
 
-        printf("failed to move at all\n");
+        Serial.println("failed to move at all");
         // Clean up and restart
         cleanupSnake();
         initBitmap();

@@ -18,7 +18,7 @@ bool Stock::updateStockData()
   
   // Check if adding ticker would exceed buffer size
   if (strlen(url) + strlen(ticker) >= sizeof(url)) {
-    printf("URL too long with ticker\n");
+    Serial.println("URL too long with ticker");
     return false;
   }
   strcat(url, ticker);
@@ -28,7 +28,7 @@ bool Stock::updateStockData()
   
   // Check if adding API key would exceed buffer size
   if (strlen(authHeader) + strlen(settings->getStockApiKey()) >= sizeof(authHeader)) {
-    printf("Auth header too long\n");
+    Serial.println("Auth header too long");
     return false;
   }
   strcat(authHeader, settings->getStockApiKey());
@@ -47,24 +47,24 @@ bool Stock::updateStockData()
   }
   
   if (statusCode != 200) {
-    printf("Stock API error: %d\n", statusCode);
+    Serial.printf("Stock API error: %d\n", statusCode);
     return false;
   }
 
-  printf("Status code: %d\n", statusCode);
-  printf("Response: %s\n", response);
+  Serial.printf("Status code: %d\n", statusCode);
+  Serial.printf("Response: %s\n", response);
 
   JsonDocument doc;
   DeserializationError error = deserializeJson(doc, response);
   if (error)
   {
-    printf("deserializeJson() failed: %s\n", error.f_str());
+    Serial.printf("deserializeJson() failed: %s\n", error.f_str());
     return false;
   }
 
   // Validate response structure
   if (!doc["data"] || !doc["data"].is<JsonArray>() || doc["data"].size() == 0) {
-    printf("Invalid stock data structure\n");
+    Serial.println("Invalid stock data structure");
     return false;
   }
   
@@ -72,7 +72,7 @@ bool Stock::updateStockData()
   if (!dataItem["t"] || !dataItem["o"] || 
       !dataItem["c"] || !dataItem["h"] || 
       !dataItem["l"] || !dataItem["v"]) {
-    printf("Missing required stock data fields\n");
+    Serial.println("Missing required stock data fields");
     return false;
   }
 

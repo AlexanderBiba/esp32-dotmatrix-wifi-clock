@@ -177,7 +177,7 @@ void Renderer::setRaw(uint8_t rawBuffer[MAX_DEVICES * 8])
   {
     if (!mx->setBuffer(mx->getColumnCount() - 1, MAX_DEVICES * 8, rawBuffer))
     {
-      printf("Failed to set buffer\n");
+      Serial.println("Failed to set buffer");
     }
   }
 }
@@ -244,7 +244,7 @@ uint8_t *Renderer::loadStringToBitmap(const char *str, uint8_t *bitmap, bool sma
   for (int i = 0; i < length; ++i)
   {
     if (curr >= bitmapEnd) {
-      printf("Buffer overflow prevented in loadStringToBitmap\n");
+      Serial.println("Buffer overflow prevented in loadStringToBitmap");
       return curr;
     }
     
@@ -262,7 +262,7 @@ uint8_t *Renderer::loadStringToBitmap(const char *str, uint8_t *bitmap, bool sma
         {
           if (curr >= bitmapEnd)
           {
-            printf("Buffer overflow prevented in loadStringToBitmap (small numbers)\n");
+            Serial.println("Buffer overflow prevented in loadStringToBitmap (small numbers)");
             return curr;
           }
 #ifdef BOTTOM_ALIGN
@@ -280,7 +280,7 @@ uint8_t *Renderer::loadStringToBitmap(const char *str, uint8_t *bitmap, bool sma
         {
           if (curr >= bitmapEnd)
           {
-            printf("Buffer overflow prevented in loadStringToBitmap (regular numbers)\n");
+            Serial.println("Buffer overflow prevented in loadStringToBitmap (regular numbers)");
             return curr;
           }
 #ifdef BOTTOM_ALIGN
@@ -299,7 +299,7 @@ uint8_t *Renderer::loadStringToBitmap(const char *str, uint8_t *bitmap, bool sma
       {
         if (curr >= bitmapEnd)
         {
-          printf("Buffer overflow prevented in loadStringToBitmap (characters)\n");
+          Serial.println("Buffer overflow prevented in loadStringToBitmap (characters)");
           return curr;
         }
 #ifdef BOTTOM_ALIGN

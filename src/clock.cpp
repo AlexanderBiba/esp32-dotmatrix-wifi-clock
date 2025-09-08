@@ -25,13 +25,13 @@ void Clock::updateTime()
   
   // Check if timezone is valid
   if (strlen(settings->getTimezone()) == 0) {
-    printf("No timezone set, using default\n");
+    Serial.println("No timezone set, using default");
     return;
   }
   
   // Check if adding timezone would exceed buffer size
   if (strlen(url) + strlen(settings->getTimezone()) >= sizeof(url)) {
-    printf("URL too long with timezone\n");
+    Serial.println("URL too long with timezone");
     return;
   }
   
@@ -40,11 +40,11 @@ void Clock::updateTime()
   int statusCode = client.responseStatusCode();
   String response = client.responseBody();
 
-  printf("Status code: %d\n", statusCode);
-  printf("Response: %s\n", response);
+  Serial.printf("Status code: %d\n", statusCode);
+  Serial.printf("Response: %s\n", response);
 
   if (statusCode != 200) {
-    printf("Failed to get time data, status: %d\n", statusCode);
+    Serial.printf("Failed to get time data, status: %d\n", statusCode);
     return;
   }
 
@@ -52,13 +52,13 @@ void Clock::updateTime()
   DeserializationError error = deserializeJson(doc, response);
   if (error)
   {
-    printf("deserializeJson() failed: %s\n", error.f_str());
+    Serial.printf("deserializeJson() failed: %s\n", error.f_str());
     return;
   }
 
   // Validate the response data
   if (!doc["unixtime"] || !doc["raw_offset"]) {
-    printf("Invalid time data received\n");
+    Serial.println("Invalid time data received");
     return;
   }
 
