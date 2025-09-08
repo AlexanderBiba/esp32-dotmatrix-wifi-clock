@@ -32,23 +32,23 @@ Snake *snake;
 
 void setup(void)
 {
-  // No printf here. For some reason nothing is printed during setup.
   Serial.begin(115200);
+  delay(1000);
+  
   EEPROM.begin(0x400);
-
-  // Initialize watchdog timer
   esp_task_wdt_init(WATCHDOG_TIMEOUT, true);
   esp_task_wdt_add(NULL);
 
   settings = new AppSettings();
-  appServer = new AppServer(settings);
   renderer = new Renderer(settings);
-  clk = new Clock(settings);
-  weather = new Weather(settings);
-  stock = new Stock(settings);
-  snake = new Snake(settings);
+  appServer = new AppServer(settings);
+  
+  // WiFi-dependent components created when WiFi connects
+  clk = nullptr;
+  weather = nullptr;
+  stock = nullptr;
+  snake = nullptr;
 
-  // Feed watchdog after initialization
   esp_task_wdt_reset();
 }
 
@@ -92,7 +92,9 @@ void handleControlRequest(char *requestBuffer)
   if (doc["timezone"])
   {
     settings->setTimezone(doc["timezone"]);
-    clk->updateTime();
+    if (clk != nullptr) {
+      clk->updateTime();
+    }
   }
   if (doc["latitude"])
   {
@@ -118,7 +120,7 @@ void handleControlRequest(char *requestBuffer)
   // Alarm control removed - was tied to buzzer functionality
 
   // update weather if required
-  if (updateWeather)
+  if (updateWeather && weather != nullptr)
   {
     weather->updateWeatherData();
   }
@@ -129,20 +131,36 @@ void loop(void)
   // Feed watchdog timer to prevent reset
   esp_task_wdt_reset();
 
+  // Process WiFiManager (keeps captive portal alive)
+  appServer->processWiFi();
+
   // CRITICAL: Check WiFi status first to prevent crashes
   // If WiFi is not connected, show configuration message and skip all other operations
   if (WiFi.status() != WL_CONNECTED)
   {
+
     static long lastWiFiCheck = 0;
-    if (millis() - lastWiFiCheck > 1000) // Check every second
+    static bool setWifiMessage = false;
+    if (!setWifiMessage && (millis() - lastWiFiCheck > 1000)) // Check every second
     {
       lastWiFiCheck = millis();
-      renderer->setMessage("Connect to DotMatrix Clock Wifi Network to configure device");
+      renderer->setMessage("Connect to 'DotMatrix Clock' AP wifi network to configure device");
+      setWifiMessage = true;
     }
-    
+
     // Skip all other operations when WiFi is not connected
     renderer->scrollText();
     return;
+  }
+
+  // Create WiFi-dependent components when WiFi connects
+  static bool componentsCreated = false;
+  if (!componentsCreated) {
+    clk = new Clock(settings);
+    weather = new Weather(settings);
+    stock = new Stock(settings);
+    snake = new Snake(settings);
+    componentsCreated = true;
   }
 
   static Card *cards[] = {
@@ -260,37 +278,53 @@ void loop(void)
     {
       switch (operationMode)
       {
-       case OperationMode::MESSAGE:
-         // WiFi status is already checked at the top of the loop
-         // This only handles custom messages when WiFi is connected
-         if (strlen(requestBuffer) == 0)
-         {
-           // Use default message if requestBuffer is empty
-           renderer->setMessage("Hello World!");
-         }
-         else
-         {
-           // Use custom message
-           renderer->setMessage(requestBuffer);
-         }
-         break;
+      case OperationMode::MESSAGE:
+        // WiFi status is already checked at the top of the loop
+        // This only handles custom messages when WiFi is connected
+        if (strlen(requestBuffer) == 0)
+        {
+          // Use default message if requestBuffer is empty
+          renderer->setMessage("Hello World!");
+        }
+        else
+        {
+          // Use custom message
+          renderer->setMessage(requestBuffer);
+        }
+        break;
       case OperationMode::CLOCK:
-        renderer->setRaw(clk->getTime());
+        if (clk != nullptr) {
+          renderer->setRaw(clk->getTime());
+        } else {
+          renderer->setMessage("Clock not available");
+        }
         break;
       case OperationMode::DATE:
-        renderer->setRaw(clk->getDate());
+        if (clk != nullptr) {
+          renderer->setRaw(clk->getDate());
+        } else {
+          renderer->setMessage("Date not available");
+        }
         break;
       case OperationMode::WEATHER:
-        renderer->setRaw(weather->getWeather());
+        if (weather != nullptr) {
+          renderer->setRaw(weather->getWeather());
+        } else {
+          renderer->setMessage("Weather not available");
+        }
         break;
       case OperationMode::SNAKE:
-        renderer->setRaw(snake->getSnake());
+        if (snake != nullptr) {
+          renderer->setRaw(snake->getSnake());
+        } else {
+          renderer->setMessage("Snake not available");
+        }
         break;
       case OperationMode::IP_ADDRESS:
       {
         // Create message with mDNS.local URL and IP address
         static char ipMessage[64];
-        snprintf(ipMessage, sizeof(ipMessage), "http://%s.local     %s", 
+        snprintf(ipMessage, sizeof(ipMessage), "http://%s.local     %s",
                  settings->getMdnsDomain(), WiFi.localIP().toString().c_str());
         renderer->setMessage(ipMessage);
       }

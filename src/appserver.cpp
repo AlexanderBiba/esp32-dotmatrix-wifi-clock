@@ -15,46 +15,36 @@ AppServer::AppServer(AppSettings *settings) : settings(settings)
 {
   server = new WiFiServer(80);
 
-  WiFiManager wifiManager;
-  wifiManager.setConfigPortalTimeout(180); // 3 minutes timeout for config portal
-  wifiManager.setConnectTimeout(20); // 20 seconds timeout for connection attempts
-  
+  // Configure WiFiManager for non-blocking operation
+  wifiManager.setConfigPortalBlocking(false);
+  wifiManager.setBreakAfterConfig(true);
+
   // Try to connect to WiFi, or start config portal if no credentials
   if (!wifiManager.autoConnect("DotMatrix Clock")) {
-    Serial.println("Failed to connect to WiFi and config portal timed out");
-    Serial.println("Device will continue running in AP mode");
-    // Don't return here - continue with server setup even if WiFi failed
+    Serial.println("Config portal running - connect to 'DotMatrix Clock' AP");
   } else {
-    Serial.println("WIFI Connected");
-    
-    // Only start MDNS if WiFi is connected
-    const char* mdnsDomain = settings->getMdnsDomain();
-    if (strlen(mdnsDomain) == 0) {
-      mdnsDomain = DEFAULT_MDNS_DOMAIN;
-      Serial.println("MDNS domain empty, using default");
-    }
-    
-    Serial.print("Starting MDNS with domain: ");
-    Serial.println(mdnsDomain);
-    
-    bool mdnsSuccess = MDNS.begin(mdnsDomain);
-    if (!mdnsSuccess)
-    {
-      Serial.println("Error setting up MDNS responder!");
-      Serial.println("Falling back to default domain...");
-      mdnsSuccess = MDNS.begin(DEFAULT_MDNS_DOMAIN);
-      if (!mdnsSuccess) {
-        Serial.println("Failed to start MDNS even with default domain!");
-      } else {
-        Serial.println("MDNS started successfully with default domain");
-      }
-    } else {
-      Serial.println("MDNS started successfully");
-    }
+    startMDNS();
   }
 
-  Serial.println("Starting Server");
   server->begin();
+}
+
+void AppServer::startMDNS()
+{
+  const char* mdnsDomain = settings->getMdnsDomain();
+  if (strlen(mdnsDomain) == 0) {
+    mdnsDomain = DEFAULT_MDNS_DOMAIN;
+  }
+  
+  if (!MDNS.begin(mdnsDomain)) {
+    MDNS.begin(DEFAULT_MDNS_DOMAIN);
+  }
+}
+
+void AppServer::processWiFi()
+{
+  // Process WiFiManager (keeps captive portal alive)
+  wifiManager.process();
 }
 
 uint8_t htoi(char c)

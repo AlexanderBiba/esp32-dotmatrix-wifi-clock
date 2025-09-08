@@ -157,6 +157,7 @@ void Renderer::setMessage(const char *message)
   strcpy(newMessage, message);
   newMessageAvailable = true;
   newRawAvailable = false;
+  scrollContent = true;
 }
 
 void Renderer::setRaw(uint8_t rawBuffer[MAX_DEVICES * 8])
