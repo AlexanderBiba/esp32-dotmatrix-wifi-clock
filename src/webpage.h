@@ -58,30 +58,129 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             justify-content: space-between;
             align-items: center;
             margin-bottom: 3rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-color);
+            padding: 2rem 2.5rem;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 1.5rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color), var(--warning-color), var(--primary-color));
+            background-size: 200% 100%;
+            animation: gradientShift 3s ease-in-out infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            flex: 1;
+        }
+
+        .title-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
         .header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            font-size: 2.25rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover), var(--success-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            margin: 0;
+            letter-spacing: -0.02em;
+            position: relative;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 0.25rem;
+            opacity: 0.8;
         }
 
         .theme-toggle {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 0.5rem;
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 3.5rem;
+            height: 3.5rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 50%;
         }
 
         .theme-toggle:hover {
-            background: var(--bg-tertiary);
+            border-color: var(--primary-color);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .theme-toggle:hover::before {
+            opacity: 0.1;
+        }
+
+        .theme-toggle:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        .theme-toggle .icon {
+            width: 1.75rem;
+            height: 1.75rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .theme-toggle:hover .icon {
+            transform: rotate(360deg) scale(1.1);
+        }
+
+        /* Dark mode specific styling */
+        [data-theme="dark"] .theme-toggle {
+            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+        }
+
+        [data-theme="dark"] .theme-toggle:hover::before {
+            background: linear-gradient(135deg, var(--warning-color), var(--primary-color));
         }
 
         .grid {
@@ -489,14 +588,37 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             }
             
             .header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
                 margin-bottom: 2rem;
+                padding: 1.5rem;
+            }
+            
+            .header-content {
+                justify-content: space-between;
+            }
+            
+            .title-section {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+                text-align: left;
             }
             
             .header h1 {
-                font-size: 1.5rem;
+                font-size: 1.75rem;
+            }
+            
+            .header-subtitle {
+                font-size: 0.9rem;
+            }
+            
+            .theme-toggle {
+                width: 3rem;
+                height: 3rem;
+            }
+            
+            .theme-toggle .icon {
+                width: 1.5rem;
+                height: 1.5rem;
             }
             
             .grid {
@@ -560,8 +682,30 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 padding: 0.75rem;
             }
             
+            .header {
+                padding: 1rem;
+            }
+            
+            .title-section {
+                gap: 0.5rem;
+            }
+            
             .header h1 {
-                font-size: 1.25rem;
+                font-size: 1.5rem;
+            }
+            
+            .header-subtitle {
+                font-size: 0.8rem;
+            }
+            
+            .theme-toggle {
+                width: 2.75rem;
+                height: 2.75rem;
+            }
+            
+            .theme-toggle .icon {
+                width: 1.25rem;
+                height: 1.25rem;
             }
             
             .card {
@@ -837,12 +981,19 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
 
     <div class="container" id="main-container">
         <header class="header">
-            <h1>Dotmatrix Digital Clock</h1>
-            <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
-                <svg class="icon" id="theme-icon" viewBox="0 0 24 24">
-                    <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
-            </button>
+            <div class="header-content">
+                <div class="title-section">
+                    <div>
+                        <h1>Dotmatrix Digital Clock</h1>
+                        <div class="header-subtitle">ESP32 WiFi-Enabled Display Controller</div>
+                    </div>
+                </div>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                    <svg class="icon" id="theme-icon" viewBox="0 0 24 24">
+                        <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </button>
+            </div>
         </header>
 
         <!-- Popup Overlay -->
