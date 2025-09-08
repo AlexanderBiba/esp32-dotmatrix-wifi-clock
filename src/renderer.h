@@ -43,6 +43,7 @@ private:
     bool newRawAvailable = false;
 
     bool scrollContent = true;
+    bool flipped = false;
 
     uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t);
 

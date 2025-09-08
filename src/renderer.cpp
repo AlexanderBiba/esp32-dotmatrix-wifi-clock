@@ -36,7 +36,7 @@ Renderer::Renderer(AppSettings *settings)
     return this->scrollDataIn(dev, t);
   };
 
-  mx = new MD_MAX72XX(MD_MAX72XX::DR1CR0RR0_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
+  mx = new MD_MAX72XX(flipped ? MD_MAX72XX::DR1CR0RR1_HW : MD_MAX72XX::DR1CR0RR0_HW, DATA_PIN, CLK_PIN, CS_PIN, MAX_DEVICES);
   mx->begin();
   mx->setShiftDataInCallback(lambdaWrapper);
   mx->control(MD_MAX72XX::INTENSITY, settings->getBrightness());
@@ -47,8 +47,25 @@ void Renderer::scrollText(void)
   static uint32_t prevTime = 0;
   if (scrollContent && (millis() - prevTime >= SCROLL_DELAY))
   {
-    mx->transform(MD_MAX72XX::TSL);
+    mx->transform(flipped ? MD_MAX72XX::TSR : MD_MAX72XX::TSL);
     prevTime = millis();
+  }
+}
+
+void horizontalFlip(uint8_t arr[], int n) {
+  int left = 0;
+  int right = n - 1;
+  int temp;
+
+  while (left < right) {
+      // Swap elements
+      temp = arr[left];
+      arr[left] = arr[right];
+      arr[right] = temp;
+
+      // Move pointers
+      left++;
+      right--;
   }
 }
 
@@ -77,7 +94,13 @@ uint8_t Renderer::scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t)
     }
     else if (newRawAvailable)
     {
-      memcpy(curRaw, newRaw, sizeof(curRaw));
+      uint8_t temp[MAX_DEVICES * 8];
+      memcpy(temp, newRaw, sizeof(newRaw));
+      if (flipped)
+      {
+        horizontalFlip(temp, MAX_DEVICES * 8);
+      }
+      memcpy(curRaw, temp, sizeof(curRaw));
       newRawAvailable = false;
       state = S_NEXT_RAW;
       curLen = 0;
@@ -162,25 +185,30 @@ void Renderer::setMessage(const char *message)
 
 void Renderer::setRaw(uint8_t rawBuffer[MAX_DEVICES * 8])
 {
-  if (rawBuffer == nullptr)
-  {
-    return;
-  }
+    if (rawBuffer == nullptr) return;
 
-  if (scrollContent)
-  {
-    memcpy(newRaw, rawBuffer, sizeof(newRaw));
-    newRawAvailable = true;
-    newMessageAvailable = false;
-  }
-  else
-  {
-    if (!mx->setBuffer(mx->getColumnCount() - 1, MAX_DEVICES * 8, rawBuffer))
+    uint8_t temp[MAX_DEVICES * 8];
+    memcpy(temp, rawBuffer, sizeof(temp));
+    if (flipped)
     {
-      Serial.println("Failed to set buffer");
+        horizontalFlip(temp, MAX_DEVICES * 8);
     }
-  }
+
+    if (scrollContent)
+    {
+        memcpy(newRaw, temp, sizeof(newRaw));
+        newRawAvailable = true;
+        newMessageAvailable = false;
+    }
+    else
+    {
+        if (!mx->setBuffer(mx->getColumnCount() - 1, MAX_DEVICES * 8, temp))
+        {
+            Serial.println("Failed to set buffer");
+        }
+    }
 }
+
 
 void Renderer::updateBrightness()
 {
