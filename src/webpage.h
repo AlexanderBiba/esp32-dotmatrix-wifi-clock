@@ -761,10 +761,81 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             color: var(--text-secondary);
             font-weight: 500;
         }
+
+        /* Loading Overlay Styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loading-content {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            max-width: 300px;
+            width: 90%;
+        }
+
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-subtext {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Blur effect for main content when loading */
+        .container.loading {
+            filter: blur(2px);
+            pointer-events: none;
+            transition: filter 0.3s ease;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading Settings</div>
+            <div class="loading-subtext">Please wait...</div>
+        </div>
+    </div>
+
+    <div class="container" id="main-container">
         <header class="header">
             <h1>Dotmatrix Digital Clock</h1>
             <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
@@ -1342,6 +1413,23 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             }, 300);
         }
 
+        // Loading state functions
+        function showLoadingState() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const mainContainer = document.getElementById('main-container');
+            
+            loadingOverlay.classList.remove('hidden');
+            mainContainer.classList.add('loading');
+        }
+
+        function hideLoadingState() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const mainContainer = document.getElementById('main-container');
+            
+            loadingOverlay.classList.add('hidden');
+            mainContainer.classList.remove('loading');
+        }
+
       function submitModeOfOperation() {
             const form = document.getElementById('operation_mode_form');
             const submitBtn = document.querySelector('#operation_mode_form .btn');
@@ -1582,14 +1670,26 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 });
         }
 
-        // Load general settings on page load
-        loadGeneralSettings();
+        // Show loading state initially
+        showLoadingState();
         
-        // Load display modes on page load
-        loadDisplayModes();
-        
-        // Load system information on page load
-        loadSystemInfo();
+        // Load all settings and hide loading state when complete
+        Promise.all([
+            loadGeneralSettings(),
+            loadDisplayModes(),
+            loadSystemInfo()
+        ]).then(() => {
+            // All settings loaded, hide loading state
+            setTimeout(() => {
+                hideLoadingState();
+            }, 500); // Small delay to ensure smooth transition
+        }).catch((error) => {
+            console.error('Error loading settings:', error);
+            // Hide loading state even if there's an error
+            setTimeout(() => {
+                hideLoadingState();
+            }, 500);
+        });
         
         // Auto-refresh system info every 30 seconds
         setInterval(loadSystemInfo, 30000);
@@ -1701,7 +1801,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         }
         
         function loadDisplayModes() {
-            getSettings()
+            return getSettings()
                 .then(settings => {
                     if (settings.activeCards && Array.isArray(settings.activeCards)) {
                         // Reset all checkboxes first
@@ -1753,6 +1853,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 })
                 .catch(error => {
                     console.error('Error loading display modes:', error);
+                    throw error; // Re-throw to be caught by Promise.all
                 });
         }
 
@@ -1814,7 +1915,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         }
         
         function loadGeneralSettings() {
-            getSettings()
+            return getSettings()
                 .then(settings => {
                     // Set brightness
                     const brightnessSlider = document.getElementById('brightness');
@@ -1861,11 +1962,12 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 })
                 .catch(error => {
                     console.error('Error loading general settings:', error);
+                    throw error; // Re-throw to be caught by Promise.all
                 });
         }
         
         function loadSystemInfo() {
-            fetch('/&SYSINFO')
+            return fetch('/&SYSINFO')
                 .then(response => response.json())
                 .then(data => {
                     // WiFi Status
@@ -1913,6 +2015,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                     document.getElementById('memory-usage').textContent = 'Error';
                     document.getElementById('storage-usage').textContent = 'Error';
                     document.getElementById('chip-model').textContent = 'Error';
+                    throw error; // Re-throw to be caught by Promise.all
                 });
         }
         
