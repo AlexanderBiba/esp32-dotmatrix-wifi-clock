@@ -25,6 +25,8 @@ public:
     void setLongitude(float _longitude);
     void setWeatherUnits(char _units);
     void setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH]);
+    void setCardOrder(uint8_t _cardOrder[OPERATION_MODE_LENGTH]);
+    void setCardDurations(uint16_t _cardDurations[OPERATION_MODE_LENGTH]);
     void setMdnsDomain(const char _mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE]);
     void factoryReset();
 
@@ -35,6 +37,8 @@ public:
     float getLongitude() { return settings.weather.longitude; }
     char getWeatherUnits() { return settings.weather.units; }
     bool *getActiveCards() { return settings.activeCards; }
+    uint8_t *getCardOrder() { return settings.cardOrder; }
+    uint16_t *getCardDurations() { return settings.cardDurations; }
     const char *getMdnsDomain() { return settings.network.mdnsDomain; }
 
     void toJson(JsonDocument &doc);
@@ -67,6 +71,8 @@ private:
             char mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE];
         } network;
         bool activeCards[OPERATION_MODE_LENGTH];
+        uint8_t cardOrder[OPERATION_MODE_LENGTH]; // Store the order of cards
+        uint16_t cardDurations[OPERATION_MODE_LENGTH]; // Store duration in seconds for each card
         // Alarm struct removed - was tied to buzzer functionality
     } settings;
 };

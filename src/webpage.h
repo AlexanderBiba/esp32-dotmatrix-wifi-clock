@@ -626,6 +626,141 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             height: 1.25rem;
             fill: currentColor;
         }
+
+        /* Drag and Drop Styles */
+        .card-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .card-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            cursor: move;
+        }
+
+        .card-item:hover {
+            background: var(--bg-secondary);
+            border-color: var(--primary-color);
+        }
+
+        .card-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .card-item.drag-over {
+            border-color: var(--primary-color);
+            background: rgb(99 102 241 / 0.1);
+        }
+
+        .drop-indicator {
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 2px;
+            margin: 0.25rem 0;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        .drop-indicator.show {
+            opacity: 1;
+        }
+
+        .drag-handle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            cursor: grab;
+            user-select: none;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            transition: color 0.3s ease;
+        }
+
+        .drag-handle:hover {
+            color: var(--primary-color);
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .card-item .checkbox-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .card-item .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .duration-input {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-left: auto;
+        }
+
+        .message-input-container {
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .message-input-container .form-control {
+            width: 100%;
+        }
+
+        .card-item[data-card-type="message"] {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .message-card-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .message-card-row .checkbox-group {
+            flex: 1;
+        }
+
+        .message-card-row .duration-input {
+            margin-left: auto;
+        }
+
+        .duration-control {
+            width: 60px;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.25rem;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        .duration-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgb(99 102 241 / 0.1);
+        }
+
+        .duration-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -653,37 +788,93 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             <!-- Left Column: Display Options -->
             <div class="card">
                 <h2>Display Options</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                    Drag and drop cards to reorder them. The order determines the sequence in which cards are displayed.
+                </p>
                 <form id="operation_mode_form">
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="clock-checkbox" name="operation-mode" checked>
-                        <label for="clock-checkbox">Clock</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="date-checkbox" name="operation-mode">
-                        <label for="date-checkbox">Date</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="weather-checkbox" name="operation-mode">
-                        <label for="weather-checkbox">Weather</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="snake-checkbox" name="operation-mode">
-                        <label for="snake-checkbox">Snake Game</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="rain-checkbox" name="operation-mode">
-                        <label for="rain-checkbox">Rain Effect</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="ip-checkbox" name="operation-mode">
-                        <label for="ip-checkbox">IP Address</label>
-                    </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="message-checkbox" name="operation-mode">
-                        <label for="message-checkbox">Message</label>
-                    </div>
-                    <div class="form-group">
-                        <input type="text" id="message-input" class="form-control" placeholder="Enter message here" maxlength="255">
+                    <div id="card-list" class="card-list">
+                        <div class="card-item" data-card-type="clock" draggable="true">
+                            <div class="drag-handle">⋮⋮</div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="clock-checkbox" name="operation-mode" checked>
+                                <label for="clock-checkbox">Clock</label>
+                            </div>
+                            <div class="duration-input">
+                                <input type="number" id="clock-duration" class="duration-control" min="1" max="300" value="10">
+                                <span class="duration-label">sec</span>
+                            </div>
+                        </div>
+                        <div class="card-item" data-card-type="date" draggable="true">
+                            <div class="drag-handle">⋮⋮</div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="date-checkbox" name="operation-mode">
+                                <label for="date-checkbox">Date</label>
+                            </div>
+                            <div class="duration-input">
+                                <input type="number" id="date-duration" class="duration-control" min="1" max="300" value="5">
+                                <span class="duration-label">sec</span>
+                            </div>
+                        </div>
+                        <div class="card-item" data-card-type="weather" draggable="true">
+                            <div class="drag-handle">⋮⋮</div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="weather-checkbox" name="operation-mode">
+                                <label for="weather-checkbox">Weather</label>
+                            </div>
+                            <div class="duration-input">
+                                <input type="number" id="weather-duration" class="duration-control" min="1" max="300" value="5">
+                                <span class="duration-label">sec</span>
+                            </div>
+                        </div>
+                        <div class="card-item" data-card-type="snake" draggable="true">
+                            <div class="drag-handle">⋮⋮</div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="snake-checkbox" name="operation-mode">
+                                <label for="snake-checkbox">Snake Game</label>
+                            </div>
+                            <div class="duration-input">
+                                <input type="number" id="snake-duration" class="duration-control" min="1" max="300" value="5">
+                                <span class="duration-label">sec</span>
+                            </div>
+                        </div>
+                        <div class="card-item" data-card-type="rain" draggable="true">
+                            <div class="drag-handle">⋮⋮</div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="rain-checkbox" name="operation-mode">
+                                <label for="rain-checkbox">Rain Effect</label>
+                            </div>
+                            <div class="duration-input">
+                                <input type="number" id="rain-duration" class="duration-control" min="1" max="300" value="5">
+                                <span class="duration-label">sec</span>
+                            </div>
+                        </div>
+                        <div class="card-item" data-card-type="ip" draggable="true">
+                            <div class="drag-handle">⋮⋮</div>
+                            <div class="checkbox-group">
+                                <input type="checkbox" id="ip-checkbox" name="operation-mode">
+                                <label for="ip-checkbox">IP Address</label>
+                            </div>
+                            <div class="duration-input">
+                                <input type="number" id="ip-duration" class="duration-control" min="1" max="300" value="5">
+                                <span class="duration-label">sec</span>
+                            </div>
+                        </div>
+                        <div class="card-item" data-card-type="message" draggable="true">
+                            <div class="message-card-row">
+                                <div class="drag-handle">⋮⋮</div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="message-checkbox" name="operation-mode">
+                                    <label for="message-checkbox">Message</label>
+                                </div>
+                                <div class="duration-input">
+                                    <input type="number" id="message-duration" class="duration-control" min="1" max="300" value="5">
+                                    <span class="duration-label">sec</span>
+                                </div>
+                            </div>
+                            <div class="message-input-container">
+                                <input type="text" id="message-input" class="form-control" placeholder="Enter message here" maxlength="255">
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -799,6 +990,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
         let currentTheme = localStorage.getItem('theme') || 'light';
         let selectedCity = null;
         let searchTimeout = null;
+        let draggedElement = null;
         
         function toggleTheme() {
             currentTheme = currentTheme === 'light' ? 'dark' : 'light';
@@ -814,6 +1006,277 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             } else {
                 icon.innerHTML = '<path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>';
             }
+        }
+
+        // Drag and Drop Functions
+        let dropIndicator = null;
+        let intendedDropPosition = null;
+
+        function createDropIndicator() {
+            if (!dropIndicator) {
+                dropIndicator = document.createElement('div');
+                dropIndicator.className = 'drop-indicator';
+            }
+            return dropIndicator;
+        }
+
+        function showDropIndicator(targetElement, position) {
+            const indicator = createDropIndicator();
+            const cardList = document.getElementById('card-list');
+            
+            // Remove any existing indicator
+            hideDropIndicator();
+            
+            // Store the intended drop position
+            intendedDropPosition = {
+                targetElement: targetElement,
+                position: position
+            };
+            
+            if (position === 'before') {
+                cardList.insertBefore(indicator, targetElement);
+            } else if (position === 'after') {
+                cardList.insertBefore(indicator, targetElement.nextSibling);
+            } else if (position === 'end') {
+                cardList.appendChild(indicator);
+            }
+            
+            indicator.classList.add('show');
+        }
+
+        function hideDropIndicator() {
+            if (dropIndicator && dropIndicator.parentNode) {
+                dropIndicator.classList.remove('show');
+                dropIndicator.parentNode.removeChild(dropIndicator);
+            }
+            intendedDropPosition = null;
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', this.outerHTML);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            draggedElement = null;
+            hideDropIndicator();
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            
+            // Find the closest card element
+            const cardList = document.getElementById('card-list');
+            const cards = Array.from(cardList.children).filter(child => child.classList.contains('card-item'));
+            
+            if (cards.length === 0) {
+                // No cards, drop at the end
+                showDropIndicator(cardList, 'end');
+                return false;
+            }
+            
+            // Find the closest card based on mouse position
+            let closestCard = null;
+            let closestDistance = Infinity;
+            let position = 'after';
+            
+            for (let card of cards) {
+                const rect = card.getBoundingClientRect();
+                const cardCenterY = rect.top + rect.height / 2;
+                const distance = Math.abs(e.clientY - cardCenterY);
+                
+                if (distance < closestDistance) {
+                    closestDistance = distance;
+                    closestCard = card;
+                    position = e.clientY < cardCenterY ? 'before' : 'after';
+                }
+            }
+            
+            if (closestCard) {
+                showDropIndicator(closestCard, position);
+            }
+            
+            return false;
+        }
+
+        function handleDragEnter(e) {
+            // Don't add drag-over class, we're using the drop indicator instead
+        }
+
+        function handleDragLeave(e) {
+            // Only hide indicator if we're leaving the card list entirely
+            const cardList = document.getElementById('card-list');
+            const rect = cardList.getBoundingClientRect();
+            if (e.clientX < rect.left || e.clientX > rect.right || 
+                e.clientY < rect.top || e.clientY > rect.bottom) {
+                hideDropIndicator();
+            }
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+
+            const cardList = document.getElementById('card-list');
+            
+            // Use the stored intended drop position if available
+            if (intendedDropPosition && intendedDropPosition.targetElement && intendedDropPosition.position) {
+                const { targetElement, position } = intendedDropPosition;
+                
+                if (position === 'before') {
+                    cardList.insertBefore(draggedElement, targetElement);
+                } else if (position === 'after') {
+                    cardList.insertBefore(draggedElement, targetElement.nextSibling);
+                } else if (position === 'end') {
+                    cardList.appendChild(draggedElement);
+                }
+            } else {
+                // Fallback to old logic if no intended position is stored
+                if (draggedElement !== this) {
+                    const draggedIndex = Array.from(cardList.children).indexOf(draggedElement);
+                    const targetIndex = Array.from(cardList.children).indexOf(this);
+
+                    if (draggedIndex < targetIndex) {
+                        cardList.insertBefore(draggedElement, this.nextSibling);
+                    } else {
+                        cardList.insertBefore(draggedElement, this);
+                    }
+                }
+            }
+
+            // Update card order
+            updateCardOrder();
+            hideDropIndicator();
+            return false;
+        }
+
+        function updateCardOrder() {
+            const cardList = document.getElementById('card-list');
+            const cardItems = cardList.children;
+            const cardOrder = [];
+
+            // Map card types to their indices
+            const cardTypeMap = {
+                'clock': 0,
+                'date': 1,
+                'weather': 2,
+                'snake': 3,
+                'message': 4,
+                'ip': 5,
+                'rain': 6
+            };
+
+            // Build the order array based on current DOM order
+            for (let i = 0; i < cardItems.length; i++) {
+                const cardType = cardItems[i].getAttribute('data-card-type');
+                if (cardTypeMap.hasOwnProperty(cardType)) {
+                    cardOrder.push(cardTypeMap[cardType]);
+                }
+            }
+
+            // Send the new order to the server
+            const settings = {
+                cardOrder: cardOrder
+            };
+
+            const jsonString = JSON.stringify(settings);
+            const encodedJson = encodeURIComponent(jsonString);
+            const url = `/&CARD_ORDER=${encodedJson}`;
+
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        showStatus('Card order updated!', 'success');
+                    } else {
+                        showStatus('Failed to update card order.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showStatus('Error updating card order.', 'error');
+                });
+        }
+
+        function updateCardDurations() {
+            const cardDurations = [];
+            
+            // Map card types to their indices
+            const cardTypeMap = {
+                'clock': 0,
+                'date': 1,
+                'weather': 2,
+                'snake': 3,
+                'message': 4,
+                'ip': 5,
+                'rain': 6
+            };
+
+            // Initialize array with default values
+            for (let i = 0; i < 7; i++) {
+                cardDurations[i] = 5; // Default 5 seconds
+            }
+
+            // Get duration values from inputs
+            const durationInputs = document.querySelectorAll('.duration-control');
+            durationInputs.forEach(input => {
+                const cardItem = input.closest('.card-item');
+                const cardType = cardItem.getAttribute('data-card-type');
+                const duration = parseInt(input.value);
+                
+                if (cardTypeMap.hasOwnProperty(cardType) && !isNaN(duration)) {
+                    const index = cardTypeMap[cardType];
+                    cardDurations[index] = Math.max(1, Math.min(300, duration)); // Clamp between 1-300
+                }
+            });
+
+            // Send the durations to the server
+            const settings = {
+                cardDurations: cardDurations
+            };
+
+            const jsonString = JSON.stringify(settings);
+            const encodedJson = encodeURIComponent(jsonString);
+            const url = `/&CARD_DURATIONS=${encodedJson}`;
+
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        showStatus('Card durations updated!', 'success');
+                    } else {
+                        showStatus('Failed to update card durations.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showStatus('Error updating card durations.', 'error');
+                });
+        }
+
+        function initializeDragAndDrop() {
+            const cardItems = document.querySelectorAll('.card-item');
+            const cardList = document.getElementById('card-list');
+            
+            cardItems.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart, false);
+                item.addEventListener('dragend', handleDragEnd, false);
+                item.addEventListener('dragover', handleDragOver, false);
+                item.addEventListener('dragenter', handleDragEnter, false);
+                item.addEventListener('dragleave', handleDragLeave, false);
+                item.addEventListener('drop', handleDrop, false);
+            });
+            
+            // Add drag listeners to the card list container for empty area drops
+            cardList.addEventListener('dragover', handleDragOver, false);
+            cardList.addEventListener('dragenter', handleDragEnter, false);
+            cardList.addEventListener('dragleave', handleDragLeave, false);
+            cardList.addEventListener('drop', handleDrop, false);
         }
 
         function showStatus(message, type = 'success') {
@@ -1189,6 +1652,21 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             document.documentElement.setAttribute('data-theme', currentTheme);
             updateThemeIcon();
             
+            // Initialize drag and drop
+            initializeDragAndDrop();
+            
+            // Duration inputs - update with debouncing
+            const durationInputs = document.querySelectorAll('.duration-control');
+            durationInputs.forEach(input => {
+                let durationTimeout;
+                input.addEventListener('input', function() {
+                    clearTimeout(durationTimeout);
+                    durationTimeout = setTimeout(() => {
+                        updateCardDurations();
+                    }, 500); // Wait 500ms after user stops typing
+                });
+            });
+            
             // City search input
             const cityInput = document.getElementById('city-input');
             if (cityInput) {
@@ -1262,10 +1740,77 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                             }
                         });
                     }
+
+                    // Restore card order if available
+                    if (settings.cardOrder && Array.isArray(settings.cardOrder)) {
+                        restoreCardOrder(settings.cardOrder);
+                    }
+
+                    // Restore card durations if available
+                    if (settings.cardDurations && Array.isArray(settings.cardDurations)) {
+                        restoreCardDurations(settings.cardDurations);
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading display modes:', error);
                 });
+        }
+
+        function restoreCardOrder(cardOrder) {
+            const cardList = document.getElementById('card-list');
+            const cardItems = Array.from(cardList.children);
+            
+            // Map indices to card types
+            const cardTypeMap = {
+                0: 'clock',
+                1: 'date',
+                2: 'weather',
+                3: 'snake',
+                4: 'message',
+                5: 'ip',
+                6: 'rain'
+            };
+
+            // Create a new order based on the saved card order
+            const newOrder = [];
+            cardOrder.forEach(index => {
+                const cardType = cardTypeMap[index];
+                if (cardType) {
+                    const cardItem = cardItems.find(item => item.getAttribute('data-card-type') === cardType);
+                    if (cardItem) {
+                        newOrder.push(cardItem);
+                    }
+                }
+            });
+
+            // Reorder the DOM elements
+            newOrder.forEach(cardItem => {
+                cardList.appendChild(cardItem);
+            });
+        }
+
+        function restoreCardDurations(cardDurations) {
+            // Map indices to card types
+            const cardTypeMap = {
+                0: 'clock',
+                1: 'date',
+                2: 'weather',
+                3: 'snake',
+                4: 'message',
+                5: 'ip',
+                6: 'rain'
+            };
+
+            // Set duration values for each card
+            cardDurations.forEach((duration, index) => {
+                const cardType = cardTypeMap[index];
+                if (cardType) {
+                    const durationInput = document.getElementById(`${cardType}-duration`);
+                    if (durationInput) {
+                        durationInput.value = duration;
+                    }
+                }
+            });
         }
         
         function loadGeneralSettings() {

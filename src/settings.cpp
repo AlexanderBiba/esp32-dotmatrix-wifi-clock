@@ -19,6 +19,109 @@ AppSettings::AppSettings()
             Serial.println("Failed to commit settings to EEPROM");
         }
     }
+    else
+    {
+        Serial.println("Settings loaded from EEPROM");
+        // Serial.printf("Card order from EEPROM: ");
+        // for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
+        // {
+        //   Serial.printf("%d ", settings.cardOrder[i]);
+        // }
+        // Serial.println();
+        
+        // Check if card order needs to be initialized (for existing devices)
+        // This happens when the cardOrder field was added to an existing structure
+        bool needsCardOrderInit = false;
+        for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
+        {
+          if (settings.cardOrder[i] >= OPERATION_MODE_LENGTH)
+          {
+            needsCardOrderInit = true;
+            break;
+          }
+        }
+        
+        // Also check if all values are 0 (uninitialized)
+        if (!needsCardOrderInit)
+        {
+          bool allZero = true;
+          for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
+          {
+            if (settings.cardOrder[i] != 0)
+            {
+              allZero = false;
+              break;
+            }
+          }
+          if (allZero)
+          {
+            needsCardOrderInit = true;
+          }
+        }
+        
+        if (needsCardOrderInit)
+        {
+          Serial.println("Initializing card order for existing device");
+          for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
+          {
+            settings.cardOrder[i] = i; // Default order: 0, 1, 2, 3, 4, 5, 6
+          }
+          EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, cardOrder), settings.cardOrder);
+          if (!EEPROM.commit()) {
+            Serial.println("Failed to commit card order initialization");
+          }
+        }
+        
+        // Check if card durations need to be initialized (for existing devices)
+        bool needsCardDurationsInit = false;
+        for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
+        {
+          if (settings.cardDurations[i] == 0)
+          {
+            needsCardDurationsInit = true;
+            break;
+          }
+        }
+        
+        if (needsCardDurationsInit)
+        {
+          Serial.println("Initializing card durations for existing device");
+          for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
+          {
+            // Set default durations (in seconds)
+            switch (i) {
+                case 0: // CLOCK
+                    settings.cardDurations[i] = 10; // 10 seconds
+                    break;
+                case 1: // DATE
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 2: // WEATHER
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 3: // SNAKE
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 4: // MESSAGE
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 5: // IP_ADDRESS
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 6: // RAIN
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                default:
+                    settings.cardDurations[i] = 5; // Default 5 seconds
+                    break;
+            }
+          }
+          EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, cardDurations), settings.cardDurations);
+          if (!EEPROM.commit()) {
+            Serial.println("Failed to commit card durations initialization");
+          }
+        }
+    }
     
     // Validate loaded settings
     if (settings.display.brightness > 0xf) settings.display.brightness = 0xf;
@@ -137,6 +240,37 @@ void AppSettings::setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH])
     }
 }
 
+void AppSettings::setCardOrder(uint8_t _cardOrder[OPERATION_MODE_LENGTH])
+{
+    for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
+    {
+        settings.cardOrder[i] = _cardOrder[i];
+    }
+    EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, cardOrder), settings.cardOrder);
+    if (!EEPROM.commit()) {
+        Serial.println("Failed to commit card order setting");
+    }
+}
+
+void AppSettings::setCardDurations(uint16_t _cardDurations[OPERATION_MODE_LENGTH])
+{
+    for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
+    {
+        // Validate duration (minimum 1 second, maximum 300 seconds = 5 minutes)
+        if (_cardDurations[i] < 1) {
+            settings.cardDurations[i] = 1;
+        } else if (_cardDurations[i] > 300) {
+            settings.cardDurations[i] = 300;
+        } else {
+            settings.cardDurations[i] = _cardDurations[i];
+        }
+    }
+    EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, cardDurations), settings.cardDurations);
+    if (!EEPROM.commit()) {
+        Serial.println("Failed to commit card durations setting");
+    }
+}
+
 void AppSettings::setMdnsDomain(const char _mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE])
 {
     if (strlen(_mdnsDomain) >= MDNS_DOMAIN_BUFFER_SIZE) {
@@ -186,6 +320,35 @@ void AppSettings::setDefaultValues()
     for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
     {
         settings.activeCards[i] = false;
+        settings.cardOrder[i] = i; // Default order: 0, 1, 2, 3, 4, 5, 6
+        
+        // Set default durations (in seconds)
+        switch (i) {
+            case 0: // CLOCK
+                settings.cardDurations[i] = 10; // 10 seconds
+                break;
+            case 1: // DATE
+                settings.cardDurations[i] = 5; // 5 seconds
+                break;
+            case 2: // WEATHER
+                settings.cardDurations[i] = 5; // 5 seconds
+                break;
+            case 3: // SNAKE
+                settings.cardDurations[i] = 5; // 5 seconds
+                break;
+            case 4: // MESSAGE
+                settings.cardDurations[i] = 5; // 5 seconds
+                break;
+            case 5: // IP_ADDRESS
+                settings.cardDurations[i] = 5; // 5 seconds
+                break;
+            case 6: // RAIN
+                settings.cardDurations[i] = 5; // 5 seconds
+                break;
+            default:
+                settings.cardDurations[i] = 5; // Default 5 seconds
+                break;
+        }
     }
     // Don't enable any cards by default - let the main loop handle the display logic
 }
@@ -213,5 +376,17 @@ void AppSettings::toJson(JsonDocument &doc)
         {
             doc["activeCards"].add(OperationModeStr[i]);
         }
+    }
+    
+    doc["cardOrder"].to<JsonArray>();
+    for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
+    {
+        doc["cardOrder"].add(settings.cardOrder[i]);
+    }
+    
+    doc["cardDurations"].to<JsonArray>();
+    for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
+    {
+        doc["cardDurations"].add(settings.cardDurations[i]);
     }
 }

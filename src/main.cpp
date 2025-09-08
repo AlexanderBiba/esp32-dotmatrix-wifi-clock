@@ -192,18 +192,39 @@ void loop(void)
 
     // Count active cards and find the next active one
     bool *activeCards = settings->getActiveCards();
+    uint8_t *cardOrder = settings->getCardOrder();
     uint8_t activeCardCount = 0;
     uint8_t activeCardIndices[OPERATION_MODE_LENGTH];
 
-    // Build list of active card indices
-    for (uint8_t i = 0; i < numCards; i++)
+    Serial.printf("Current card order: ");
+    for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
     {
-      if (activeCards[static_cast<int>(cards[i]->getOperationMode())])
+      Serial.printf("%d ", cardOrder[i]);
+    }
+    Serial.println();
+    
+    Serial.printf("Active cards: ");
+    for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
+    {
+      Serial.printf("%d ", activeCards[i]);
+    }
+    Serial.println();
+
+    // Build list of active card indices in user-defined order
+    for (uint8_t orderIndex = 0; orderIndex < OPERATION_MODE_LENGTH; orderIndex++)
+    {
+      uint8_t cardIndex = cardOrder[orderIndex];
+      // Serial.printf("Order index %d -> card index %d, operation mode %d, active: %d\n", 
+      //               orderIndex, cardIndex, static_cast<int>(cards[cardIndex]->getOperationMode()), 
+      //               activeCards[static_cast<int>(cards[cardIndex]->getOperationMode())]);
+      if (cardIndex < numCards && activeCards[static_cast<int>(cards[cardIndex]->getOperationMode())])
       {
-        activeCardIndices[activeCardCount] = i;
+        activeCardIndices[activeCardCount] = cardIndex;
         activeCardCount++;
       }
     }
+
+    Serial.printf("Active card count: %d\n", activeCardCount);
 
     // If no cards are active, show IP address
     if (activeCardCount == 0)
@@ -216,7 +237,9 @@ void loop(void)
     {
       currentState = activeCardIndices[0];
       operationMode = cards[currentState]->getOperationMode();
-      cardSwitchTime = cards[currentState]->getCardSwitchTime();
+      // Use user-defined duration instead of card's default switch time
+      uint16_t *cardDurations = settings->getCardDurations();
+      cardSwitchTime = cardDurations[static_cast<int>(operationMode)] * 1000; // Convert seconds to milliseconds
     }
     // If multiple cards are active, cycle through them
     else
@@ -236,7 +259,9 @@ void loop(void)
       currentActiveIndex = (currentActiveIndex + 1) % activeCardCount;
       currentState = activeCardIndices[currentActiveIndex];
       operationMode = cards[currentState]->getOperationMode();
-      cardSwitchTime = cards[currentState]->getCardSwitchTime();
+      // Use user-defined duration instead of card's default switch time
+      uint16_t *cardDurations = settings->getCardDurations();
+      cardSwitchTime = cardDurations[static_cast<int>(operationMode)] * 1000; // Convert seconds to milliseconds
     }
   }
 
@@ -258,6 +283,12 @@ void loop(void)
       break;
     case AppServer::RequestMode::SETT:
       // Settings request handled by AppServer
+      break;
+    case AppServer::RequestMode::CARD_ORDER:
+      // Card order request handled by AppServer
+      break;
+    case AppServer::RequestMode::CARD_DURATIONS:
+      // Card durations request handled by AppServer
       break;
     default:
       break;

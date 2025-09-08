@@ -19,7 +19,9 @@ public:
         SYSINFO,
         REBOOT,
         CLEAR_SETTINGS,
-        FACTORY_RESET
+        FACTORY_RESET,
+        CARD_ORDER,
+        CARD_DURATIONS
     };
 
     AppServer(AppSettings *settings);

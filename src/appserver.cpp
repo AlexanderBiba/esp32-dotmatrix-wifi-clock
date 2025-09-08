@@ -245,6 +245,56 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     requestMode = AppServer::RequestMode::FACTORY_RESET;
   }
 
+  // handle card order request
+  pStart = strstr(szMesg, "/&CARD_ORDER");
+  if (pStart != NULL)
+  {
+    pStart += 12; // skip to start of data
+    // Skip the '=' character if present
+    if (*pStart == '=')
+    {
+      pStart++;
+    }
+    pEnd = strstr(pStart, "/&");
+
+    if (pEnd != NULL)
+    {
+      extractPayload(pStart, pEnd, psz);
+      requestMode = AppServer::RequestMode::CARD_ORDER;
+    }
+    else
+    {
+      // If no /& found, extract to end of string
+      extractPayload(pStart, pStart + strlen(pStart), psz);
+      requestMode = AppServer::RequestMode::CARD_ORDER;
+    }
+  }
+
+  // handle card durations request
+  pStart = strstr(szMesg, "/&CARD_DURATIONS");
+  if (pStart != NULL)
+  {
+    pStart += 16; // skip to start of data
+    // Skip the '=' character if present
+    if (*pStart == '=')
+    {
+      pStart++;
+    }
+    pEnd = strstr(pStart, "/&");
+
+    if (pEnd != NULL)
+    {
+      extractPayload(pStart, pEnd, psz);
+      requestMode = AppServer::RequestMode::CARD_DURATIONS;
+    }
+    else
+    {
+      // If no /& found, extract to end of string
+      extractPayload(pStart, pStart + strlen(pStart), psz);
+      requestMode = AppServer::RequestMode::CARD_DURATIONS;
+    }
+  }
+
   if (requestMode == AppServer::RequestMode::MODE)
   {
     for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
@@ -407,6 +457,134 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
       // Schedule reboot after sending response
       delay(1000);
       ESP.restart();
+    }
+    else if (appRequestMode == RequestMode::CARD_ORDER)
+    {
+      responseHeader = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
+      response = "{\"status\":\"card_order_updated\"}";
+      
+      // Parse the card order from JSON
+      Serial.printf("Card order request buffer: %s\n", requestBuffer);
+      JsonDocument doc;
+      DeserializationError error = deserializeJson(doc, requestBuffer);
+      if (error)
+      {
+        Serial.printf("Card order deserializeJson() failed: %s\n", error.f_str());
+        response = "{\"status\":\"error\",\"message\":\"Invalid JSON\"}";
+      }
+      else
+      {
+        // Extract card order array
+        if (doc.containsKey("cardOrder") && doc["cardOrder"].is<JsonArray>())
+        {
+          uint8_t newCardOrder[OPERATION_MODE_LENGTH];
+          JsonArray orderArray = doc["cardOrder"];
+          
+          // Validate array size
+          if (orderArray.size() == OPERATION_MODE_LENGTH)
+          {
+            for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
+            {
+              newCardOrder[i] = orderArray[i].as<uint8_t>();
+            }
+            
+            // Validate that all indices are present and unique
+            bool validOrder = true;
+            // Serial.printf("Received card order: ");
+            // for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
+            // {
+            //   Serial.printf("%d ", newCardOrder[i]);
+            // }
+            // Serial.println();
+            
+            for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
+            {
+              bool found = false;
+              for (int j = 0; j < OPERATION_MODE_LENGTH; j++)
+              {
+                if (newCardOrder[j] == i)
+                {
+                  found = true;
+                  break;
+                }
+              }
+              if (!found)
+              {
+                Serial.printf("Missing index %d in card order\n", i);
+                validOrder = false;
+                break;
+              }
+            }
+            
+            if (validOrder)
+            {
+              settings->setCardOrder(newCardOrder);
+              Serial.println("Card order updated successfully");
+            }
+            else
+            {
+              Serial.println("Invalid card order - not all indices present");
+              response = "{\"status\":\"error\",\"message\":\"Invalid card order\"}";
+            }
+          }
+          else
+          {
+            Serial.println("Invalid card order array size");
+            response = "{\"status\":\"error\",\"message\":\"Invalid array size\"}";
+          }
+        }
+        else
+        {
+          Serial.println("Missing or invalid cardOrder field");
+          response = "{\"status\":\"error\",\"message\":\"Missing cardOrder field\"}";
+        }
+      }
+    }
+    else if (appRequestMode == RequestMode::CARD_DURATIONS)
+    {
+      responseHeader = "HTTP/1.1 200 OK\nContent-Type: application/json\n\n";
+      response = "{\"status\":\"card_durations_updated\"}";
+      
+      // Parse the card durations from JSON
+      Serial.printf("Card durations request buffer: %s\n", requestBuffer);
+      JsonDocument doc;
+      DeserializationError error = deserializeJson(doc, requestBuffer);
+      if (error)
+      {
+        Serial.printf("Card durations deserializeJson() failed: %s\n", error.f_str());
+        response = "{\"status\":\"error\",\"message\":\"Invalid JSON\"}";
+      }
+      else
+      {
+        // Extract card durations array
+        if (doc.containsKey("cardDurations") && doc["cardDurations"].is<JsonArray>())
+        {
+          uint16_t newCardDurations[OPERATION_MODE_LENGTH];
+          JsonArray durationsArray = doc["cardDurations"];
+          
+          // Validate array size
+          if (durationsArray.size() == OPERATION_MODE_LENGTH)
+          {
+            for (int i = 0; i < OPERATION_MODE_LENGTH; i++)
+            {
+              newCardDurations[i] = durationsArray[i].as<uint16_t>();
+            }
+            
+            settings->setCardDurations(newCardDurations);
+            Serial.println("Card durations updated successfully");
+          }
+          else
+          {
+            Serial.println("Invalid card durations array size");
+            response = "{\"status\":\"error\",\"message\":\"Invalid array size\"}";
+          }
+        }
+        else
+        {
+          Serial.println("Missing or invalid cardDurations field");
+          response = "{\"status\":\"error\",\"message\":\"Missing cardDurations field\"}";
+        }
+      }
     }
     state = S_RESPONSE;
     break;
