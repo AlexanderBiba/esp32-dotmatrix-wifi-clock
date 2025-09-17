@@ -98,7 +98,7 @@ void handleControlRequest(char *requestBuffer)
   {
     settings->setTimezone(doc["timezone"]);
     if (clk != nullptr) {
-      clk->updateTime();
+      clk->updateTimezone();
     }
   }
   if (doc["latitude"])

@@ -1,7 +1,6 @@
-#include <ArduinoJson.h>
 #include <MD_MAX72xx.h>
 #include <WiFi.h>
-#include <HttpClient.h>
+#include <ezTime.h>
 
 #include "clock.h"
 #include "settings.h"
@@ -9,155 +8,141 @@
 #include "main.h"
 #include "renderer.h"
 
-#define UPDATE_TIME_INTERVAL 3600 * 1000
-
 extern Renderer *renderer;
 
-void Clock::updateTime()
-{
-  static WiFiClient wifiClient = WiFiClient();
-  
-  // Set timeout for the client
-  wifiClient.setTimeout(10000); // 10 second timeout
-  
-  HttpClient client = HttpClient(wifiClient, "worldtimeapi.org");
-  char url[128] = "/api/timezone/";
-  
-  // Check if timezone is valid
-  if (strlen(settings->getTimezone()) == 0) {
-    Serial.println("No timezone set, using default");
-    return;
-  }
-  
-  // Check if adding timezone would exceed buffer size
-  if (strlen(url) + strlen(settings->getTimezone()) >= sizeof(url)) {
-    Serial.println("URL too long with timezone");
-    return;
-  }
-  
-  strcat(url, settings->getTimezone());
-  client.get(url);
-  int statusCode = client.responseStatusCode();
-  String response = client.responseBody();
-
-  Serial.printf("Status code: %d\n", statusCode);
-  Serial.printf("Response: %s\n", response);
-
-  if (statusCode != 200) {
-    Serial.printf("Failed to get time data, status: %d\n", statusCode);
-    return;
-  }
-
-  JsonDocument doc;
-  DeserializationError error = deserializeJson(doc, response);
-  if (error)
-  {
-    Serial.printf("deserializeJson() failed: %s\n", error.f_str());
-    return;
-  }
-
-  // Validate the response data
-  if (!doc["unixtime"] || !doc["raw_offset"]) {
-    Serial.println("Invalid time data received");
-    return;
-  }
-
-  epoch = (long)doc["unixtime"] + (long)doc["raw_offset"] + (doc["dst"] ? (long)doc["dst_offset"] : 0) - (millis() / 1000);
-  currentTime = epoch + (millis() / 1000);
-
-  loadClockBitmap();
-}
-
-// getTimeStruct() method removed - was tied to buzzer functionality
-
-void Clock::loadDateBitmap()
-{
-  static char timeBuffer[TIME_BUFFER_SIZE] = {0};
-  uint8_t *p = dateBitmap;
-  strftime(timeBuffer, TIME_BUFFER_SIZE, "%a", gmtime(&currentTime));
-  p = renderer->loadStringToBitmap(timeBuffer, p);
-  *p++ = 0;
-  *p++ = 0;
-#ifdef MMDD_DATE_FORMAT
-  strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", gmtime(&currentTime));
-  p = renderer->loadStringToBitmap(timeBuffer, p, true);
-  *p++ = 0x20;
-  strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", gmtime(&currentTime));
-  p = renderer->loadStringToBitmap(timeBuffer, p, true);
-#else
-  strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", gmtime(&currentTime));
-  p = renderer->loadStringToBitmap(timeBuffer, p, true);
-  *p++ = 0x10;
-  strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", gmtime(&currentTime));
-  p = renderer->loadStringToBitmap(timeBuffer, p, true);
-#endif
-  renderer->alightBitmapContentToCenter(dateBitmap, p);
-}
+Timezone myTimezone;
 
 void Clock::loadClockBitmap()
 {
-  static char timeBuffer[TIME_BUFFER_SIZE] = {0};
-  strftime(timeBuffer, TIME_BUFFER_SIZE, "%T", gmtime(&currentTime));
-  uint8_t *p = clockBitmap;
+    uint8_t h = myTimezone.hour();
+    uint8_t m = myTimezone.minute();
+    uint8_t s = myTimezone.second();
+
+    uint8_t *p = clockBitmap;
 
 #if SMALL_SECONDS_CLOCK
-  p += renderer->writeCharToBuffer(timeBuffer[0], p);
-  p += renderer->writeCharToBuffer(timeBuffer[1], p);
-  *p++ = 0; // empty column between hours and minutes
-  *p++ = 0; // empty column between hours and minutes
-  p += renderer->writeCharToBuffer(timeBuffer[3], p);
-  p += renderer->writeCharToBuffer(timeBuffer[4], p);
-  *p++ = 0; // empty column between minutes and seconds
-  *p++ = 0; // empty column between minutes and seconds
-  p += renderer->writeSmallCharToBuffer(timeBuffer[6], p);
-  *p++ = 0; // empty column
-  p += renderer->writeSmallCharToBuffer(timeBuffer[7], p);
+    // Render hour digits
+    p += renderer->writeCharToBuffer('0' + (h / 10), p);
+    p += renderer->writeCharToBuffer('0' + (h % 10), p);
+    *p++ = 0;
+    *p++ = 0; // Separator
+    // Render minute digits
+    p += renderer->writeCharToBuffer('0' + (m / 10), p);
+    p += renderer->writeCharToBuffer('0' + (m % 10), p);
+    *p++ = 0;
+    *p++ = 0; // Separator
+    // Render second digits (small)
+    p += renderer->writeSmallCharToBuffer('0' + (s / 10), p);
+    *p++ = 0;
+    p += renderer->writeSmallCharToBuffer('0' + (s % 10), p);
 #else
-  p += renderer->writeCharToBuffer(timeBuffer[0], p);
-  p += renderer->writeCharToBuffer(timeBuffer[1], p);
-  *p++ = 0; // empty column between hours and minutes
-  p += renderer->writeCharToBuffer(timeBuffer[3], p);
-  p += renderer->writeCharToBuffer(timeBuffer[4], p);
-  *p++ = 0; // empty column between minutes and seconds
-  p += renderer->writeCharToBuffer(timeBuffer[6], p);
-  p += renderer->writeCharToBuffer(timeBuffer[7], p);
+    // Render hour digits
+    p += renderer->writeCharToBuffer('0' + (h / 10), p);
+    p += renderer->writeCharToBuffer('0' + (h % 10), p);
+    *p++ = 0; // Separator
+    // Render minute digits
+    p += renderer->writeCharToBuffer('0' + (m / 10), p);
+    p += renderer->writeCharToBuffer('0' + (m % 10), p);
+    *p++ = 0; // Separator
+    // Render second digits
+    p += renderer->writeCharToBuffer('0' + (s / 10), p);
+    p += renderer->writeCharToBuffer('0' + (s % 10), p);
 #endif
+}
+
+void Clock::loadDateBitmap()
+{
+    static char timeBuffer[TIME_BUFFER_SIZE] = {0};
+    uint8_t *p = dateBitmap;
+
+    strftime(timeBuffer, TIME_BUFFER_SIZE, "%a", localtime(&currentTime));
+    p = renderer->loadStringToBitmap(timeBuffer, p);
+    *p++ = 0;
+    *p++ = 0;
+
+#ifdef MMDD_DATE_FORMAT
+    strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", localtime(&currentTime));
+    p = renderer->loadStringToBitmap(timeBuffer, p, true);
+    *p++ = 0x20;
+    strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", localtime(&currentTime));
+    p = renderer->loadStringToBitmap(timeBuffer, p, true);
+#else
+    strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", localtime(&currentTime));
+    p = renderer->loadStringToBitmap(timeBuffer, p, true);
+    *p++ = 0x10;
+    strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", localtime(&currentTime));
+    p = renderer->loadStringToBitmap(timeBuffer, p, true);
+#endif
+
+    renderer->alightBitmapContentToCenter(dateBitmap, p);
+}
+
+Clock::Clock(AppSettings *settings)
+{
+    this->settings = settings;
+
+    waitForSync();
+    Serial.println("ezTime synced with NTP server.");
+
+    String timezone_setting = settings->getTimezone();
+    if (timezone_setting.length() > 0)
+    {
+        if (myTimezone.setLocation(timezone_setting))
+        {
+            Serial.printf("Timezone set to: %s\n", timezone_setting.c_str());
+        }
+        else
+        {
+            Serial.printf("Error: Could not set timezone '%s'. Defaulting to UTC.\n", timezone_setting.c_str());
+        }
+    }
+    else
+    {
+        Serial.println("No timezone set in settings. Defaulting to UTC.");
+    }
+    currentTime = 0;
 }
 
 uint8_t *Clock::getTime()
 {
-  static long prevUpdate = 0;
-  if ((millis() - prevUpdate > UPDATE_TIME_INTERVAL) && WiFi.status() == WL_CONNECTED)
-  {
-    prevUpdate = millis();
-    updateTime();
-  }
-
-  long newTime = epoch + (millis() / 1000);
-  if (newTime != currentTime)
-  {
-    currentTime = newTime;
-    loadClockBitmap();
-  }
-
-  return clockBitmap;
+    time_t now = ::now();
+    if (now != currentTime)
+    {
+        currentTime = now;
+        loadClockBitmap();
+    }
+    return clockBitmap;
 }
 
 uint8_t *Clock::getDate()
 {
-  static long prevUpdate = 0;
-  if ((millis() - prevUpdate > UPDATE_TIME_INTERVAL) && WiFi.status() == WL_CONNECTED)
-  {
-    prevUpdate = millis();
-    updateTime();
-  }
+    time_t now = ::now();
+    if (now != currentTime)
+    {
+        currentTime = now;
+        loadDateBitmap();
+    }
+    return dateBitmap;
+}
 
-  long newTime = epoch + (millis() / 1000);
-  if (newTime != currentTime)
-  {
-    currentTime = newTime;
-    loadDateBitmap();
-  }
+/**
+ * @brief Sets the clock's timezone dynamically at runtime.
+ * @param new_timezone The IANA timezone name (e.g., "America/Los_Angeles").
+ */
+void Clock::updateTimezone()
+{
+    const char *new_timezone = settings->getTimezone();
+    if (myTimezone.setLocation(new_timezone))
+    {
+        Serial.printf("Timezone updated to: %s\n", new_timezone);
 
-  return dateBitmap;
+        // Force an immediate redraw of the bitmaps with the new time.
+        currentTime = myTimezone.now();
+        loadClockBitmap();
+        loadDateBitmap();
+    }
+    else
+    {
+        Serial.printf("Error: Could not set timezone '%s'. It may be invalid.\n", new_timezone);
+    }
 }

@@ -14,13 +14,10 @@
 class Clock
 {
 public:
-    Clock(AppSettings *settings) : settings(settings) { updateTime(); };
+    Clock(AppSettings *settings);
     uint8_t *getTime();
     uint8_t *getDate();
-    void updateTime();
-    void loadClockBitmap();
-    void loadDateBitmap();
-    // getTimeStruct() method removed - was tied to buzzer functionality
+    void updateTimezone();
 
 private:
     AppSettings *settings;
@@ -29,6 +26,9 @@ private:
     char timeBuffer[TIME_BUFFER_SIZE] = {0};
     uint8_t clockBitmap[RAW_TIME_BITMAP_SIZE] = {0};
     uint8_t dateBitmap[RAW_TIME_BITMAP_SIZE] = {0};
+
+    void loadClockBitmap();
+    void loadDateBitmap();
 };
 
 #endif
