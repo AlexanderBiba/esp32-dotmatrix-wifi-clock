@@ -293,6 +293,19 @@ void AppSettings::setMdnsDomain(const char _mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE])
     }
 }
 
+void AppSettings::setMessage(const char _message[MESSAGE_BUFFER_SIZE])
+{
+    if (strlen(_message) >= MESSAGE_BUFFER_SIZE) {
+        Serial.println("Message too long, truncated");
+    }
+    strncpy(settings.message.content, _message, MESSAGE_BUFFER_SIZE - 1);
+    settings.message.content[MESSAGE_BUFFER_SIZE - 1] = '\0'; // Ensure null termination
+    EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, message.content), settings.message.content);
+    if (!EEPROM.commit()) {
+        Serial.println("Failed to commit message setting");
+    }
+}
+
 
 void AppSettings::factoryReset()
 {
@@ -319,6 +332,7 @@ void AppSettings::setDefaultValues()
     strcpy(settings.time.timezone, "America/New_York");
     strcpy(settings.stock.apiKey, "\0");
     strcpy(settings.network.mdnsDomain, "digiclk");
+    strcpy(settings.message.content, "Hello World!");
     settings.display.brightness = 0xf;
     settings.display.flipped = false;
     settings.weather.latitude = 40.7128f;  // New York City latitude
@@ -371,6 +385,7 @@ void AppSettings::toJson(JsonDocument &doc)
     doc["latitude"] = settings.weather.latitude;
     doc["longitude"] = settings.weather.longitude;
     doc["weatherUnits"] = settings.weather.units == 'f' ? "f" : "c";
+    doc["message"] = settings.message.content;
     
     // Ensure MDNS domain is valid for JSON output
     const char* mdnsDomain = settings.network.mdnsDomain;

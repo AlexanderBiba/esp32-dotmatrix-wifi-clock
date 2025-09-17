@@ -2110,6 +2110,12 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                         flipBtnText.textContent = settings.flipped ? 'Unflip Display' : 'Flip Display';
                     }
                     
+                    // Set message content
+                    const messageInput = document.getElementById('message-input');
+                    if (messageInput && settings.message) {
+                        messageInput.value = settings.message;
+                    }
+                    
                     
                     // Set city info if available - use the correct field names from ESP32
                     if (settings.latitude !== undefined && settings.longitude !== undefined && 

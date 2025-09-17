@@ -9,6 +9,7 @@
 #define TIMEZONE_BUFFER_SIZE 128
 #define STOCK_API_KEY_BUFFER_SIZE 128
 #define MDNS_DOMAIN_BUFFER_SIZE 64
+#define MESSAGE_BUFFER_SIZE 255
 
 #define MAGIC_NUMBER 0x5A
 #define BASE_EEPROM_ADDR 0
@@ -29,6 +30,7 @@ public:
     void setCardOrder(uint8_t _cardOrder[OPERATION_MODE_LENGTH]);
     void setCardDurations(uint16_t _cardDurations[OPERATION_MODE_LENGTH]);
     void setMdnsDomain(const char _mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE]);
+    void setMessage(const char _message[MESSAGE_BUFFER_SIZE]);
     void factoryReset();
 
     uint8_t getBrightness() { return settings.display.brightness; }
@@ -42,6 +44,7 @@ public:
     uint8_t *getCardOrder() { return settings.cardOrder; }
     uint16_t *getCardDurations() { return settings.cardDurations; }
     const char *getMdnsDomain() { return settings.network.mdnsDomain; }
+    const char *getMessage() { return settings.message.content; }
 
     void toJson(JsonDocument &doc);
 
@@ -73,6 +76,10 @@ private:
         {
             char mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE];
         } network;
+        struct
+        {
+            char content[MESSAGE_BUFFER_SIZE];
+        } message;
         bool activeCards[OPERATION_MODE_LENGTH];
         uint8_t cardOrder[OPERATION_MODE_LENGTH]; // Store the order of cards
         uint16_t cardDurations[OPERATION_MODE_LENGTH]; // Store duration in seconds for each card

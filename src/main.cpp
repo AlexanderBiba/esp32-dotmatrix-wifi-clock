@@ -121,12 +121,17 @@ void handleControlRequest(char *requestBuffer)
     {
         settings->setMdnsDomain(doc["mdnsDomain"]);
     }
+    if (doc["message"])
+    {
+        settings->setMessage(doc["message"]);
+    }
 
     if (updateWeather && weather != nullptr)
     {
         weather->updateWeatherData();
     }
 }
+
 
 // Helper function to identify scrolling modes
 bool isScrollingMode(OperationMode mode)
@@ -260,6 +265,11 @@ void loop(void)
         case AppServer::RequestMode::MODE:
         {
             settings->setActiveCards(activeCards);
+            // If MESSAGE card is active and we have message content, store it
+            if (activeCards[static_cast<int>(OperationMode::MESSAGE)] && strlen(requestBuffer) > 0)
+            {
+                settings->setMessage(requestBuffer);
+            }
             break;
         }
         case AppServer::RequestMode::CNTL:
@@ -303,14 +313,7 @@ void loop(void)
             switch (operationMode)
             {
             case OperationMode::MESSAGE:
-                if (strlen(requestBuffer) == 0)
-                {
-                    renderer->setMessage("Hello World!");
-                }
-                else
-                {
-                    renderer->setMessage(requestBuffer);
-                }
+                renderer->setMessage(settings->getMessage());
                 break;
             case OperationMode::CLOCK:
                 if (clk != nullptr)
