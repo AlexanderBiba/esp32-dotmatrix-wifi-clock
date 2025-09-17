@@ -74,7 +74,7 @@ void Clock::loadDateBitmap()
     p = renderer->loadStringToBitmap(timeBuffer, p, true);
 #endif
 
-    renderer->alightBitmapContentToCenter(dateBitmap, p);
+    renderer->alignBitmapContentToCenter(dateBitmap, p);
 }
 
 Clock::Clock(AppSettings *settings)

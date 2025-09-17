@@ -20,9 +20,10 @@ public:
     void updateBrightness();
     void setRaw(uint8_t rawBuffer[MAX_DEVICES * 8]);
     uint8_t *loadStringToBitmap(const char *str, uint8_t *bitmap, bool smallNumbers = false);
-    void alightBitmapContentToCenter(uint8_t *bitmap, uint8_t *endPtr);
+    void alignBitmapContentToCenter(uint8_t *bitmap, uint8_t *endPtr);
     uint8_t writeCharToBuffer(char c, uint8_t *buffer);
     uint8_t writeSmallCharToBuffer(char c, uint8_t *buffer);
+    void stopMessage();
 
 private:
     enum struct RenderMode
@@ -43,6 +44,7 @@ private:
     bool newRawAvailable = false;
 
     bool scrollContent = true;
+    bool _stopMessage = false;
 
     uint8_t scrollDataIn(uint8_t dev, MD_MAX72XX::transformType_t t);
 

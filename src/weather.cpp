@@ -31,7 +31,7 @@ void Weather::loadBitmap(const char *weather)
     *rawWeather++ = 0x50;
     *rawWeather++ = 0x10;
   }
-  renderer->alightBitmapContentToCenter(bitmap, rawWeather);
+  renderer->alignBitmapContentToCenter(bitmap, rawWeather);
 }
 
 uint8_t *Weather::getWeather()
@@ -60,7 +60,7 @@ bool Weather::updateWeatherData()
           -180 < settings->getLongitude() && settings->getLongitude() < 180))
   {
     Serial.println("Invalid location");
-    renderer->alightBitmapContentToCenter(bitmap, renderer->loadStringToBitmap("No LOC", bitmap));
+    renderer->alignBitmapContentToCenter(bitmap, renderer->loadStringToBitmap("No LOC", bitmap));
     Serial.println("location done");
     return true;
   }
