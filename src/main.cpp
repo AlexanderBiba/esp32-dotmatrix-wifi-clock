@@ -174,10 +174,10 @@ void loop(void)
         new Card(OperationMode::CLOCK, 10000),
         new Card(OperationMode::DATE, 5000),
         new Card(OperationMode::WEATHER, 5000),
-        new Card(OperationMode::SNAKE, 5000),
         new Card(OperationMode::MESSAGE, 5000),
-        new Card(OperationMode::IP_ADDRESS, 5000),
-        new Card(OperationMode::RAIN, 5000)};
+        new Card(OperationMode::SNAKE, 5000),
+        new Card(OperationMode::RAIN, 5000),
+        new Card(OperationMode::IP_ADDRESS, 5000)};
     static const size_t numCards = sizeof(cards) / sizeof(cards[0]);
     static uint8_t currentState = 0;
     static OperationMode operationMode = cards[currentState]->getOperationMode();

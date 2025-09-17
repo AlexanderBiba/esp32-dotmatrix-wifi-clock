@@ -99,16 +99,16 @@ AppSettings::AppSettings()
                 case 2: // WEATHER
                     settings.cardDurations[i] = 5; // 5 seconds
                     break;
-                case 3: // SNAKE
+                case 3: // MESSAGE
                     settings.cardDurations[i] = 5; // 5 seconds
                     break;
-                case 4: // MESSAGE
+                case 4: // SNAKE
                     settings.cardDurations[i] = 5; // 5 seconds
                     break;
-                case 5: // IP_ADDRESS
+                case 5: // RAIN
                     settings.cardDurations[i] = 5; // 5 seconds
                     break;
-                case 6: // RAIN
+                case 6: // IP_ADDRESS
                     settings.cardDurations[i] = 5; // 5 seconds
                     break;
                 default:
@@ -332,7 +332,7 @@ void AppSettings::setDefaultValues()
     strcpy(settings.time.timezone, "America/New_York");
     strcpy(settings.stock.apiKey, "\0");
     strcpy(settings.network.mdnsDomain, "digiclk");
-    strcpy(settings.message.content, "Hello World!");
+    strcpy(settings.message.content, "Set your message here");
     settings.display.brightness = 0xf;
     settings.display.flipped = false;
     settings.weather.latitude = 40.7128f;  // New York City latitude
@@ -357,16 +357,16 @@ void AppSettings::setDefaultValues()
             case 2: // WEATHER
                 settings.cardDurations[i] = 5; // 5 seconds
                 break;
-            case 3: // SNAKE
+            case 3: // MESSAGE
                 settings.cardDurations[i] = 5; // 5 seconds
                 break;
-            case 4: // MESSAGE
+            case 4: // SNAKE
                 settings.cardDurations[i] = 5; // 5 seconds
                 break;
-            case 5: // IP_ADDRESS
+            case 5: // RAIN
                 settings.cardDurations[i] = 5; // 5 seconds
                 break;
-            case 6: // RAIN
+            case 6: // IP_ADDRESS
                 settings.cardDurations[i] = 5; // 5 seconds
                 break;
             default:

@@ -1055,6 +1055,22 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                                 <span class="duration-label">sec</span>
                             </div>
                         </div>
+                        <div class="card-item" data-card-type="message" draggable="true">
+                            <div class="message-card-row">
+                                <div class="drag-handle">⋮⋮</div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="message-checkbox" name="operation-mode">
+                                    <label for="message-checkbox">Message</label>
+                                </div>
+                                <div class="duration-input">
+                                    <input type="number" id="message-duration" class="duration-control" min="1" max="300" value="5">
+                                    <span class="duration-label">sec</span>
+                                </div>
+                            </div>
+                            <div class="message-input-container">
+                                <input type="text" id="message-input" class="form-control" placeholder="Enter message here" maxlength="255">
+                            </div>
+                        </div>
                         <div class="card-item" data-card-type="snake" draggable="true">
                             <div class="drag-handle">⋮⋮</div>
                             <div class="checkbox-group">
@@ -1086,22 +1102,6 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                             <div class="duration-input">
                                 <input type="number" id="ip-duration" class="duration-control" min="1" max="300" value="5">
                                 <span class="duration-label">sec</span>
-                            </div>
-                        </div>
-                        <div class="card-item" data-card-type="message" draggable="true">
-                            <div class="message-card-row">
-                                <div class="drag-handle">⋮⋮</div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="message-checkbox" name="operation-mode">
-                                    <label for="message-checkbox">Message</label>
-                                </div>
-                                <div class="duration-input">
-                                    <input type="number" id="message-duration" class="duration-control" min="1" max="300" value="5">
-                                    <span class="duration-label">sec</span>
-                                </div>
-                            </div>
-                            <div class="message-input-container">
-                                <input type="text" id="message-input" class="form-control" placeholder="Enter message here" maxlength="255">
                             </div>
                         </div>
                     </div>
@@ -1404,10 +1404,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 'clock': 0,
                 'date': 1,
                 'weather': 2,
-                'snake': 3,
-                'message': 4,
-                'ip': 5,
-                'rain': 6
+                'message': 3,
+                'snake': 4,
+                'rain': 5,
+                'ip': 6
             };
 
             // Build the order array based on current DOM order
@@ -1449,10 +1449,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 'clock': 0,
                 'date': 1,
                 'weather': 2,
-                'snake': 3,
-                'message': 4,
-                'ip': 5,
-                'rain': 6
+                'message': 3,
+                'snake': 4,
+                'rain': 5,
+                'ip': 6
             };
 
             // Initialize array with default values
@@ -2032,10 +2032,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 0: 'clock',
                 1: 'date',
                 2: 'weather',
-                3: 'snake',
-                4: 'message',
-                5: 'ip',
-                6: 'rain'
+                3: 'message',
+                4: 'snake',
+                5: 'rain',
+                6: 'ip'
             };
 
             // Create a new order based on the saved card order
@@ -2062,10 +2062,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 0: 'clock',
                 1: 'date',
                 2: 'weather',
-                3: 'snake',
-                4: 'message',
-                5: 'ip',
-                6: 'rain'
+                3: 'message',
+                4: 'snake',
+                5: 'rain',
+                6: 'ip'
             };
 
             // Set duration values for each card
