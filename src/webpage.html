@@ -1,17 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dotmatrix Digital Clock</title>
+    <title>Dotmatrix Digital Clock Controller</title>
+    
     <script>
-        // Set theme immediately to prevent flash
+        // Set theme immediately to prevent flash of unstyled content. This script remains in the head.
         (function() {
             const theme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', theme);
         })();
     </script>
+
     <style>
+        /* * =============================================
+         * CSS: Refactored and Organized
+         * =============================================
+         */
+
+        /* --- 1. Root Variables & Theming --- */
         :root {
             --primary-color: #6366f1;
             --primary-hover: #4f46e5;
@@ -37,6 +45,7 @@
             --border-color: #475569;
         }
 
+        /* --- 2. Base & Layout Styles --- */
         * {
             margin: 0;
             padding: 0;
@@ -57,6 +66,14 @@
             padding: 2rem;
         }
 
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* --- 3. Component Styles (Header, Card) --- */
         .header {
             display: flex;
             justify-content: space-between;
@@ -83,11 +100,6 @@
             animation: gradientShift 3s ease-in-out infinite;
         }
 
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
         .header-content {
             display: flex;
             align-items: center;
@@ -111,7 +123,6 @@
             background-clip: text;
             margin: 0;
             letter-spacing: -0.02em;
-            position: relative;
         }
 
         .header-subtitle {
@@ -120,78 +131,6 @@
             font-weight: 500;
             margin-top: 0.25rem;
             opacity: 0.8;
-        }
-
-        .theme-toggle {
-            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
-            border: 2px solid var(--border-color);
-            border-radius: 50%;
-            width: 3.5rem;
-            height: 3.5rem;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: var(--shadow);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .theme-toggle::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, var(--primary-color), var(--success-color));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            border-radius: 50%;
-        }
-
-        .theme-toggle:hover {
-            border-color: var(--primary-color);
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .theme-toggle:hover::before {
-            opacity: 0.1;
-        }
-
-        .theme-toggle:active {
-            transform: translateY(-1px) scale(1.02);
-        }
-
-        .theme-toggle .icon {
-            width: 1.75rem;
-            height: 1.75rem;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            z-index: 1;
-        }
-
-        .theme-toggle:hover .icon {
-            transform: rotate(360deg) scale(1.1);
-        }
-
-        /* Dark mode specific styling */
-        [data-theme="dark"] .theme-toggle {
-            background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
-        }
-
-        [data-theme="dark"] .theme-toggle:hover::before {
-            background: linear-gradient(135deg, var(--warning-color), var(--primary-color));
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
         }
 
         .card {
@@ -214,7 +153,8 @@
             margin-bottom: 1.5rem;
             color: var(--text-primary);
         }
-
+        
+        /* --- 4. Form & Button Styles --- */
         .form-group {
             margin-bottom: 1.5rem;
         }
@@ -224,6 +164,13 @@
             font-weight: 500;
             margin-bottom: 0.5rem;
             color: var(--text-primary);
+        }
+        
+        .form-group small {
+            font-size: 0.875em;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            display: block;
         }
 
         .form-control {
@@ -243,41 +190,32 @@
             box-shadow: 0 0 0 3px rgb(99 102 241 / 0.1);
         }
 
-        .checkbox-group {
+        .checkbox-group, .radio-group label {
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .checkbox-group {
             margin-bottom: 1rem;
         }
-
-        .checkbox-group input[type="checkbox"] {
-            width: 1.25rem;
-            height: 1.25rem;
-            accent-color: var(--primary-color);
-        }
-
+        
         .checkbox-group label {
             margin-bottom: 0;
-            cursor: pointer;
         }
-
-        .radio-group {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .radio-group label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-        }
-
+        
+        .checkbox-group input[type="checkbox"],
         .radio-group input[type="radio"] {
             width: 1.25rem;
             height: 1.25rem;
             accent-color: var(--primary-color);
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
         }
 
         .btn {
@@ -291,12 +229,21 @@
             cursor: pointer;
             transition: all 0.3s ease;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .btn:hover {
             background: var(--primary-hover);
             transform: translateY(-1px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
         }
 
         .btn-secondary {
@@ -304,20 +251,83 @@
             color: var(--text-primary);
             border: 1px solid var(--border-color);
         }
-
+        
         .btn-secondary:hover {
             background: var(--border-color);
         }
-
+        
         .btn-success {
             background: var(--success-color);
         }
-
+        
         .btn-success:hover {
             background: #059669;
         }
+        
+        .btn-warning {
+            background: var(--warning-color);
+            color: white;
+        }
 
-        /* Popup overlay styles */
+        .btn-warning:hover {
+            background: #d97706; /* Darker orange */
+        }
+        
+        .btn-error {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .btn-error:hover {
+            background: #dc2626; /* Darker red */
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        /* --- 5. Specialized Component Styles --- */
+        
+        /* Theme Toggle */
+        .theme-toggle {
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 3.5rem;
+            height: 3.5rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .theme-toggle:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .theme-toggle:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+
+        .theme-toggle .icon {
+            width: 1.75rem;
+            height: 1.75rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .theme-toggle:hover .icon {
+            transform: rotate(360deg) scale(1.1);
+        }
+        
+        /* Popup & Loading Overlays */
         .popup-overlay {
             position: fixed;
             bottom: 2rem;
@@ -331,6 +341,10 @@
             border-radius: 0.75rem;
         }
 
+        .popup-overlay.hiding {
+            animation: slideDown 0.3s ease-in;
+        }
+        
         .popup {
             background: var(--bg-primary);
             border: 1px solid var(--border-color);
@@ -340,122 +354,61 @@
             min-width: 280px;
             max-width: calc(100vw - 2rem);
             text-align: center;
-            position: relative;
         }
 
-        .popup.success {
-            border-color: var(--success-color);
-            background: rgb(16 185 129 / 0.05);
-        }
+        .popup.success { border-color: var(--success-color); background: rgb(16 185 129 / 0.05); }
+        .popup.error   { border-color: var(--error-color);   background: rgb(239 68 68 / 0.05); }
+        .popup.loading { border-color: var(--primary-color); background: rgb(99 102 241 / 0.05); }
 
-        .popup.error {
-            border-color: var(--error-color);
-            background: rgb(239 68 68 / 0.05);
-        }
+        .popup-content { display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
+        .popup-icon    { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+        .popup-icon.success { color: var(--success-color); }
+        .popup-icon.error   { color: var(--error-color); }
+        .popup-icon.loading { color: var(--primary-color); }
+        .popup-message { font-weight: 500; color: var(--text-primary); }
 
-        .popup.loading {
-            border-color: var(--primary-color);
-            background: rgb(99 102 241 / 0.05);
-        }
-
-        .popup-content {
+        .loading-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
 
-        .popup-icon {
-            width: 1.25rem;
-            height: 1.25rem;
-            flex-shrink: 0;
+        .loading-overlay.hidden { opacity: 0; visibility: hidden; }
+
+        .loading-content {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            max-width: 300px;
+            width: 90%;
         }
 
-        .popup-icon.success {
-            color: var(--success-color);
+        .loading-text { font-size: 1.1rem; font-weight: 500; color: var(--text-primary); margin-bottom: 0.5rem; }
+        .loading-subtext { font-size: 0.9rem; color: var(--text-secondary); }
+        
+        .container.loading {
+            filter: blur(2px);
+            pointer-events: none;
+            transition: filter 0.3s ease;
         }
-
-        .popup-icon.error {
-            color: var(--error-color);
-        }
-
-        .popup-icon.loading {
-            color: var(--primary-color);
-        }
-
-        .popup-message {
-            font-weight: 500;
-            color: var(--text-primary);
-        }
-
-        .popup-spinner {
-            border: 2px solid var(--border-color);
-            border-top: 2px solid var(--primary-color);
-            border-radius: 50%;
-            width: 1.25rem;
-            height: 1.25rem;
-            animation: spin 1s linear infinite;
-            flex-shrink: 0;
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(1rem);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateX(-50%) translateY(1rem);
-            }
-        }
-
-        @keyframes slideUpMobile {
-            from {
-                opacity: 0;
-                transform: translateY(1rem);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideDownMobile {
-            from {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            to {
-                opacity: 0;
-                transform: translateY(1rem);
-            }
-        }
-
-        .popup-overlay.hiding {
-            animation: slideDown 0.3s ease-in;
-        }
-
-        /* Autocomplete styles */
-        .autocomplete-container {
-            position: relative;
-        }
+        
+        /* Autocomplete */
+        .autocomplete-container { position: relative; }
 
         .autocomplete-dropdown {
             position: absolute;
             top: 100%;
-            left: 0;
-            right: 0;
+            left: 0; right: 0;
             background: var(--bg-primary);
             border: 1px solid var(--border-color);
             border-top: none;
@@ -472,316 +425,13 @@
             border-bottom: 1px solid var(--border-color);
             transition: background-color 0.2s ease;
         }
-
-        .autocomplete-item:hover {
-            background: var(--bg-secondary);
-        }
-
-        .autocomplete-item:last-child {
-            border-bottom: none;
-        }
-
-        .city-info {
-            margin-top: 8px;
-            font-size: 0.9em;
-            color: var(--text-secondary);
-        }
         
-        /* System Information Styles */
-        .system-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: var(--bg-secondary); }
+        .city-info { margin-top: 8px; font-size: 0.9em; color: var(--text-secondary); }
         
-        .info-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            transition: all 0.3s ease;
-        }
-        
-        .info-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .info-icon {
-            font-size: 2em;
-            width: 50px;
-            text-align: center;
-        }
-        
-        .info-content {
-            flex: 1;
-        }
-        
-        .info-label {
-            font-size: 0.9em;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
-            font-weight: 500;
-        }
-        
-        .info-value {
-            font-size: 1.1em;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 2px;
-        }
-        
-        .info-sub {
-            font-size: 0.8em;
-            color: var(--text-tertiary);
-        }
-        
-        .btn-secondary {
-            background: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-secondary:hover {
-            background: var(--secondary-hover);
-            transform: translateY(-1px);
-        }
-        
-        /* Spinner and Loading States */
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid transparent;
-            border-top: 2px solid currentColor;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .btn:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
-            
-            .header {
-                margin-bottom: 2rem;
-                padding: 1.5rem;
-            }
-            
-            .header-content {
-                justify-content: space-between;
-            }
-            
-            .title-section {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-                text-align: left;
-            }
-            
-            .header h1 {
-                font-size: 1.75rem;
-            }
-            
-            .header-subtitle {
-                font-size: 0.9rem;
-            }
-            
-            .theme-toggle {
-                width: 3rem;
-                height: 3rem;
-            }
-            
-            .theme-toggle .icon {
-                width: 1.5rem;
-                height: 1.5rem;
-            }
-            
-            .grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-            
-            .card {
-                padding: 1.5rem;
-            }
-            
-            .card h2 {
-                font-size: 1.25rem;
-                margin-bottom: 1rem;
-            }
-            
-            .system-info-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            .info-card {
-                padding: 1rem;
-            }
-            
-            .info-icon {
-                font-size: 1.5em;
-                width: 40px;
-            }
-            
-            .btn {
-                padding: 0.75rem 1rem;
-                font-size: 0.9rem;
-            }
-            
-            .button-group {
-                gap: 0.75rem;
-            }
-            
-            .popup-overlay {
-                bottom: 1rem;
-                left: 1rem;
-                right: 1rem;
-                transform: none;
-                animation: slideUpMobile 0.3s ease-out;
-            }
-            
-            .popup-overlay.hiding {
-                animation: slideDownMobile 0.3s ease-in;
-            }
-            
-            .popup {
-                min-width: auto;
-                max-width: none;
-                width: 100%;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .container {
-                padding: 0.75rem;
-            }
-            
-            .header {
-                padding: 1rem;
-            }
-            
-            .title-section {
-                gap: 0.5rem;
-            }
-            
-            .header h1 {
-                font-size: 1.5rem;
-            }
-            
-            .header-subtitle {
-                font-size: 0.8rem;
-            }
-            
-            .theme-toggle {
-                width: 2.75rem;
-                height: 2.75rem;
-            }
-            
-            .theme-toggle .icon {
-                width: 1.25rem;
-                height: 1.25rem;
-            }
-            
-            .card {
-                padding: 1rem;
-            }
-            
-            .form-control {
-                padding: 0.75rem;
-                font-size: 16px; /* Prevent zoom on iOS */
-            }
-            
-            .checkbox-group {
-                margin-bottom: 0.75rem;
-            }
-            
-            .radio-group {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-            
-            .info-card {
-                padding: 0.75rem;
-                gap: 12px;
-            }
-            
-            .info-icon {
-                font-size: 1.25em;
-                width: 35px;
-            }
-            
-            .info-label {
-                font-size: 0.8em;
-            }
-            
-            .info-value {
-                font-size: 1em;
-            }
-            
-            .info-sub {
-                font-size: 0.75em;
-            }
-            
-            .btn {
-                padding: 0.625rem 0.875rem;
-                font-size: 0.875rem;
-            }
-            
-            /* Stack buttons vertically on very small screens */
-            .button-group {
-                flex-direction: column;
-                gap: 0.75rem;
-            }
-            
-            .button-group .btn {
-                width: 100%;
-                text-align: center;
-            }
-        }
-
-        .icon {
-            width: 1.25rem;
-            height: 1.25rem;
-            fill: currentColor;
-        }
-
-        /* Drag and Drop Styles */
-        .card-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
+        /* Drag and Drop */
+        .card-list { display: flex; flex-direction: column; gap: 0.75rem; }
         .card-item {
             display: flex;
             align-items: center;
@@ -793,155 +443,72 @@
             transition: all 0.3s ease;
             cursor: move;
         }
-
-        .card-item:hover {
-            background: var(--bg-secondary);
-            border-color: var(--primary-color);
-        }
-
-        .card-item.dragging {
-            opacity: 0.5;
-            transform: rotate(5deg);
-        }
-
-        .card-item.drag-over {
-            border-color: var(--primary-color);
-            background: rgb(99 102 241 / 0.1);
-        }
-
-        .drop-indicator {
-            height: 3px;
-            background: var(--primary-color);
-            border-radius: 2px;
-            margin: 0.25rem 0;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            position: relative;
-            z-index: 10;
-        }
-
-        .drop-indicator.show {
-            opacity: 1;
-        }
-
-        .drag-handle {
-            color: var(--text-secondary);
-            font-size: 1rem;
-            cursor: grab;
-            user-select: none;
-            padding: 0.25rem;
-            border-radius: 0.25rem;
-            transition: color 0.3s ease;
-        }
-
-        .drag-handle:hover {
-            color: var(--primary-color);
-        }
-
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-
-        .card-item .checkbox-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
-        .card-item .form-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
-        .duration-input {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            margin-left: auto;
-        }
-
-        .message-input-container {
-            width: 100%;
-            margin-top: 0.5rem;
-        }
-
-        .message-input-container .form-control {
-            width: 100%;
-        }
-
+        .card-item:hover { background: var(--bg-secondary); border-color: var(--primary-color); }
+        .card-item.dragging { opacity: 0.5; transform: rotate(5deg); }
+        .drop-indicator { height: 3px; background: var(--primary-color); border-radius: 2px; margin: 0.25rem 0; opacity: 0; transition: opacity 0.2s ease; }
+        .drop-indicator.show { opacity: 1; }
+        .drag-handle { color: var(--text-secondary); cursor: grab; user-select: none; padding: 0.25rem; }
+        .drag-handle:active { cursor: grabbing; }
+        .card-item .checkbox-group, .card-item .form-group { flex: 1; margin-bottom: 0; }
         .card-item[data-card-type="message"],
-        .card-item[data-card-type="countdown"] {
-            flex-direction: column;
-            align-items: stretch;
+        .card-item[data-card-type="countdown"] { flex-direction: column; align-items: stretch; }
+        .message-card-row { display: flex; align-items: center; gap: 0.75rem; }
+        .message-input-container { width: 100%; margin-top: 0.5rem; }
+        .duration-input { display: flex; align-items: center; gap: 0.25rem; margin-left: auto; }
+        .duration-control { width: 60px; padding: 0.25rem 0.5rem; text-align: center; font-size: 0.875rem; }
+        .duration-label { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+        
+        /* --- 6. System Information Styles --- */
+        .system-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
         }
-
-        .message-card-row {
+        
+        .info-card {
+            background: var(--bg-primary); /* Use primary bg to stand out slightly */
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .info-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .info-icon { font-size: 2em; width: 50px; text-align: center; }
+        .info-content { flex: 1; }
+        .info-label { font-size: 0.9em; color: var(--text-secondary); margin-bottom: 4px; font-weight: 500; }
+        .info-value { font-size: 1.1em; font-weight: 600; color: var(--text-primary); }
+        .info-sub { font-size: 0.8em; color: var(--text-secondary); }
+        
+        /* --- 7. Utility Classes --- */
+        .icon { width: 1.25rem; height: 1.25rem; fill: currentColor; }
+        .text-secondary { color: var(--text-secondary); }
+        .mb-1_5rem { margin-bottom: 1.5rem; }
+        .fs-0_9rem { font-size: 0.9rem; }
+        
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
 
-        .message-card-row .checkbox-group {
-            flex: 1;
-        }
-
-        .message-card-row .duration-input {
-            margin-left: auto;
-        }
-
-        .duration-control {
-            width: 60px;
-            padding: 0.25rem 0.5rem;
-            border: 1px solid var(--border-color);
-            border-radius: 0.25rem;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            font-size: 0.875rem;
-            text-align: center;
-        }
-
-        .duration-control:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgb(99 102 241 / 0.1);
-        }
-
-        .duration-label {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        /* Loading Overlay Styles */
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .loading-overlay.hidden {
-            opacity: 0;
-            visibility: hidden;
-        }
-
-        .loading-content {
-            background: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            padding: 2rem;
-            text-align: center;
-            box-shadow: var(--shadow-lg);
-            max-width: 300px;
-            width: 90%;
+        .popup-spinner {
+            border: 2px solid var(--border-color);
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            width: 1.25rem;
+            height: 1.25rem;
+            animation: spin 1s linear infinite;
+            flex-shrink: 0;
         }
 
         .loading-spinner {
@@ -954,28 +521,55 @@
             margin: 0 auto 1rem;
         }
 
-        .loading-text {
-            font-size: 1.1rem;
-            font-weight: 500;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
+        /* --- 8. Animations & Keyframes --- */
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes gradientShift { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(1rem); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        @keyframes slideDown { from { opacity: 1; transform: translateX(-50%) translateY(0); } to { opacity: 0; transform: translateX(-50%) translateY(1rem); } }
+        @keyframes slideUpMobile { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDownMobile { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(1rem); } }
 
-        .loading-subtext {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+        /* --- 9. Media Queries (Responsive Design) --- */
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .header { margin-bottom: 2rem; padding: 1.5rem; }
+            .header-content { justify-content: space-between; }
+            .title-section { flex-direction: column; align-items: flex-start; gap: 0.5rem; text-align: left; }
+            .header h1 { font-size: 1.75rem; }
+            .header-subtitle { font-size: 0.9rem; }
+            .theme-toggle { width: 3rem; height: 3rem; }
+            .theme-toggle .icon { width: 1.5rem; height: 1.5rem; }
+            .grid, .system-info-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .card { padding: 1.5rem; }
+            .card h2 { font-size: 1.25rem; margin-bottom: 1rem; }
+            .info-card { padding: 1rem; }
+            .info-icon { font-size: 1.5em; width: 40px; }
+            .btn { padding: 0.75rem 1rem; font-size: 0.9rem; }
+            .button-group { gap: 0.75rem; }
+            .popup-overlay { bottom: 1rem; left: 1rem; right: 1rem; transform: none; animation-name: slideUpMobile; }
+            .popup-overlay.hiding { animation-name: slideDownMobile; }
+            .popup { min-width: auto; max-width: none; width: 100%; }
         }
-
-        /* Blur effect for main content when loading */
-        .container.loading {
-            filter: blur(2px);
-            pointer-events: none;
-            transition: filter 0.3s ease;
+        
+        @media (max-width: 480px) {
+            .container { padding: 0.75rem; }
+            .header { padding: 1rem; }
+            .header h1 { font-size: 1.5rem; }
+            .header-subtitle { font-size: 0.8rem; }
+            .theme-toggle { width: 2.75rem; height: 2.75rem; }
+            .theme-toggle .icon { width: 1.25rem; height: 1.25rem; }
+            .card { padding: 1rem; }
+            .form-control { padding: 0.75rem; font-size: 16px; /* Prevent zoom on iOS */ }
+            .radio-group { flex-direction: column; gap: 0.5rem; }
+            .info-card { padding: 0.75rem; gap: 12px; }
+            .info-icon { font-size: 1.25em; width: 35px; }
+            .info-value { font-size: 1em; }
+            .button-group { flex-direction: column; }
+            .button-group .btn { width: 100%; text-align: center; }
         }
     </style>
 </head>
 <body>
-    <!-- Loading Overlay -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
@@ -984,7 +578,7 @@
         </div>
     </div>
 
-    <div class="container" id="main-container">
+    <main class="container" id="main-container">
         <header class="header">
             <div class="header-content">
                 <div class="title-section">
@@ -993,137 +587,71 @@
                         <div class="header-subtitle">ESP32 WiFi-Enabled Display Controller</div>
                     </div>
                 </div>
-                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
-                    <svg class="icon" id="theme-icon" viewBox="0 0 24 24">
-                        <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-                    </svg>
+                <button id="theme-toggle-btn" class="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
+                    <svg class="icon" id="theme-icon" viewBox="0 0 24 24"></svg>
                 </button>
             </div>
         </header>
 
-        <!-- Popup Overlay -->
-        <div id="popup-overlay" class="popup-overlay">
-            <div id="popup" class="popup">
-                <div class="popup-content">
-                    <div id="popup-icon" class="popup-icon"></div>
-                    <span id="popup-message" class="popup-message"></span>
-                </div>
-            </div>
-        </div>
-
         <div class="grid">
-            <!-- Left Column: Display Options -->
-            <div class="card">
+            <section class="card">
                 <h2>Display Options</h2>
-                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                <p class="text-secondary mb-1_5rem fs-0_9rem">
                     Drag and drop cards to reorder them. The order determines the sequence in which cards are displayed.
                 </p>
                 <form id="operation_mode_form">
                     <div id="card-list" class="card-list">
                         <div class="card-item" data-card-type="clock" draggable="true">
                             <div class="drag-handle">⋮⋮</div>
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="clock-checkbox" name="operation-mode" checked>
-                                <label for="clock-checkbox">Clock</label>
-                            </div>
-                            <div class="duration-input">
-                                <input type="number" id="clock-duration" class="duration-control" min="1" max="300" value="10">
-                                <span class="duration-label">sec</span>
-                            </div>
+                            <div class="checkbox-group"><input type="checkbox" id="clock-checkbox" name="operation-mode" checked><label for="clock-checkbox">Clock</label></div>
+                            <div class="duration-input"><input type="number" id="clock-duration" class="duration-control form-control" min="1" max="300" value="10"><span class="duration-label">sec</span></div>
                         </div>
                         <div class="card-item" data-card-type="date" draggable="true">
                             <div class="drag-handle">⋮⋮</div>
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="date-checkbox" name="operation-mode">
-                                <label for="date-checkbox">Date</label>
-                            </div>
-                            <div class="duration-input">
-                                <input type="number" id="date-duration" class="duration-control" min="1" max="300" value="5">
-                                <span class="duration-label">sec</span>
-                            </div>
+                            <div class="checkbox-group"><input type="checkbox" id="date-checkbox" name="operation-mode"><label for="date-checkbox">Date</label></div>
+                            <div class="duration-input"><input type="number" id="date-duration" class="duration-control form-control" min="1" max="300" value="5"><span class="duration-label">sec</span></div>
                         </div>
                         <div class="card-item" data-card-type="weather" draggable="true">
                             <div class="drag-handle">⋮⋮</div>
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="weather-checkbox" name="operation-mode">
-                                <label for="weather-checkbox">Weather</label>
-                            </div>
-                            <div class="duration-input">
-                                <input type="number" id="weather-duration" class="duration-control" min="1" max="300" value="5">
-                                <span class="duration-label">sec</span>
-                            </div>
+                            <div class="checkbox-group"><input type="checkbox" id="weather-checkbox" name="operation-mode"><label for="weather-checkbox">Weather</label></div>
+                            <div class="duration-input"><input type="number" id="weather-duration" class="duration-control form-control" min="1" max="300" value="5"><span class="duration-label">sec</span></div>
                         </div>
                         <div class="card-item" data-card-type="message" draggable="true">
                             <div class="message-card-row">
                                 <div class="drag-handle">⋮⋮</div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="message-checkbox" name="operation-mode">
-                                    <label for="message-checkbox">Message</label>
-                                </div>
-                                <div class="duration-input">
-                                    <input type="number" id="message-duration" class="duration-control" min="1" max="300" value="5">
-                                    <span class="duration-label">sec</span>
-                                </div>
+                                <div class="checkbox-group"><input type="checkbox" id="message-checkbox" name="operation-mode"><label for="message-checkbox">Message</label></div>
+                                <div class="duration-input"><input type="number" id="message-duration" class="duration-control form-control" min="1" max="300" value="5"><span class="duration-label">sec</span></div>
                             </div>
-                            <div class="message-input-container">
-                                <input type="text" id="message-input" class="form-control" placeholder="Enter message here" maxlength="255">
-                            </div>
+                            <div class="message-input-container"><input type="text" id="message-input" class="form-control" placeholder="Enter message here" maxlength="255"></div>
                         </div>
                         <div class="card-item" data-card-type="countdown" draggable="true">
                             <div class="message-card-row">
                                 <div class="drag-handle">⋮⋮</div>
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="countdown-checkbox" name="operation-mode">
-                                    <label for="countdown-checkbox">Countdown</label>
-                                </div>
-                                <div class="duration-input">
-                                    <input type="number" id="countdown-duration" class="duration-control" min="1" max="300" value="5">
-                                    <span class="duration-label">sec</span>
-                                </div>
+                                <div class="checkbox-group"><input type="checkbox" id="countdown-checkbox" name="operation-mode"><label for="countdown-checkbox">Countdown</label></div>
+                                <div class="duration-input"><input type="number" id="countdown-duration" class="duration-control form-control" min="1" max="300" value="5"><span class="duration-label">sec</span></div>
                             </div>
-                            <div class="message-input-container">
-                                <input type="date" id="countdown-input" class="form-control">
-                            </div>
+                            <div class="message-input-container"><input type="date" id="countdown-input" class="form-control"></div>
                         </div>
                         <div class="card-item" data-card-type="snake" draggable="true">
                             <div class="drag-handle">⋮⋮</div>
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="snake-checkbox" name="operation-mode">
-                                <label for="snake-checkbox">Snake Game</label>
-                            </div>
-                            <div class="duration-input">
-                                <input type="number" id="snake-duration" class="duration-control" min="1" max="300" value="5">
-                                <span class="duration-label">sec</span>
-                            </div>
+                            <div class="checkbox-group"><input type="checkbox" id="snake-checkbox" name="operation-mode"><label for="snake-checkbox">Snake Game</label></div>
+                            <div class="duration-input"><input type="number" id="snake-duration" class="duration-control form-control" min="1" max="300" value="5"><span class="duration-label">sec</span></div>
                         </div>
                         <div class="card-item" data-card-type="rain" draggable="true">
                             <div class="drag-handle">⋮⋮</div>
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="rain-checkbox" name="operation-mode">
-                                <label for="rain-checkbox">Rain Effect</label>
-                            </div>
-                            <div class="duration-input">
-                                <input type="number" id="rain-duration" class="duration-control" min="1" max="300" value="5">
-                                <span class="duration-label">sec</span>
-                            </div>
+                            <div class="checkbox-group"><input type="checkbox" id="rain-checkbox" name="operation-mode"><label for="rain-checkbox">Rain Effect</label></div>
+                            <div class="duration-input"><input type="number" id="rain-duration" class="duration-control form-control" min="1" max="300" value="5"><span class="duration-label">sec</span></div>
                         </div>
                         <div class="card-item" data-card-type="ip" draggable="true">
                             <div class="drag-handle">⋮⋮</div>
-                            <div class="checkbox-group">
-                                <input type="checkbox" id="ip-checkbox" name="operation-mode">
-                                <label for="ip-checkbox">IP Address</label>
-                            </div>
-                            <div class="duration-input">
-                                <input type="number" id="ip-duration" class="duration-control" min="1" max="300" value="5">
-                                <span class="duration-label">sec</span>
-                            </div>
+                            <div class="checkbox-group"><input type="checkbox" id="ip-checkbox" name="operation-mode"><label for="ip-checkbox">IP Address</label></div>
+                            <div class="duration-input"><input type="number" id="ip-duration" class="duration-control form-control" min="1" max="300" value="5"><span class="duration-label">sec</span></div>
                         </div>
                     </div>
                 </form>
-            </div>
+            </section>
         
-            <!-- Right Column: General Settings -->
-            <div class="card">
+            <section class="card">
                 <h2>General Settings</h2>
                 <form id="general_settings_form">
                     <input type="hidden" id="timezone" value="">
@@ -1142,879 +670,124 @@
                     <div class="form-group">
                         <label>Temperature Units</label>
                         <div class="radio-group">
-                            <label>
-                                <input type="radio" id="fahrenheit-radio" name="weather-units" value="f">
-                                Fahrenheit
-                            </label>
-                            <label>
-                                <input type="radio" id="celsius-radio" name="weather-units" value="c">
-                                Celsius
-                            </label>
+                            <label><input type="radio" id="fahrenheit-radio" name="weather-units" value="f"> Fahrenheit</label>
+                            <label><input type="radio" id="celsius-radio" name="weather-units" value="c"> Celsius</label>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>Date Format</label>
                         <div class="radio-group">
-                            <label>
-                                <input type="radio" id="mmdd-radio" name="date-format" value="mmdd">
-                                MM.DD
-                            </label>
-                            <label>
-                                <input type="radio" id="ddmm-radio" name="date-format" value="ddmm">
-                                DD.MM
-                            </label>
+                            <label><input type="radio" id="mmdd-radio" name="date-format" value="mmdd"> MM.DD</label>
+                            <label><input type="radio" id="ddmm-radio" name="date-format" value="ddmm"> DD.MM</label>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="mdns-domain">Network Name (MDNS Domain)</label>
                         <input type="text" id="mdns-domain" class="form-control" placeholder="digiclk" maxlength="63">
-                        <small class="form-text">Used for accessing the device via http://[name].local/ (requires restart to take effect)</small>
+                        <small>Used for accessing the device via http://[name].local/ (requires restart)</small>
                     </div>
                     <div class="form-group">
                         <label>Display Orientation</label>
-                        <div class="button-group">
-                            <button type="button" class="btn" id="flip-display-btn" onclick="flipDisplay()" style="background: var(--primary-color);">
+                         <div class="button-group">
+                            <button type="button" class="btn" id="flip-display-btn">
                                 <span id="flip-btn-text">Flip Display</span>
                             </button>
                         </div>
-                        <small class="form-text">Flip the display orientation (requires reboot)</small>
+                        <small>Flip the display orientation (requires reboot)</small>
                     </div>
                 </form>
-            </div>
+            </section>
         </div>
         
-        <!-- System Information Section (Full Width) -->
-        <div class="card">
+        <section class="card">
             <h2>System Information</h2>
             <div class="system-info-grid">
-                <div class="info-card">
-                    <div class="info-icon">📶</div>
-                    <div class="info-content">
-                        <div class="info-label">WiFi Status</div>
-                        <div class="info-value" id="wifi-status">Loading...</div>
-                        <div class="info-sub" id="wifi-ssid">-</div>
-                    </div>
-                </div>
-                
-                <div class="info-card">
-                    <div class="info-icon">🌐</div>
-                    <div class="info-content">
-                        <div class="info-label">IP Address</div>
-                        <div class="info-value" id="ip-address">Loading...</div>
-                        <div class="info-sub" id="wifi-strength">-</div>
-                    </div>
-                </div>
-                
-                <div class="info-card">
-                    <div class="info-icon">⏱️</div>
-                    <div class="info-content">
-                        <div class="info-label">Uptime</div>
-                        <div class="info-value" id="uptime">Loading...</div>
-                        <div class="info-sub" id="uptime-seconds">-</div>
-                    </div>
-                </div>
-                
-                <div class="info-card">
-                    <div class="info-icon">💾</div>
-                    <div class="info-content">
-                        <div class="info-label">Memory</div>
-                        <div class="info-value" id="memory-usage">Loading...</div>
-                        <div class="info-sub" id="memory-details">-</div>
-                    </div>
-                </div>
-                
-                <div class="info-card">
-                    <div class="info-icon">💿</div>
-                    <div class="info-content">
-                        <div class="info-label">Storage</div>
-                        <div class="info-value" id="storage-usage">Loading...</div>
-                        <div class="info-sub" id="storage-details">-</div>
-                    </div>
-                </div>
-                
-                <div class="info-card">
-                    <div class="info-icon">🔧</div>
-                    <div class="info-content">
-                        <div class="info-label">Hardware</div>
-                        <div class="info-value" id="chip-model">Loading...</div>
-                        <div class="info-sub" id="cpu-freq">-</div>
-                    </div>
-                </div>
+                <div class="info-card"><div class="info-icon">📶</div><div class="info-content"><div class="info-label">WiFi Status</div><div class="info-value" id="wifi-status">Loading...</div><div class="info-sub" id="wifi-ssid">-</div></div></div>
+                <div class="info-card"><div class="info-icon">🌐</div><div class="info-content"><div class="info-label">IP Address</div><div class="info-value" id="ip-address">Loading...</div><div class="info-sub" id="wifi-strength">-</div></div></div>
+                <div class="info-card"><div class="info-icon">⏱️</div><div class="info-content"><div class="info-label">Uptime</div><div class="info-value" id="uptime">Loading...</div><div class="info-sub" id="uptime-seconds">-</div></div></div>
+                <div class="info-card"><div class="info-icon">💾</div><div class="info-content"><div class="info-label">Memory</div><div class="info-value" id="memory-usage">Loading...</div><div class="info-sub" id="memory-details">-</div></div></div>
+                <div class="info-card"><div class="info-icon">💿</div><div class="info-content"><div class="info-label">Storage</div><div class="info-value" id="storage-usage">Loading...</div><div class="info-sub" id="storage-details">-</div></div></div>
+                <div class="info-card"><div class="info-icon">🔧</div><div class="info-content"><div class="info-label">Hardware</div><div class="info-value" id="chip-model">Loading...</div><div class="info-sub" id="cpu-freq">-</div></div></div>
             </div>
             
             <div class="button-group">
-                <button type="button" class="btn" onclick="refreshSystemInfo()">Refresh System Info</button>
-                <button type="button" class="btn" style="background: var(--warning-color);" onclick="rebootDevice()">Reboot Device</button>
-                <button type="button" class="btn" style="background: var(--error-color);" onclick="factoryResetDevice()">Factory Reset</button>
+                <button type="button" class="btn" id="refresh-sysinfo-btn">Refresh System Info</button>
+                <button type="button" class="btn btn-warning" id="reboot-btn">Reboot Device</button>
+                <button type="button" class="btn btn-error" id="factory-reset-btn">Factory Reset</button>
+            </div>
+        </section>
+    </main>
+
+    <div id="popup-overlay" class="popup-overlay">
+        <div id="popup" class="popup">
+            <div class="popup-content">
+                <div id="popup-icon" class="popup-icon"></div>
+                <span id="popup-message" class="popup-message"></span>
             </div>
         </div>
     </div>
 
     <script>
+    /* * =============================================
+     * JavaScript: Refactored and Organized
+     * =============================================
+     */
+    (function() {
+        'use strict';
+
+        // --- 1. DOM Element References ---
+        const elements = {
+            themeToggleBtn: document.getElementById('theme-toggle-btn'),
+            themeIcon: document.getElementById('theme-icon'),
+            loadingOverlay: document.getElementById('loading-overlay'),
+            mainContainer: document.getElementById('main-container'),
+            popupOverlay: document.getElementById('popup-overlay'),
+            popup: document.getElementById('popup'),
+            popupIcon: document.getElementById('popup-icon'),
+            popupMessage: document.getElementById('popup-message'),
+            cardList: document.getElementById('card-list'),
+            cityInput: document.getElementById('city-input'),
+            cityDropdown: document.getElementById('city-dropdown'),
+            cityInfo: document.getElementById('city-info'),
+            timezoneInput: document.getElementById('timezone'),
+            flipDisplayBtn: document.getElementById('flip-display-btn'),
+            refreshSysInfoBtn: document.getElementById('refresh-sysinfo-btn'),
+            rebootBtn: document.getElementById('reboot-btn'),
+            factoryResetBtn: document.getElementById('factory-reset-btn'),
+            brightnessSlider: document.getElementById('brightness'),
+            mdnsDomainInput: document.getElementById('mdns-domain'),
+            messageInput: document.getElementById('message-input'),
+            countdownInput: document.getElementById('countdown-input'),
+            opModeForm: document.getElementById('operation_mode_form'),
+            // System Info Panels
+            sysInfo: {
+                wifiStatus: document.getElementById('wifi-status'),
+                wifiSsid: document.getElementById('wifi-ssid'),
+                ipAddress: document.getElementById('ip-address'),
+                wifiStrength: document.getElementById('wifi-strength'),
+                uptime: document.getElementById('uptime'),
+                uptimeSeconds: document.getElementById('uptime-seconds'),
+                memoryUsage: document.getElementById('memory-usage'),
+                memoryDetails: document.getElementById('memory-details'),
+                storageUsage: document.getElementById('storage-usage'),
+                storageDetails: document.getElementById('storage-details'),
+                chipModel: document.getElementById('chip-model'),
+                cpuFreq: document.getElementById('cpu-freq'),
+            }
+        };
+
+        // --- 2. State Variables ---
         let currentTheme = localStorage.getItem('theme') || 'light';
-        let selectedCity = null;
-        let searchTimeout = null;
         let draggedElement = null;
-        
-        function toggleTheme() {
-            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-            document.documentElement.setAttribute('data-theme', currentTheme);
-            localStorage.setItem('theme', currentTheme);
-            updateThemeIcon();
-        }
-
-        function updateThemeIcon() {
-            const icon = document.getElementById('theme-icon');
-            if (currentTheme === 'dark') {
-                icon.innerHTML = '<path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>';
-            } else {
-                icon.innerHTML = '<path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>';
-            }
-        }
-
-        // Drag and Drop Functions
         let dropIndicator = null;
-        let intendedDropPosition = null;
+        let popupTimeout = null;
 
-        function createDropIndicator() {
-            if (!dropIndicator) {
-                dropIndicator = document.createElement('div');
-                dropIndicator.className = 'drop-indicator';
-            }
-            return dropIndicator;
-        }
+        // Map card types to their indices for server communication
+        const CARD_TYPE_MAP = { 'clock': 0, 'date': 1, 'weather': 2, 'message': 3, 'countdown': 4, 'snake': 5, 'rain': 6, 'ip': 7 };
+        const CARD_INDEX_MAP = Object.fromEntries(Object.entries(CARD_TYPE_MAP).map(([k, v]) => [v, k]));
 
-        function showDropIndicator(targetElement, position) {
-            const indicator = createDropIndicator();
-            const cardList = document.getElementById('card-list');
-            
-            // Remove any existing indicator
-            hideDropIndicator();
-            
-            // Store the intended drop position
-            intendedDropPosition = {
-                targetElement: targetElement,
-                position: position
-            };
-            
-            if (position === 'before') {
-                cardList.insertBefore(indicator, targetElement);
-            } else if (position === 'after') {
-                cardList.insertBefore(indicator, targetElement.nextSibling);
-            } else if (position === 'end') {
-                cardList.appendChild(indicator);
-            }
-            
-            indicator.classList.add('show');
-        }
-
-        function hideDropIndicator() {
-            if (dropIndicator && dropIndicator.parentNode) {
-                dropIndicator.classList.remove('show');
-                dropIndicator.parentNode.removeChild(dropIndicator);
-            }
-            intendedDropPosition = null;
-        }
-
-        function handleDragStart(e) {
-            draggedElement = this;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', this.outerHTML);
-        }
-
-        function handleDragEnd(e) {
-            this.classList.remove('dragging');
-            draggedElement = null;
-            hideDropIndicator();
-        }
-
-        function handleDragOver(e) {
-            if (e.preventDefault) {
-                e.preventDefault();
-            }
-            e.dataTransfer.dropEffect = 'move';
-            
-            // Find the closest card element
-            const cardList = document.getElementById('card-list');
-            const cards = Array.from(cardList.children).filter(child => child.classList.contains('card-item'));
-            
-            if (cards.length === 0) {
-                // No cards, drop at the end
-                showDropIndicator(cardList, 'end');
-                return false;
-            }
-            
-            // Find the closest card based on mouse position
-            let closestCard = null;
-            let closestDistance = Infinity;
-            let position = 'after';
-            
-            for (let card of cards) {
-                const rect = card.getBoundingClientRect();
-                const cardCenterY = rect.top + rect.height / 2;
-                const distance = Math.abs(e.clientY - cardCenterY);
-                
-                if (distance < closestDistance) {
-                    closestDistance = distance;
-                    closestCard = card;
-                    position = e.clientY < cardCenterY ? 'before' : 'after';
-                }
-            }
-            
-            if (closestCard) {
-                showDropIndicator(closestCard, position);
-            }
-            
-            return false;
-        }
-
-        function handleDragEnter(e) {
-            // Don't add drag-over class, we're using the drop indicator instead
-        }
-
-        function handleDragLeave(e) {
-            // Only hide indicator if we're leaving the card list entirely
-            const cardList = document.getElementById('card-list');
-            const rect = cardList.getBoundingClientRect();
-            if (e.clientX < rect.left || e.clientX > rect.right || 
-                e.clientY < rect.top || e.clientY > rect.bottom) {
-                hideDropIndicator();
-            }
-        }
-
-        function handleDrop(e) {
-            if (e.stopPropagation) {
-                e.stopPropagation();
-            }
-
-            const cardList = document.getElementById('card-list');
-            
-            // Use the stored intended drop position if available
-            if (intendedDropPosition && intendedDropPosition.targetElement && intendedDropPosition.position) {
-                const { targetElement, position } = intendedDropPosition;
-                
-                if (position === 'before') {
-                    cardList.insertBefore(draggedElement, targetElement);
-                } else if (position === 'after') {
-                    cardList.insertBefore(draggedElement, targetElement.nextSibling);
-                } else if (position === 'end') {
-                    cardList.appendChild(draggedElement);
-                }
-            } else {
-                // Fallback to old logic if no intended position is stored
-                if (draggedElement !== this) {
-                    const draggedIndex = Array.from(cardList.children).indexOf(draggedElement);
-                    const targetIndex = Array.from(cardList.children).indexOf(this);
-
-                    if (draggedIndex < targetIndex) {
-                        cardList.insertBefore(draggedElement, this.nextSibling);
-                    } else {
-                        cardList.insertBefore(draggedElement, this);
-                    }
-                }
-            }
-
-            // Update card order
-            updateCardOrder();
-            hideDropIndicator();
-            return false;
-        }
-
-        function updateCardOrder() {
-            const cardList = document.getElementById('card-list');
-            const cardItems = cardList.children;
-            const cardOrder = [];
-
-            // Map card types to their indices
-            const cardTypeMap = {
-                'clock': 0,
-                'date': 1,
-                'weather': 2,
-                'message': 3,
-                'countdown': 4,
-                'snake': 5,
-                'rain': 6,
-                'ip': 7
-            };
-
-            // Build the order array based on current DOM order
-            for (let i = 0; i < cardItems.length; i++) {
-                const cardType = cardItems[i].getAttribute('data-card-type');
-                if (cardTypeMap.hasOwnProperty(cardType)) {
-                    cardOrder.push(cardTypeMap[cardType]);
-                }
-            }
-
-            // Send the new order to the server
-            const settings = {
-                cardOrder: cardOrder
-            };
-
-            const jsonString = JSON.stringify(settings);
-            const encodedJson = encodeURIComponent(jsonString);
-            const url = `/&CARD_ORDER=${encodedJson}`;
-
-            fetch(url)
-                .then(response => {
-                    if (response.ok) {
-                        showStatus('Card order updated!', 'success');
-                    } else {
-                        showStatus('Failed to update card order.', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showStatus('Error updating card order.', 'error');
-                });
-        }
-
-        function updateCardDurations() {
-            const cardDurations = [];
-            
-            // Map card types to their indices
-            const cardTypeMap = {
-                'clock': 0,
-                'date': 1,
-                'weather': 2,
-                'message': 3,
-                'countdown': 4,
-                'snake': 5,
-                'rain': 6,
-                'ip': 7
-            };
-
-            // Initialize array with default values
-            for (let i = 0; i < 7; i++) {
-                cardDurations[i] = 5; // Default 5 seconds
-            }
-
-            // Get duration values from inputs
-            const durationInputs = document.querySelectorAll('.duration-control');
-            durationInputs.forEach(input => {
-                const cardItem = input.closest('.card-item');
-                const cardType = cardItem.getAttribute('data-card-type');
-                const duration = parseInt(input.value);
-                
-                if (cardTypeMap.hasOwnProperty(cardType) && !isNaN(duration)) {
-                    const index = cardTypeMap[cardType];
-                    cardDurations[index] = Math.max(1, Math.min(300, duration)); // Clamp between 1-300
-                }
-            });
-
-            // Send the durations to the server
-            const settings = {
-                cardDurations: cardDurations
-            };
-
-            const jsonString = JSON.stringify(settings);
-            const encodedJson = encodeURIComponent(jsonString);
-            const url = `/&CARD_DURATIONS=${encodedJson}`;
-
-            fetch(url)
-                .then(response => {
-                    if (response.ok) {
-                        showStatus('Card durations updated!', 'success');
-                    } else {
-                        showStatus('Failed to update card durations.', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showStatus('Error updating card durations.', 'error');
-                });
-        }
-
-        function initializeDragAndDrop() {
-            const cardItems = document.querySelectorAll('.card-item');
-            const cardList = document.getElementById('card-list');
-            
-            cardItems.forEach(item => {
-                item.addEventListener('dragstart', handleDragStart, false);
-                item.addEventListener('dragend', handleDragEnd, false);
-                item.addEventListener('dragover', handleDragOver, false);
-                item.addEventListener('dragenter', handleDragEnter, false);
-                item.addEventListener('dragleave', handleDragLeave, false);
-                item.addEventListener('drop', handleDrop, false);
-            });
-            
-            // Add drag listeners to the card list container for empty area drops
-            cardList.addEventListener('dragover', handleDragOver, false);
-            cardList.addEventListener('dragenter', handleDragEnter, false);
-            cardList.addEventListener('dragleave', handleDragLeave, false);
-            cardList.addEventListener('drop', handleDrop, false);
-        }
-
-        function showStatus(message, type = 'success') {
-            const overlay = document.getElementById('popup-overlay');
-            const popup = document.getElementById('popup');
-            const icon = document.getElementById('popup-icon');
-            const messageEl = document.getElementById('popup-message');
-            
-            // Remove any existing classes
-            popup.className = 'popup';
-            icon.className = 'popup-icon';
-            
-            // Set content and styling based on type
-            messageEl.textContent = message;
-            
-            if (type === 'success') {
-                popup.classList.add('success');
-                icon.classList.add('success');
-                icon.innerHTML = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';
-            } else if (type === 'error') {
-                popup.classList.add('error');
-                icon.classList.add('error');
-                icon.innerHTML = '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>';
-            }
-            
-            // Show popup
-            overlay.style.display = 'block';
-            
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-                hidePopup();
-            }, 3000);
-        }
-
-        function showLoading(message = 'Loading...') {
-            const overlay = document.getElementById('popup-overlay');
-            const popup = document.getElementById('popup');
-            const icon = document.getElementById('popup-icon');
-            const messageEl = document.getElementById('popup-message');
-            
-            // Remove any existing classes
-            popup.className = 'popup';
-            icon.className = 'popup-icon';
-            
-            // Set loading state
-            popup.classList.add('loading');
-            icon.classList.add('loading');
-            icon.innerHTML = '<div class="popup-spinner"></div>';
-            messageEl.textContent = message;
-            
-            // Show popup
-            overlay.style.display = 'block';
-        }
-
-        function hidePopup() {
-            const overlay = document.getElementById('popup-overlay');
-            overlay.classList.add('hiding');
-            
-            // Wait for animation to complete before hiding
-            setTimeout(() => {
-                overlay.style.display = 'none';
-                overlay.classList.remove('hiding');
-            }, 300);
-        }
-
-        // Loading state functions
-        function showLoadingState() {
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const mainContainer = document.getElementById('main-container');
-            
-            loadingOverlay.classList.remove('hidden');
-            mainContainer.classList.add('loading');
-        }
-
-        function hideLoadingState() {
-            const loadingOverlay = document.getElementById('loading-overlay');
-            const mainContainer = document.getElementById('main-container');
-            
-            loadingOverlay.classList.add('hidden');
-            mainContainer.classList.remove('loading');
-        }
-
-      function submitModeOfOperation() {
-            const form = document.getElementById('operation_mode_form');
-            const submitBtn = document.querySelector('#operation_mode_form .btn');
-            let strLine = "";
-            
-            if (form["clock-checkbox"].checked) {
-                strLine += "/&CLOCK";
-            }
-            if (form["date-checkbox"].checked) {
-                strLine += "/&DATE";
-            }
-            if (form["weather-checkbox"].checked) {
-                strLine += "/&WEATHER";
-            }
-            if (form["snake-checkbox"].checked) {
-                strLine += "/&SNAKE";
-            }
-            if (form["rain-checkbox"].checked) {
-                strLine += "/&RAIN";
-            }
-            if (form["ip-checkbox"].checked) {
-                strLine += "/&IP";
-            }
-            if (form["message-checkbox"].checked) {
-                const message = form["message-input"].value.trim();
-                if (message === "") {
-                    showStatus("Message cannot be empty when selected.", "error");
-                    return;
-                }
-                strLine += "/&MSG=" + encodeURIComponent(message);
-            }
-            if (form["countdown-checkbox"].checked) {
-                const countdownDate = form["countdown-input"].value;
-                if (countdownDate === "") {
-                    showStatus("Countdown date cannot be empty when selected.", "error");
-                    return;
-                }
-                // Convert date to Unix timestamp (set to start of day - 00:00 AM)
-                const date = new Date(countdownDate + "T00:00:00");
-                const timestamp = Math.floor(date.getTime() / 1000);
-                strLine += "/&COUNTDOWN=" + timestamp;
-            }
-            
-            if (strLine === "") {
-                showStatus("Please select at least one display mode.", "error");
-                return;
-            }
-            
-            // Show loading state
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = "Updating...";
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner"></span> Updating...';
-            
-            // Add nocache parameter to prevent caching
-            const nocache = "/&nocache=" + Math.random() * 1000000;
-            
-            fetch(strLine + nocache)
-                .then(response => {
-                    if (response.ok) {
-                        showStatus("Display modes updated successfully!", "success");
-                    } else {
-                        showStatus("Failed to update display modes.", "error");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showStatus("Error updating display modes.", "error");
-                })
-                .finally(() => {
-                    // Restore button state
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
-                });
-        }
-
-      function setCntl(settings) {
-        for (const key in settings) {
-                if (settings[key] === "" || settings[key] === undefined || settings[key] === null) {
-                    showStatus("Please fill out all fields.", "error");
-            return;
-          }
-        }
-            const strLine = `&CNTL=${encodeURIComponent(JSON.stringify(settings))}`;
-        const nocache = "/&nocache=" + Math.random() * 1000000;
-            
-            showLoading("Updating settings...");
-            fetch(strLine + nocache)
-                .then(() => {
-                    showStatus("Settings updated successfully!");
-                })
-                .catch(() => {
-                    showStatus("Failed to update settings.", "error");
-                });
-        }
-
-        function updateGeneralSettings() {
-            const btn = document.querySelector('#general_settings_form .btn');
-            const originalText = btn.textContent;
-            
-            // Show loading state
-            btn.textContent = "Updating...";
-            btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Updating...';
-            
-            const cityInput = document.getElementById('city-input');
-            const brightnessSlider = document.getElementById('brightness');
-            const celsiusRadio = document.getElementById('celsius-radio');
-            const mdnsDomainInput = document.getElementById('mdns-domain');
-            
-            // Get city coordinates from the city info data attributes
-            const cityInfo = document.getElementById('city-info');
-            let latitude = null;
-            let longitude = null;
-            
-            if (cityInfo && cityInfo.hasAttribute('data-latitude') && cityInfo.hasAttribute('data-longitude')) {
-                latitude = parseFloat(cityInfo.getAttribute('data-latitude'));
-                longitude = parseFloat(cityInfo.getAttribute('data-longitude'));
-            }
-            
-            const settings = {
-                brightness: parseInt(brightnessSlider.value),
-                weatherUnits: celsiusRadio.checked ? 'c' : 'f'
-            };
-            
-            // Add MDNS domain if provided
-            if (mdnsDomainInput.value.trim()) {
-                settings.mdnsDomain = mdnsDomainInput.value.trim();
-            }
-            
-            // Only add coordinates if we have them
-            if (latitude !== null && longitude !== null) {
-                settings.latitude = latitude;
-                settings.longitude = longitude;
-            }
-            
-            // Use GET request with URL-encoded JSON
-            const jsonString = JSON.stringify(settings);
-            const encodedJson = encodeURIComponent(jsonString);
-            const url = `/&CNTL=${encodedJson}`;
-            
-            fetch(url)
-            .then(response => {
-                if (response.ok) {
-                    showStatus('Settings updated successfully!', 'success');
-                } else {
-                    showStatus('Failed to update settings.', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showStatus('Error updating settings.', 'error');
-            })
-            .finally(() => {
-                // Restore button state
-                btn.textContent = originalText;
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            });
-        }
-
-        // City search functionality
-        function searchCities(query) {
-            if (query.length < 2) {
-                hideCityDropdown();
-                return;
-            }
-
-            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=en&format=json`;
-            
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.results && data.results.length > 0) {
-                        showCityDropdown(data.results);
-                    } else {
-                        hideCityDropdown();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error searching cities:', error);
-                    hideCityDropdown();
-                });
-        }
-
-        function showCityDropdown(cities) {
-            const dropdown = document.getElementById('city-dropdown');
-            dropdown.innerHTML = '';
-            
-            cities.forEach(city => {
-                const item = document.createElement('div');
-                item.className = 'autocomplete-item';
-                item.innerHTML = `
-                    <div><strong>${city.name}</strong></div>
-                    <div style="font-size: 0.875rem; color: var(--text-secondary);">
-                        ${city.country}${city.admin1 ? ', ' + city.admin1 : ''}
-                    </div>
-                `;
-                item.onclick = () => selectCity(city);
-                dropdown.appendChild(item);
-            });
-            
-            dropdown.style.display = 'block';
-        }
-
-        function hideCityDropdown() {
-            const dropdown = document.getElementById('city-dropdown');
-            dropdown.style.display = 'none';
-        }
-
-        function selectCity(city) {
-            document.getElementById('city-input').value = city.name;
-            document.getElementById('city-dropdown').style.display = 'none';
-            
-            // Show city info
-            const cityInfo = document.getElementById('city-info');
-            cityInfo.innerHTML = `
-                <div class="city-details">
-                    <strong>${city.name}, ${city.country}</strong><br>
-                    Coordinates: ${city.latitude}, ${city.longitude}<br>
-                    Timezone: ${city.timezone || 'Auto-detected'}
-                </div>
-            `;
-            
-            // Store coordinates as data attributes for display purposes
-            cityInfo.setAttribute('data-latitude', city.latitude);
-            cityInfo.setAttribute('data-longitude', city.longitude);
-            
-            // Update timezone if available
-            if (city.timezone) {
-                document.getElementById('timezone').value = city.timezone;
-            }
-            
-            // Send only the coordinates to the ESP32
-            updateCoordinates(city.latitude, city.longitude);
-        }
-
-      function getSettings() {
-        return fetch("/&SETT")
-          .then((response) => response.json())
-          .then((data) => {
-                    return data;
-                })
-                .catch((error) => {
-                    console.error("Error fetching settings:", error);
-                    showStatus("Failed to load settings.", "error");
-                    return {}; // Return an empty object on error
-                });
-        }
-
-        // Show loading state initially
-        showLoadingState();
-        
-        // Load all settings and hide loading state when complete
-        Promise.all([
-            loadGeneralSettings(),
-            loadDisplayModes(),
-            loadSystemInfo()
-        ]).then(() => {
-            // All settings loaded, hide loading state
-            setTimeout(() => {
-                hideLoadingState();
-            }, 500); // Small delay to ensure smooth transition
-        }).catch((error) => {
-            console.error('Error loading settings:', error);
-            // Hide loading state even if there's an error
-            setTimeout(() => {
-                hideLoadingState();
-            }, 500);
-        });
-        
-        // Auto-refresh system info every 30 seconds
-        setInterval(loadSystemInfo, 30000);
-        
-        // Add event listeners for automatic updates
-        document.addEventListener('DOMContentLoaded', function() {
-            // Display mode checkboxes - update immediately when changed
-            const modeCheckboxes = document.querySelectorAll('#operation_mode_form input[type="checkbox"]');
-            modeCheckboxes.forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    updateDisplayModes();
-                });
-            });
-            
-            // Message input - update with debouncing
-            const messageInput = document.getElementById('message-input');
-            if (messageInput) {
-                let messageTimeout;
-                messageInput.addEventListener('input', function() {
-                    clearTimeout(messageTimeout);
-                    messageTimeout = setTimeout(() => {
-                        updateDisplayModes();
-                    }, 500); // Wait 500ms after user stops typing
-                });
-            }
-            
-            // Countdown input - update with debouncing
-            const countdownInput = document.getElementById('countdown-input');
-            if (countdownInput) {
-                let countdownTimeout;
-                countdownInput.addEventListener('change', function() {
-                    clearTimeout(countdownTimeout);
-                    countdownTimeout = setTimeout(() => {
-                        updateDisplayModes();
-                    }, 500); // Wait 500ms after user stops changing
-                });
-            }
-            
-            // Brightness slider - update with debouncing, send only brightness
-            const brightnessSlider = document.getElementById('brightness');
-            if (brightnessSlider) {
-                let brightnessTimeout;
-                brightnessSlider.addEventListener('input', function() {
-                    clearTimeout(brightnessTimeout);
-                    brightnessTimeout = setTimeout(() => {
-                        updateSingleSetting('brightness', parseInt(this.value));
-                    }, 300); // Wait 300ms after user stops moving slider
-                });
-            }
-            
-            // Temperature unit radios - update immediately when changed, send only weatherUnits
-            const tempRadios = document.querySelectorAll('input[name="weather-units"]');
-            tempRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    updateSingleSetting('weatherUnits', this.value);
-                });
-            });
-            
-            // Date format radios - update immediately when changed, send only dateFormat
-            const dateFormatRadios = document.querySelectorAll('input[name="date-format"]');
-            dateFormatRadios.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    updateSingleSetting('dateFormat', this.value);
-                });
-            });
-            
-            // MDNS domain input - update when losing focus (blur event)
-            const mdnsDomainInput = document.getElementById('mdns-domain');
-            if (mdnsDomainInput) {
-                mdnsDomainInput.addEventListener('blur', function() {
-                    const domainValue = this.value.trim();
-                    if (domainValue) {
-                        updateSingleSetting('mdnsDomain', domainValue);
-                    }
-                });
-            }
-            
-            
-            // Initialize theme
-            document.documentElement.setAttribute('data-theme', currentTheme);
-            updateThemeIcon();
-            
-            // Initialize drag and drop
-            initializeDragAndDrop();
-            
-            // Duration inputs - update with debouncing
-            const durationInputs = document.querySelectorAll('.duration-control');
-            durationInputs.forEach(input => {
-                let durationTimeout;
-                input.addEventListener('input', function() {
-                    clearTimeout(durationTimeout);
-                    durationTimeout = setTimeout(() => {
-                        updateCardDurations();
-                    }, 500); // Wait 500ms after user stops typing
-                });
-            });
-            
-            // City search input
-            const cityInput = document.getElementById('city-input');
-            if (cityInput) {
-                let searchTimeout;
-                cityInput.addEventListener('input', function() {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        searchCities(this.value);
-                    }, 300);
-                });
-            }
-            
-            // Hide dropdown when clicking outside
-            document.addEventListener('click', function(e) {
-                if (!e.target.closest('.autocomplete-container')) {
-                    hideCityDropdown();
-                }
-            });
-        });
-        
-        // Debounce function for general use
-        function debounce(func, wait) {
+        // --- 3. Utility Functions ---
+        const debounce = (func, wait) => {
             let timeout;
             return function executedFunction(...args) {
                 const later = () => {
@@ -2024,527 +797,407 @@
                 clearTimeout(timeout);
                 timeout = setTimeout(later, wait);
             };
-        }
-        
-        function loadDisplayModes() {
-            return getSettings()
-                .then(settings => {
-                    if (settings.activeCards && Array.isArray(settings.activeCards)) {
-                        // Reset all checkboxes first
-                        document.getElementById('clock-checkbox').checked = false;
-                        document.getElementById('date-checkbox').checked = false;
-                        document.getElementById('weather-checkbox').checked = false;
-                        document.getElementById('snake-checkbox').checked = false;
-                        document.getElementById('rain-checkbox').checked = false;
-                        document.getElementById('ip-checkbox').checked = false;
-                        document.getElementById('message-checkbox').checked = false;
-                        document.getElementById('countdown-checkbox').checked = false;
-                        
-                        // Check the active ones
-                        settings.activeCards.forEach(mode => {
-                            switch(mode) {
-                                case 'CLOCK':
-                                    document.getElementById('clock-checkbox').checked = true;
-                                    break;
-                                case 'DATE':
-                                    document.getElementById('date-checkbox').checked = true;
-                                    break;
-                                case 'WEATHER':
-                                    document.getElementById('weather-checkbox').checked = true;
-                                    break;
-                                case 'SNAKE':
-                                    document.getElementById('snake-checkbox').checked = true;
-                                    break;
-                                case 'RAIN':
-                                    document.getElementById('rain-checkbox').checked = true;
-                                    break;
-                                case 'IP':
-                                    document.getElementById('ip-checkbox').checked = true;
-                                    break;
-                                case 'MESSAGE':
-                                    document.getElementById('message-checkbox').checked = true;
-                                    break;
-                                case 'COUNTDOWN':
-                                    document.getElementById('countdown-checkbox').checked = true;
-                                    break;
-                            }
-                        });
-                    }
+        };
 
-                    // Restore card order if available
-                    if (settings.cardOrder && Array.isArray(settings.cardOrder)) {
-                        restoreCardOrder(settings.cardOrder);
-                    }
+        const showPopup = (message, type = 'success', duration = 3000) => {
+            clearTimeout(popupTimeout);
+            elements.popup.className = 'popup'; // Reset classes
+            elements.popupIcon.className = 'popup-icon';
 
-                    // Restore card durations if available
-                    if (settings.cardDurations && Array.isArray(settings.cardDurations)) {
-                        restoreCardDurations(settings.cardDurations);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading display modes:', error);
-                    throw error; // Re-throw to be caught by Promise.all
-                });
-        }
+            elements.popupMessage.textContent = message;
+            elements.popup.classList.add(type);
+            elements.popupIcon.classList.add(type);
 
-        function restoreCardOrder(cardOrder) {
-            const cardList = document.getElementById('card-list');
-            const cardItems = Array.from(cardList.children);
-            
-            // Map indices to card types
-            const cardTypeMap = {
-                0: 'clock',
-                1: 'date',
-                2: 'weather',
-                3: 'message',
-                4: 'countdown',
-                5: 'snake',
-                6: 'rain',
-                7: 'ip'
+            const icons = {
+                success: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+                error: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>',
+                loading: '<div class="popup-spinner"></div>',
             };
+            elements.popupIcon.innerHTML = icons[type] || '';
 
-            // Create a new order based on the saved card order
-            const newOrder = [];
-            cardOrder.forEach(index => {
-                const cardType = cardTypeMap[index];
-                if (cardType) {
-                    const cardItem = cardItems.find(item => item.getAttribute('data-card-type') === cardType);
-                    if (cardItem) {
-                        newOrder.push(cardItem);
-                    }
-                }
-            });
+            elements.popupOverlay.style.display = 'block';
 
-            // Reorder the DOM elements
-            newOrder.forEach(cardItem => {
-                cardList.appendChild(cardItem);
-            });
-        }
+            if (duration > 0) {
+                popupTimeout = setTimeout(hidePopup, duration);
+            }
+        };
 
-        function restoreCardDurations(cardDurations) {
-            // Map indices to card types
-            const cardTypeMap = {
-                0: 'clock',
-                1: 'date',
-                2: 'weather',
-                3: 'message',
-                4: 'countdown',
-                5: 'snake',
-                6: 'rain',
-                7: 'ip'
-            };
+        const hidePopup = () => {
+            elements.popupOverlay.classList.add('hiding');
+            setTimeout(() => {
+                elements.popupOverlay.style.display = 'none';
+                elements.popupOverlay.classList.remove('hiding');
+            }, 300);
+        };
 
-            // Set duration values for each card
-            cardDurations.forEach((duration, index) => {
-                const cardType = cardTypeMap[index];
-                if (cardType) {
-                    const durationInput = document.getElementById(`${cardType}-duration`);
-                    if (durationInput) {
-                        durationInput.value = duration;
-                    }
-                }
-            });
-        }
-        
-        function loadGeneralSettings() {
-            return getSettings()
-                .then(settings => {
-                    // Set brightness
-                    const brightnessSlider = document.getElementById('brightness');
-                    if (brightnessSlider && settings.brightness) {
-                        brightnessSlider.value = settings.brightness;
-                    }
-                    
-                    // Set temperature units - use the correct field name from ESP32
-                    const celsiusRadio = document.getElementById('celsius-radio');
-                    const fahrenheitRadio = document.getElementById('fahrenheit-radio');
-                    if (settings.weatherUnits === 'c' && celsiusRadio) {
-                        celsiusRadio.checked = true;
-                    } else if (settings.weatherUnits === 'f' && fahrenheitRadio) {
-                        fahrenheitRadio.checked = true;
-                    }
-                    
-                    // Set date format
-                    const mmddRadio = document.getElementById('mmdd-radio');
-                    const ddmmRadio = document.getElementById('ddmm-radio');
-                    if (settings.dateFormat === 'mmdd' && mmddRadio) {
-                        mmddRadio.checked = true;
-                    } else if (settings.dateFormat === 'ddmm' && ddmmRadio) {
-                        ddmmRadio.checked = true;
-                    }
-                    
-                    // Set MDNS domain
-                    const mdnsDomainInput = document.getElementById('mdns-domain');
-                    if (mdnsDomainInput && settings.mdnsDomain) {
-                        mdnsDomainInput.value = settings.mdnsDomain;
-                    }
-                    
-                    // Set flip display button state
-                    const flipBtnText = document.getElementById('flip-btn-text');
-                    if (flipBtnText && settings.flipped !== undefined) {
-                        flipBtnText.textContent = settings.flipped ? 'Unflip Display' : 'Flip Display';
-                    }
-                    
-                    // Set message content
-                    const messageInput = document.getElementById('message-input');
-                    if (messageInput && settings.message) {
-                        messageInput.value = settings.message;
-                    }
-                    
-                    // Set countdown target date
-                    const countdownInput = document.getElementById('countdown-input');
-                    if (countdownInput && settings.countdownTargetDate) {
-                        // Convert Unix timestamp to date format (YYYY-MM-DD)
-                        const date = new Date(settings.countdownTargetDate * 1000);
-                        const year = date.getFullYear();
-                        const month = String(date.getMonth() + 1).padStart(2, '0');
-                        const day = String(date.getDate()).padStart(2, '0');
-                        countdownInput.value = `${year}-${month}-${day}`;
-                    }
-                    
-                    
-                    // Set city info if available - use the correct field names from ESP32
-                    if (settings.latitude !== undefined && settings.longitude !== undefined && 
-                        settings.latitude !== 2147483647 && settings.longitude !== 2147483647) {
-                        
-                        // Show city info
-                        const cityInfo = document.getElementById('city-info');
-                        if (cityInfo) {
-                            cityInfo.innerHTML = `
-                                <div class="city-details">
-                                    <strong>Location Set</strong><br>
-                                    Coordinates: ${settings.latitude}, ${settings.longitude}<br>
-                                    Timezone: ${settings.timezone || 'Auto-detected'}
-                                </div>
-                            `;
-                            
-                            // Store coordinates as data attributes for easy access
-                            cityInfo.setAttribute('data-latitude', settings.latitude);
-                            cityInfo.setAttribute('data-longitude', settings.longitude);
-                        }
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading general settings:', error);
-                    throw error; // Re-throw to be caught by Promise.all
-                });
-        }
-        
-        function loadSystemInfo() {
-            return fetch('/&SYSINFO')
-                .then(response => response.json())
-                .then(data => {
-                    // WiFi Status
-                    document.getElementById('wifi-status').textContent = data.wifi_connected ? 'Connected' : 'Disconnected';
-                    document.getElementById('wifi-ssid').textContent = data.wifi_ssid || 'Unknown';
-                    
-                    // IP Address
-                    document.getElementById('ip-address').textContent = data.ip_address || 'Unknown';
-                    const rssi = data.wifi_rssi || 0;
-                    let strength = 'Unknown';
-                    if (rssi >= -50) strength = 'Excellent';
-                    else if (rssi >= -60) strength = 'Good';
-                    else if (rssi >= -70) strength = 'Fair';
-                    else if (rssi >= -80) strength = 'Poor';
-                    else if (rssi < -80) strength = 'Very Poor';
-                    document.getElementById('wifi-strength').textContent = `${strength} (${rssi} dBm)`;
-                    
-                    // Uptime
-                    document.getElementById('uptime').textContent = data.uptime_formatted || 'Unknown';
-                    document.getElementById('uptime-seconds').textContent = `${data.uptime_seconds || 0} seconds`;
-                    
-                    // Memory
-                    const freeHeap = data.free_heap || 0;
-                    const totalHeap = data.total_heap || 0;
-                    const usagePercent = totalHeap > 0 ? Math.round(((totalHeap - freeHeap) / totalHeap) * 100) : 0;
-                    document.getElementById('memory-usage').textContent = `${usagePercent}% used`;
-                    document.getElementById('memory-details').textContent = `${(freeHeap / 1024).toFixed(1)}KB free / ${(totalHeap / 1024).toFixed(1)}KB total`;
-                    
-                    // Storage
-                    const flashSize = data.flash_size || 0;
-                    const flashSizeMB = (flashSize / (1024 * 1024)).toFixed(1);
-                    document.getElementById('storage-usage').textContent = `${flashSizeMB} MB`;
-                    document.getElementById('storage-details').textContent = 'Flash Storage';
-                    
-                    // Hardware
-                    document.getElementById('chip-model').textContent = data.chip_model || 'Unknown';
-                    document.getElementById('cpu-freq').textContent = `${data.cpu_freq_mhz || 0} MHz`;
-                })
-                .catch(error => {
-                    console.error('Error loading system info:', error);
-                    // Set error states
-                    document.getElementById('wifi-status').textContent = 'Error';
-                    document.getElementById('ip-address').textContent = 'Error';
-                    document.getElementById('uptime').textContent = 'Error';
-                    document.getElementById('memory-usage').textContent = 'Error';
-                    document.getElementById('storage-usage').textContent = 'Error';
-                    document.getElementById('chip-model').textContent = 'Error';
-                    throw error; // Re-throw to be caught by Promise.all
-                });
-        }
-        
-        function refreshSystemInfo() {
-            const refreshBtn = document.querySelector('.btn-secondary');
-            if (refreshBtn) {
-                const originalText = refreshBtn.textContent;
-                
-                // Show loading state
-                refreshBtn.textContent = "Refreshing...";
-                refreshBtn.disabled = true;
-                refreshBtn.innerHTML = '<span class="spinner"></span> Refreshing...';
-                
-                loadSystemInfo();
-                
-                // Restore button state after a short delay
-                setTimeout(() => {
-                    refreshBtn.textContent = originalText;
-                    refreshBtn.disabled = false;
-                    refreshBtn.innerHTML = originalText;
-                }, 1000);
+        const setLoadingState = (isLoading) => {
+            if (isLoading) {
+                elements.loadingOverlay.classList.remove('hidden');
+                elements.mainContainer.classList.add('loading');
             } else {
-                loadSystemInfo();
+                elements.loadingOverlay.classList.add('hidden');
+                elements.mainContainer.classList.remove('loading');
             }
-            
-            showStatus('System information refreshed!', 'success');
-        }
+        };
+
+        // --- 4. API Communication ---
+        const apiRequest = async (url, options = {}) => {
+            const { showSuccessPopup = true, successMessage = 'Updated successfully!', errorMessage = 'Update failed.' } = options;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                if (showSuccessPopup) showPopup(successMessage, 'success');
+                return response;
+            } catch (error) {
+                console.error('API Request Error:', error);
+                showPopup(errorMessage, 'error');
+                throw error;
+            }
+        };
+
+        const getSettings = async () => {
+            try {
+                const response = await fetch("/&SETT");
+                if (!response.ok) throw new Error('Failed to fetch settings');
+                return await response.json();
+            } catch (error) {
+                console.error("Error fetching settings:", error);
+                showPopup("Failed to load settings.", "error");
+                return {};
+            }
+        };
         
-        function rebootDevice() {
-            // Show confirmation dialog
-            if (confirm('Are you sure you want to reboot the device? This will disconnect you from the web interface.')) {
-                showLoading('Rebooting device...');
-                
-                // Send reboot request
-                fetch('/&REBOOT')
-                    .then(response => {
-                        if (response.ok) {
-                            showStatus('Device is rebooting...', 'success');
-                            // Redirect to a waiting page or show message
-                            setTimeout(() => {
-                                showStatus('Device is rebooting. Please wait and refresh the page in a few moments.', 'success');
-                            }, 2000);
-                        } else {
-                            showStatus('Failed to reboot device.', 'error');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        showStatus('Error rebooting device.', 'error');
-                    });
+        const getSystemInfo = async () => {
+             try {
+                const response = await fetch("/&SYSINFO");
+                if (!response.ok) throw new Error('Failed to fetch system info');
+                return await response.json();
+            } catch (error) {
+                console.error('Error loading system info:', error);
+                Object.values(elements.sysInfo).forEach(el => el.textContent = 'Error');
+                throw error;
             }
-        }
+        };
 
+        const sendSingleSetting = (setting) => {
+            const jsonString = JSON.stringify(setting);
+            const url = `/&CNTL=${encodeURIComponent(jsonString)}`;
+            const settingName = Object.keys(setting)[0];
+            apiRequest(url, { successMessage: `${settingName} updated!` });
+        };
 
-        function factoryResetDevice() {
-            // Show confirmation dialog with strongest warning
-            if (confirm('DANGER: This will COMPLETELY ERASE the EEPROM and restore the device to factory state!\n\nThis will:\n- Erase ALL stored data\n- Reset to absolute factory defaults\n- Require complete reconfiguration\n\nThis action cannot be undone!\n\nAre you absolutely certain you want to continue?')) {
-                showLoading('Performing factory reset...');
-                
-                // Send factory reset request - no error handling since WiFi will disconnect
-                fetch('/&FACTORY_RESET')
-                    .then(response => {
-                        // This will likely not execute due to WiFi disconnection
-                        if (response.ok) {
-                            showStatus('Factory reset completed. Device is rebooting...', 'success');
-                        }
-                    })
-                    .catch(error => {
-                        // Expected behavior - WiFi disconnects during factory reset
-                        console.log('Factory reset initiated - WiFi disconnected as expected');
-                        showStatus('Factory reset initiated. Device is rebooting and will start WiFi setup mode.', 'success');
-                    });
-            }
-        }
+        // --- 5. Feature-specific Functions ---
 
-        function flipDisplay() {
-            // Show confirmation dialog
-            if (confirm('Are you sure you want to flip the display orientation? The device will reboot after this change.')) {
-                showLoading('Flipping display orientation...');
-                
-                // Send flip request
-                fetch('/&FLIP_DISPLAY')
-                    .then(response => {
-                        if (response.ok) {
-                            showStatus('Display orientation flipped. Device is rebooting...', 'success');
-                            // The device will reboot automatically after the request
-                        } else {
-                            showStatus('Failed to flip display orientation.', 'error');
-                            hideLoading();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error flipping display:', error);
-                        showStatus('Error flipping display orientation.', 'error');
-                        hideLoading();
-                    });
+        // Theme Management
+        const updateThemeIcon = () => {
+            const icons = {
+                dark: '<path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>',
+                light: '<path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.166a.75.75 0 00-1.06-1.06l-1.591 1.59a.75.75 0 101.06 1.061l1.591-1.59zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.834 18.894a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 10-1.061 1.06l1.59 1.591zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.758 17.303a.75.75 0 00-1.061-1.06l-1.591 1.59a.75.75 0 001.06 1.061l1.591-1.59zM6 12a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 12zM6.697 7.757a.75.75 0 001.06-1.06l-1.59-1.591a.75.75 0 00-1.061 1.06l1.59 1.591z"/>'
+            };
+            elements.themeIcon.innerHTML = icons[currentTheme];
+            document.documentElement.setAttribute('data-theme', currentTheme);
+        };
+        const toggleTheme = () => {
+            currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('theme', currentTheme);
+            updateThemeIcon();
+        };
+
+        // Drag and Drop
+        const createDropIndicator = () => {
+            if (!dropIndicator) {
+                dropIndicator = document.createElement('div');
+                dropIndicator.className = 'drop-indicator';
             }
-        }
-        
-        // New automatic update functions
-        function updateDisplayModes() {
-            const form = document.getElementById('operation_mode_form');
-            let strLine = "";
-            
-            if (form["clock-checkbox"].checked) {
-                strLine += "/&CLOCK";
-            }
-            if (form["date-checkbox"].checked) {
-                strLine += "/&DATE";
-            }
-            if (form["weather-checkbox"].checked) {
-                strLine += "/&WEATHER";
-            }
-            if (form["snake-checkbox"].checked) {
-                strLine += "/&SNAKE";
-            }
-            if (form["rain-checkbox"].checked) {
-                strLine += "/&RAIN";
-            }
-            if (form["ip-checkbox"].checked) {
-                strLine += "/&IP";
-            }
-            if (form["message-checkbox"].checked) {
-                const message = form["message-input"].value.trim();
-                if (message === "") {
-                    showStatus("Message cannot be empty when selected.", "error");
-                    return;
+            return dropIndicator;
+        };
+        const handleDragStart = (e) => {
+            draggedElement = e.target;
+            draggedElement.classList.add('dragging');
+        };
+        const handleDragEnd = () => {
+            draggedElement.classList.remove('dragging');
+            draggedElement = null;
+            if (dropIndicator && dropIndicator.parentNode) dropIndicator.remove();
+        };
+        const handleDragOver = (e) => {
+            e.preventDefault();
+            const indicator = createDropIndicator();
+            const targetCard = e.target.closest('.card-item');
+            if (targetCard) {
+                const rect = targetCard.getBoundingClientRect();
+                const offset = e.clientY - rect.top - rect.height / 2;
+                if (offset < 0) {
+                    elements.cardList.insertBefore(indicator, targetCard);
+                } else {
+                    elements.cardList.insertBefore(indicator, targetCard.nextSibling);
                 }
-                strLine += "/&MSG=" + encodeURIComponent(message);
+                indicator.classList.add('show');
             }
-            if (form["countdown-checkbox"].checked) {
-                const countdownDate = form["countdown-input"].value;
-                if (countdownDate === "") {
-                    showStatus("Countdown date cannot be empty when selected.", "error");
-                    return;
-                }
-                // Convert date to Unix timestamp (set to start of day - 00:00 AM)
-                const date = new Date(countdownDate + "T00:00:00");
-                const timestamp = Math.floor(date.getTime() / 1000);
-                strLine += "/&COUNTDOWN=" + timestamp;
+        };
+        const handleDrop = (e) => {
+            e.preventDefault();
+            if (dropIndicator && dropIndicator.parentNode) {
+                elements.cardList.insertBefore(draggedElement, dropIndicator);
+                dropIndicator.remove();
+                updateCardOrder();
             }
-            
-            if (strLine === "") {
-                showStatus("Please select at least one display mode.", "error");
+        };
+
+        // City Autocomplete
+        const searchCities = debounce((query) => {
+            if (query.length < 2) {
+                elements.cityDropdown.style.display = 'none';
                 return;
             }
-            
-            // Add nocache parameter to prevent caching
-            const nocache = "/&nocache=" + Math.random() * 1000000;
-            
-            fetch(strLine + nocache)
-                .then(response => {
-                    if (response.ok) {
-                        showStatus("Display modes updated!", "success");
+            const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=en&format=json`;
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    elements.cityDropdown.innerHTML = '';
+                    if (data.results && data.results.length > 0) {
+                        data.results.forEach(city => {
+                            const item = document.createElement('div');
+                            item.className = 'autocomplete-item';
+                            item.innerHTML = `<strong>${city.name}</strong>, ${city.country}${city.admin1 ? ', ' + city.admin1 : ''}`;
+                            item.onclick = () => selectCity(city);
+                            elements.cityDropdown.appendChild(item);
+                        });
+                        elements.cityDropdown.style.display = 'block';
                     } else {
-                        showStatus("Failed to update display modes.", "error");
+                        elements.cityDropdown.style.display = 'none';
                     }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showStatus("Error updating display modes.", "error");
+                }).catch(err => console.error('City search failed:', err));
+        }, 300);
+        
+        const selectCity = (city) => {
+            elements.cityInput.value = city.name;
+            elements.cityDropdown.style.display = 'none';
+            elements.cityInfo.innerHTML = `<strong>${city.name}, ${city.country}</strong><br>Timezone: ${city.timezone || 'N/A'}`;
+            elements.timezoneInput.value = city.timezone || '';
+            sendSingleSetting({ latitude: city.latitude, longitude: city.longitude, timezone: city.timezone });
+        };
+        
+        // System Actions
+        const rebootDevice = () => {
+            if (confirm('Are you sure you want to reboot the device?')) {
+                showPopup('Rebooting device...', 'loading', 0);
+                apiRequest('/&REBOOT', { showSuccessPopup: false }).catch(() => {}); // Expect disconnect
+            }
+        };
+
+        const factoryResetDevice = () => {
+            if (confirm('DANGER: This will ERASE ALL settings and restore the device to its factory state. This cannot be undone. Are you sure?')) {
+                showPopup('Performing factory reset...', 'loading', 0);
+                apiRequest('/&FACTORY_RESET', { showSuccessPopup: false }).catch(() => {}); // Expect disconnect
+            }
+        };
+
+        const flipDisplay = () => {
+            if (confirm('Are you sure you want to flip the display orientation? The device will reboot.')) {
+                showPopup('Flipping display...', 'loading', 0);
+                apiRequest('/&FLIP_DISPLAY', { successMessage: 'Display flipped. Rebooting...' }).catch(() => {});
+            }
+        };
+        
+        const refreshSystemInfo = async () => {
+            const originalText = elements.refreshSysInfoBtn.innerHTML;
+            elements.refreshSysInfoBtn.innerHTML = '<span class="spinner"></span> Refreshing...';
+            elements.refreshSysInfoBtn.disabled = true;
+            await loadSystemInfo();
+            setTimeout(() => {
+                elements.refreshSysInfoBtn.innerHTML = originalText;
+                elements.refreshSysInfoBtn.disabled = false;
+                showPopup('System info refreshed!', 'success');
+            }, 500);
+        };
+        
+        // Settings Updates
+        const updateDisplayModes = () => {
+            let strLine = "";
+            const form = elements.opModeForm;
+            const checkedModes = Array.from(form.querySelectorAll('input[type="checkbox"]:checked'));
+            
+            if (checkedModes.length === 0) {
+                 showPopup("Please select at least one display mode.", "error");
+                 return;
+            }
+            
+            checkedModes.forEach(cb => {
+                const type = cb.id.replace('-checkbox', '').toUpperCase();
+                strLine += `&${type}`;
+
+                if (type === 'MSG') {
+                    strLine += `=${encodeURIComponent(elements.messageInput.value)}`;
+                } else if (type === 'COUNTDOWN') {
+                    const date = new Date(elements.countdownInput.value + "T00:00:00");
+                    const timestamp = Math.floor(date.getTime() / 1000);
+                    strLine += `=${timestamp}`;
+                }
+            });
+            
+            apiRequest(`/${strLine}`, { successMessage: 'Display modes updated!' });
+        };
+
+        const updateCardOrder = () => {
+            const cardOrder = Array.from(elements.cardList.children)
+                .map(item => CARD_TYPE_MAP[item.dataset.cardType]);
+            sendSingleSetting({ cardOrder: cardOrder });
+        };
+
+        const updateCardDurations = () => {
+            const cardDurations = [];
+            Object.values(CARD_INDEX_MAP).forEach((cardType, index) => {
+                const input = document.getElementById(`${cardType}-duration`);
+                cardDurations[index] = input ? parseInt(input.value) : 5;
+            });
+            sendSingleSetting({ cardDurations: cardDurations });
+        };
+        
+        // --- 6. Data Loading and UI Population ---
+        const loadDisplayModes = (settings) => {
+            // Uncheck all first
+            elements.opModeForm.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            // Check active cards
+            if (settings.activeCards) {
+                settings.activeCards.forEach(mode => {
+                    const cb = document.getElementById(`${mode.toLowerCase()}-checkbox`);
+                    if (cb) cb.checked = true;
                 });
-        }
+            }
+            // Restore card order
+            if (settings.cardOrder) {
+                const sortedItems = settings.cardOrder.map(index => {
+                    const cardType = CARD_INDEX_MAP[index];
+                    return elements.cardList.querySelector(`[data-card-type="${cardType}"]`);
+                }).filter(Boolean);
+                sortedItems.forEach(item => elements.cardList.appendChild(item));
+            }
+            // Restore card durations
+            if (settings.cardDurations) {
+                settings.cardDurations.forEach((duration, index) => {
+                    const cardType = CARD_INDEX_MAP[index];
+                    const input = document.getElementById(`${cardType}-duration`);
+                    if (input) input.value = duration;
+                });
+            }
+        };
         
-        // Function to update a single setting
-        function updateSingleSetting(settingName, value) {
-            const settings = {};
-            settings[settingName] = value;
+        const loadGeneralSettings = (settings) => {
+            if (settings.brightness) elements.brightnessSlider.value = settings.brightness;
+            if (settings.weatherUnits) document.querySelector(`input[name="weather-units"][value="${settings.weatherUnits}"]`).checked = true;
+            if (settings.dateFormat) document.querySelector(`input[name="date-format"][value="${settings.dateFormat}"]`).checked = true;
+            if (settings.mdnsDomain) elements.mdnsDomainInput.value = settings.mdnsDomain;
+            if (settings.message) elements.messageInput.value = settings.message;
             
-            // Use GET request with URL-encoded JSON
-            const jsonString = JSON.stringify(settings);
-            const encodedJson = encodeURIComponent(jsonString);
-            const url = `/&CNTL=${encodedJson}`;
+            document.getElementById('flip-btn-text').textContent = settings.flipped ? 'Unflip Display' : 'Flip Display';
+
+            if (settings.countdownTargetDate) {
+                const date = new Date(settings.countdownTargetDate * 1000);
+                elements.countdownInput.value = date.toISOString().split('T')[0];
+            }
+            if (settings.latitude && settings.latitude !== 2147483647) {
+                elements.cityInfo.innerHTML = `<strong>Location Set</strong><br>Coords: ${settings.latitude}, ${settings.longitude}`;
+            }
+        };
+
+        const loadSystemInfo = async () => {
+            const data = await getSystemInfo();
+            const { sysInfo } = elements;
+            sysInfo.wifiStatus.textContent = data.wifi_connected ? 'Connected' : 'Disconnected';
+            sysInfo.wifiSsid.textContent = data.wifi_ssid || '-';
+            sysInfo.ipAddress.textContent = data.ip_address || '-';
             
-            fetch(url)
-            .then(response => {
-                if (response.ok) {
-                    showStatus(`${settingName} updated!`, 'success');
-                } else {
-                    showStatus(`Failed to update ${settingName}.`, 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showStatus(`Error updating ${settingName}.`, 'error');
+            const rssi = data.wifi_rssi || 0;
+            let strength = 'Poor';
+            if (rssi >= -50) strength = 'Excellent';
+            else if (rssi >= -60) strength = 'Good';
+            else if (rssi >= -70) strength = 'Fair';
+            sysInfo.wifiStrength.textContent = `${strength} (${rssi} dBm)`;
+
+            sysInfo.uptime.textContent = data.uptime_formatted || '-';
+            sysInfo.uptimeSeconds.textContent = `${data.uptime_seconds || 0} seconds`;
+            
+            const freeHeap = data.free_heap || 0, totalHeap = data.total_heap || 0;
+            const usagePercent = totalHeap > 0 ? Math.round(((totalHeap - freeHeap) / totalHeap) * 100) : 0;
+            sysInfo.memoryUsage.textContent = `${usagePercent}% used`;
+            sysInfo.memoryDetails.textContent = `${(freeHeap / 1024).toFixed(1)}KB free / ${(totalHeap / 1024).toFixed(1)}KB total`;
+            
+            sysInfo.storageUsage.textContent = `${(data.flash_size / (1024 * 1024)).toFixed(1)} MB`;
+            sysInfo.storageDetails.textContent = 'Flash Storage';
+            sysInfo.chipModel.textContent = data.chip_model || '-';
+            sysInfo.cpuFreq.textContent = `${data.cpu_freq_mhz || 0} MHz`;
+        };
+
+        // --- 7. Event Listener Setup ---
+        const setupEventListeners = () => {
+            elements.themeToggleBtn.addEventListener('click', toggleTheme);
+            elements.rebootBtn.addEventListener('click', rebootDevice);
+            elements.factoryResetBtn.addEventListener('click', factoryResetDevice);
+            elements.flipDisplayBtn.addEventListener('click', flipDisplay);
+            elements.refreshSysInfoBtn.addEventListener('click', refreshSystemInfo);
+
+            // Drag and Drop listeners
+            elements.cardList.addEventListener('dragstart', handleDragStart);
+            elements.cardList.addEventListener('dragend', handleDragEnd);
+            elements.cardList.addEventListener('dragover', handleDragOver);
+            elements.cardList.addEventListener('drop', handleDrop);
+            
+            // Auto-updating form controls with debounce
+            const debouncedDurationUpdate = debounce(updateCardDurations, 500);
+            const debouncedModeUpdate = debounce(updateDisplayModes, 500);
+
+            elements.cardList.querySelectorAll('.duration-control').forEach(input => {
+                input.addEventListener('input', debouncedDurationUpdate);
             });
-        }
-        
-        // Function to update coordinates when city is selected
-        function updateCoordinates(latitude, longitude) {
-            const timezone = document.getElementById('timezone').value;
             
-            const settings = {
-                latitude: latitude,
-                longitude: longitude
-            };
+            elements.opModeForm.querySelectorAll('input').forEach(input => {
+                input.addEventListener('change', debouncedModeUpdate); // `change` for checkboxes, `input` for text
+                 if (input.type === 'text' || input.type === 'date') {
+                    input.addEventListener('input', debouncedModeUpdate);
+                }
+            });
+
+            elements.brightnessSlider.addEventListener('input', debounce(e => sendSingleSetting({ brightness: parseInt(e.target.value) }), 300));
+            document.querySelectorAll('input[name="weather-units"]').forEach(r => r.addEventListener('change', e => sendSingleSetting({ weatherUnits: e.target.value })));
+            document.querySelectorAll('input[name="date-format"]').forEach(r => r.addEventListener('change', e => sendSingleSetting({ dateFormat: e.target.value })));
+            elements.mdnsDomainInput.addEventListener('blur', e => {
+                if (e.target.value.trim()) sendSingleSetting({ mdnsDomain: e.target.value.trim() });
+            });
             
-            // Add timezone if available
-            if (timezone) {
-                settings.timezone = timezone;
+            elements.cityInput.addEventListener('input', e => searchCities(e.target.value));
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.autocomplete-container')) {
+                    elements.cityDropdown.style.display = 'none';
+                }
+            });
+        };
+
+        // --- 8. Initialization ---
+        const initializePage = async () => {
+            setLoadingState(true);
+            updateThemeIcon();
+            setupEventListeners();
+            
+            try {
+                const [settings] = await Promise.all([
+                    getSettings(),
+                    loadSystemInfo()
+                ]);
+                loadDisplayModes(settings);
+                loadGeneralSettings(settings);
+            } catch (error) {
+                console.error("Initialization failed:", error);
+            } finally {
+                setTimeout(() => setLoadingState(false), 500); // Small delay for smooth transition
             }
             
-            // Use GET request with URL-encoded JSON
-            const jsonString = JSON.stringify(settings);
-            const encodedJson = encodeURIComponent(jsonString);
-            const url = `/&CNTL=${encodedJson}`;
-            
-            fetch(url)
-            .then(response => {
-                if (response.ok) {
-                    showStatus('Location and timezone updated!', 'success');
-                } else {
-                    showStatus('Failed to update location.', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showStatus('Error updating location.', 'error');
-            });
-        }
-        
-        function updateGeneralSettings() {
-            const cityInput = document.getElementById('city-input');
-            const brightnessSlider = document.getElementById('brightness');
-            const celsiusRadio = document.getElementById('celsius-radio');
-            
-            // Get city coordinates from the city info data attributes
-            const cityInfo = document.getElementById('city-info');
-            let latitude = null;
-            let longitude = null;
-            
-            if (cityInfo && cityInfo.hasAttribute('data-latitude') && cityInfo.hasAttribute('data-longitude')) {
-                latitude = parseFloat(cityInfo.getAttribute('data-latitude'));
-                longitude = parseFloat(cityInfo.getAttribute('data-longitude'));
-            }
-            
-            const settings = {
-                brightness: parseInt(brightnessSlider.value),
-                weatherUnits: celsiusRadio.checked ? 'c' : 'f'
-            };
-            
-            // Only add coordinates if we have them
-            if (latitude !== null && longitude !== null) {
-                settings.latitude = latitude;
-                settings.longitude = longitude;
-            }
-            
-            // Use GET request with URL-encoded JSON
-            const jsonString = JSON.stringify(settings);
-            const encodedJson = encodeURIComponent(jsonString);
-            const url = `/&CNTL=${encodedJson}`;
-            
-            fetch(url)
-            .then(response => {
-                if (response.ok) {
-                    showStatus('Settings updated!', 'success');
-                } else {
-                    showStatus('Failed to update settings.', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showStatus('Error updating settings.', 'error');
-            });
-        }
+            setInterval(loadSystemInfo, 30000); // Auto-refresh system info
+        };
+
+        // Run initialization when the DOM is ready
+        document.addEventListener('DOMContentLoaded', initializePage);
+    })();
     </script>
-  </body>
+</body>
 </html>
