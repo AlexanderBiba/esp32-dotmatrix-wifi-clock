@@ -17,6 +17,7 @@
 #include "card.h"
 #include "snake.h"
 #include "rain.h"
+#include "countdown.h"
 
 #define PRINT_CALLBACK 0
 #define DEBUG 1
@@ -31,6 +32,7 @@ Stock *stock;
 Weather *weather;
 Snake *snake;
 Rain *rain;
+Countdown *countdown;
 
 void setup(void)
 {
@@ -51,6 +53,7 @@ void setup(void)
     stock = nullptr;
     snake = nullptr;
     rain = nullptr;
+    countdown = nullptr;
 
     esp_task_wdt_reset();
 }
@@ -66,6 +69,8 @@ void cleanup(void)
         delete stock;
     if (weather)
         delete weather;
+    if (countdown)
+        delete countdown;
     if (clk)
         delete clk;
     if (renderer)
@@ -129,6 +134,14 @@ void handleControlRequest(char *requestBuffer)
     {
         settings->setMessage(doc["message"]);
     }
+    if (doc["countdownTargetDate"])
+    {
+        settings->setCountdownTargetDate(doc["countdownTargetDate"]);
+        if (countdown != nullptr)
+        {
+            countdown->updateCountdownData();
+        }
+    }
 
     if (updateWeather && weather != nullptr)
     {
@@ -171,17 +184,20 @@ void loop(void)
         stock = new Stock(settings);
         snake = new Snake(settings);
         rain = new Rain(settings);
+        countdown = new Countdown(settings);
         componentsCreated = true;
     }
 
-    static Card *cards[] = {
-        new Card(OperationMode::CLOCK, 10000),
-        new Card(OperationMode::DATE, 5000),
-        new Card(OperationMode::WEATHER, 5000),
-        new Card(OperationMode::MESSAGE, 5000),
-        new Card(OperationMode::SNAKE, 5000),
-        new Card(OperationMode::RAIN, 5000),
-        new Card(OperationMode::IP_ADDRESS, 5000)};
+    static Card *cards[OPERATION_MODE_LENGTH] = {
+        new Card(OperationMode::CLOCK, 10000),      // Index 0
+        new Card(OperationMode::DATE, 5000),        // Index 1
+        new Card(OperationMode::WEATHER, 5000),     // Index 2
+        new Card(OperationMode::MESSAGE, 5000),     // Index 3
+        new Card(OperationMode::COUNTDOWN, 5000),   // Index 4
+        new Card(OperationMode::SNAKE, 5000),       // Index 5
+        new Card(OperationMode::RAIN, 5000),         // Index 6
+        new Card(OperationMode::IP_ADDRESS, 5000)   // Index 7
+    };
     static const size_t numCards = sizeof(cards) / sizeof(cards[0]);
     static uint8_t currentState = 0;
     static OperationMode operationMode = cards[currentState]->getOperationMode();
@@ -274,6 +290,16 @@ void loop(void)
             {
                 settings->setMessage(requestBuffer);
             }
+            // If COUNTDOWN card is active and we have countdown timestamp, store it
+            if (activeCards[static_cast<int>(OperationMode::COUNTDOWN)] && strlen(requestBuffer) > 0)
+            {
+                time_t timestamp = atol(requestBuffer);
+                settings->setCountdownTargetDate(timestamp);
+                if (countdown != nullptr)
+                {
+                    countdown->updateCountdownData();
+                }
+            }
             break;
         }
         case AppServer::RequestMode::CNTL:
@@ -318,6 +344,16 @@ void loop(void)
             {
             case OperationMode::MESSAGE:
                 renderer->setMessage(settings->getMessage());
+                break;
+            case OperationMode::COUNTDOWN:
+                if (countdown != nullptr)
+                {
+                    renderer->setRaw(countdown->getCountdown());
+                }
+                else
+                {
+                    renderer->setMessage("Countdown not available");
+                }
                 break;
             case OperationMode::CLOCK:
                 if (clk != nullptr)

@@ -157,6 +157,22 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
     }
   }
 
+  // handle countdown mode
+  pStart = strstr(szMesg, "/&COUNTDOWN=");
+
+  if (pStart != NULL)
+  {
+    pStart += 12; // skip to start of data
+    pEnd = strstr(pStart, "/&");
+
+    if (pEnd != NULL)
+    {
+      extractPayload(pStart, pEnd, psz);
+      requestMode = AppServer::RequestMode::MODE;
+      _activeCards[static_cast<int>(OperationMode::COUNTDOWN)] = true;
+    }
+  }
+
   // handle clock mode
   pStart = strstr(szMesg, "/&CLOCK");
 

@@ -64,7 +64,7 @@ AppSettings::AppSettings()
           Serial.println("Initializing card order for existing device");
           for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
           {
-            settings.cardOrder[i] = i; // Default order: 0, 1, 2, 3, 4, 5, 6
+            settings.cardOrder[i] = i; // Default order: 0, 1, 2, 3, 4, 5, 6, 7
           }
           EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, cardOrder), settings.cardOrder);
           if (!EEPROM.commit()) {
@@ -102,13 +102,16 @@ AppSettings::AppSettings()
                 case 3: // MESSAGE
                     settings.cardDurations[i] = 5; // 5 seconds
                     break;
-                case 4: // SNAKE
+                case 4: // COUNTDOWN
                     settings.cardDurations[i] = 5; // 5 seconds
                     break;
-                case 5: // RAIN
+                case 5: // SNAKE
                     settings.cardDurations[i] = 5; // 5 seconds
                     break;
-                case 6: // IP_ADDRESS
+                case 6: // RAIN
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 7: // IP_ADDRESS
                     settings.cardDurations[i] = 5; // 5 seconds
                     break;
                 default:
@@ -129,6 +132,62 @@ AppSettings::AppSettings()
           EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, display.dateFormat), settings.display.dateFormat);
           if (!EEPROM.commit()) {
             Serial.println("Failed to commit date format initialization");
+          }
+        }
+        
+        // Check if settings need migration due to structure changes
+        if (settings.version < SETTINGS_VERSION) {
+          Serial.printf("Settings version %d detected, migrating to version %d\n", settings.version, SETTINGS_VERSION);
+          
+          // Initialize countdown target date for new structure
+          settings.countdown.targetDate = 0;
+          
+          // Re-initialize card order and durations with new structure
+          for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
+          {
+            settings.cardOrder[i] = i; // Default order: 0, 1, 2, 3, 4, 5, 6, 7
+            
+            // Set default durations (in seconds)
+            switch (i) {
+                case 0: // CLOCK
+                    settings.cardDurations[i] = 10; // 10 seconds
+                    break;
+                case 1: // DATE
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 2: // WEATHER
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 3: // MESSAGE
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 4: // COUNTDOWN
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 5: // SNAKE
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 6: // RAIN
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                case 7: // IP_ADDRESS
+                    settings.cardDurations[i] = 5; // 5 seconds
+                    break;
+                default:
+                    settings.cardDurations[i] = 5; // Default 5 seconds
+                    break;
+            }
+          }
+          
+          // Update version
+          settings.version = SETTINGS_VERSION;
+          
+          // Write the migrated settings
+          EEPROM.put(BASE_EEPROM_ADDR, settings);
+          if (!EEPROM.commit()) {
+            Serial.println("Failed to commit settings migration");
+          } else {
+            Serial.println("Settings migration completed successfully");
           }
         }
     }
@@ -329,6 +388,15 @@ void AppSettings::setMessage(const char _message[MESSAGE_BUFFER_SIZE])
     }
 }
 
+void AppSettings::setCountdownTargetDate(time_t _targetDate)
+{
+    settings.countdown.targetDate = _targetDate;
+    EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, countdown.targetDate), _targetDate);
+    if (!EEPROM.commit()) {
+        Serial.println("Failed to commit countdown target date setting");
+    }
+}
+
 
 void AppSettings::factoryReset()
 {
@@ -352,10 +420,12 @@ void AppSettings::factoryReset()
 void AppSettings::setDefaultValues()
 {
     settings.magic = MAGIC_NUMBER;
+    settings.version = SETTINGS_VERSION;
     strcpy(settings.time.timezone, "America/New_York");
     strcpy(settings.stock.apiKey, "\0");
     strcpy(settings.network.mdnsDomain, "digiclk");
     strcpy(settings.message.content, "Set your message here");
+    settings.countdown.targetDate = 0; // No target date set by default
     settings.display.brightness = 0xf;
     settings.display.flipped = false;
     settings.display.dateFormat = 'm'; // Default to MM.DD format
@@ -368,7 +438,7 @@ void AppSettings::setDefaultValues()
     for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
     {
         settings.activeCards[i] = false;
-        settings.cardOrder[i] = i; // Default order: 0, 1, 2, 3, 4, 5, 6
+        settings.cardOrder[i] = i; // Default order: 0, 1, 2, 3, 4, 5, 6, 7
         
         // Set default durations (in seconds)
         switch (i) {
@@ -384,13 +454,16 @@ void AppSettings::setDefaultValues()
             case 3: // MESSAGE
                 settings.cardDurations[i] = 5; // 5 seconds
                 break;
-            case 4: // SNAKE
+            case 4: // COUNTDOWN
                 settings.cardDurations[i] = 5; // 5 seconds
                 break;
-            case 5: // RAIN
+            case 5: // SNAKE
                 settings.cardDurations[i] = 5; // 5 seconds
                 break;
-            case 6: // IP_ADDRESS
+            case 6: // RAIN
+                settings.cardDurations[i] = 5; // 5 seconds
+                break;
+            case 7: // IP_ADDRESS
                 settings.cardDurations[i] = 5; // 5 seconds
                 break;
             default:
@@ -411,6 +484,7 @@ void AppSettings::toJson(JsonDocument &doc)
     doc["longitude"] = settings.weather.longitude;
     doc["weatherUnits"] = settings.weather.units == 'f' ? "f" : "c";
     doc["message"] = settings.message.content;
+    doc["countdownTargetDate"] = settings.countdown.targetDate;
     
     // Ensure MDNS domain is valid for JSON output
     const char* mdnsDomain = settings.network.mdnsDomain;

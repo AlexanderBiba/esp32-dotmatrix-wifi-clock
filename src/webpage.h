@@ -871,7 +871,8 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             width: 100%;
         }
 
-        .card-item[data-card-type="message"] {
+        .card-item[data-card-type="message"],
+        .card-item[data-card-type="countdown"] {
             flex-direction: column;
             align-items: stretch;
         }
@@ -1069,6 +1070,22 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                             </div>
                             <div class="message-input-container">
                                 <input type="text" id="message-input" class="form-control" placeholder="Enter message here" maxlength="255">
+                            </div>
+                        </div>
+                        <div class="card-item" data-card-type="countdown" draggable="true">
+                            <div class="message-card-row">
+                                <div class="drag-handle">⋮⋮</div>
+                                <div class="checkbox-group">
+                                    <input type="checkbox" id="countdown-checkbox" name="operation-mode">
+                                    <label for="countdown-checkbox">Countdown</label>
+                                </div>
+                                <div class="duration-input">
+                                    <input type="number" id="countdown-duration" class="duration-control" min="1" max="300" value="5">
+                                    <span class="duration-label">sec</span>
+                                </div>
+                            </div>
+                            <div class="message-input-container">
+                                <input type="date" id="countdown-input" class="form-control">
                             </div>
                         </div>
                         <div class="card-item" data-card-type="snake" draggable="true">
@@ -1418,9 +1435,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 'date': 1,
                 'weather': 2,
                 'message': 3,
-                'snake': 4,
-                'rain': 5,
-                'ip': 6
+                'countdown': 4,
+                'snake': 5,
+                'rain': 6,
+                'ip': 7
             };
 
             // Build the order array based on current DOM order
@@ -1463,9 +1481,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 'date': 1,
                 'weather': 2,
                 'message': 3,
-                'snake': 4,
-                'rain': 5,
-                'ip': 6
+                'countdown': 4,
+                'snake': 5,
+                'rain': 6,
+                'ip': 7
             };
 
             // Initialize array with default values
@@ -1639,6 +1658,17 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                     return;
                 }
                 strLine += "/&MSG=" + encodeURIComponent(message);
+            }
+            if (form["countdown-checkbox"].checked) {
+                const countdownDate = form["countdown-input"].value;
+                if (countdownDate === "") {
+                    showStatus("Countdown date cannot be empty when selected.", "error");
+                    return;
+                }
+                // Convert date to Unix timestamp (set to start of day - 00:00 AM)
+                const date = new Date(countdownDate + "T00:00:00");
+                const timestamp = Math.floor(date.getTime() / 1000);
+                strLine += "/&COUNTDOWN=" + timestamp;
             }
             
             if (strLine === "") {
@@ -1895,6 +1925,18 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 });
             }
             
+            // Countdown input - update with debouncing
+            const countdownInput = document.getElementById('countdown-input');
+            if (countdownInput) {
+                let countdownTimeout;
+                countdownInput.addEventListener('change', function() {
+                    clearTimeout(countdownTimeout);
+                    countdownTimeout = setTimeout(() => {
+                        updateDisplayModes();
+                    }, 500); // Wait 500ms after user stops changing
+                });
+            }
+            
             // Brightness slider - update with debouncing, send only brightness
             const brightnessSlider = document.getElementById('brightness');
             if (brightnessSlider) {
@@ -1999,6 +2041,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                         document.getElementById('rain-checkbox').checked = false;
                         document.getElementById('ip-checkbox').checked = false;
                         document.getElementById('message-checkbox').checked = false;
+                        document.getElementById('countdown-checkbox').checked = false;
                         
                         // Check the active ones
                         settings.activeCards.forEach(mode => {
@@ -2023,6 +2066,9 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                                     break;
                                 case 'MESSAGE':
                                     document.getElementById('message-checkbox').checked = true;
+                                    break;
+                                case 'COUNTDOWN':
+                                    document.getElementById('countdown-checkbox').checked = true;
                                     break;
                             }
                         });
@@ -2054,9 +2100,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 1: 'date',
                 2: 'weather',
                 3: 'message',
-                4: 'snake',
-                5: 'rain',
-                6: 'ip'
+                4: 'countdown',
+                5: 'snake',
+                6: 'rain',
+                7: 'ip'
             };
 
             // Create a new order based on the saved card order
@@ -2084,9 +2131,10 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 1: 'date',
                 2: 'weather',
                 3: 'message',
-                4: 'snake',
-                5: 'rain',
-                6: 'ip'
+                4: 'countdown',
+                5: 'snake',
+                6: 'rain',
+                7: 'ip'
             };
 
             // Set duration values for each card
@@ -2144,6 +2192,17 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                     const messageInput = document.getElementById('message-input');
                     if (messageInput && settings.message) {
                         messageInput.value = settings.message;
+                    }
+                    
+                    // Set countdown target date
+                    const countdownInput = document.getElementById('countdown-input');
+                    if (countdownInput && settings.countdownTargetDate) {
+                        // Convert Unix timestamp to date format (YYYY-MM-DD)
+                        const date = new Date(settings.countdownTargetDate * 1000);
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        countdownInput.value = `${year}-${month}-${day}`;
                     }
                     
                     
@@ -2353,6 +2412,17 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                     return;
                 }
                 strLine += "/&MSG=" + encodeURIComponent(message);
+            }
+            if (form["countdown-checkbox"].checked) {
+                const countdownDate = form["countdown-input"].value;
+                if (countdownDate === "") {
+                    showStatus("Countdown date cannot be empty when selected.", "error");
+                    return;
+                }
+                // Convert date to Unix timestamp (set to start of day - 00:00 AM)
+                const date = new Date(countdownDate + "T00:00:00");
+                const timestamp = Math.floor(date.getTime() / 1000);
+                strLine += "/&COUNTDOWN=" + timestamp;
             }
             
             if (strLine === "") {

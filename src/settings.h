@@ -12,6 +12,7 @@
 #define MESSAGE_BUFFER_SIZE 255
 
 #define MAGIC_NUMBER 0x5A
+#define SETTINGS_VERSION 2  // Increment when structure changes
 #define BASE_EEPROM_ADDR 0
 
 class AppSettings
@@ -32,6 +33,7 @@ public:
     void setCardDurations(uint16_t _cardDurations[OPERATION_MODE_LENGTH]);
     void setMdnsDomain(const char _mdnsDomain[MDNS_DOMAIN_BUFFER_SIZE]);
     void setMessage(const char _message[MESSAGE_BUFFER_SIZE]);
+    void setCountdownTargetDate(time_t _targetDate);
     void factoryReset();
 
     uint8_t getBrightness() { return settings.display.brightness; }
@@ -47,6 +49,7 @@ public:
     uint16_t *getCardDurations() { return settings.cardDurations; }
     const char *getMdnsDomain() { return settings.network.mdnsDomain; }
     const char *getMessage() { return settings.message.content; }
+    time_t getCountdownTargetDate() { return settings.countdown.targetDate; }
 
     void toJson(JsonDocument &doc);
 
@@ -55,6 +58,7 @@ private:
     struct _AppSettings
     {
         uint8_t magic;
+        uint8_t version;
         struct
         {
             char timezone[TIMEZONE_BUFFER_SIZE];
@@ -83,6 +87,10 @@ private:
         {
             char content[MESSAGE_BUFFER_SIZE];
         } message;
+        struct
+        {
+            time_t targetDate;
+        } countdown;
         bool activeCards[OPERATION_MODE_LENGTH];
         uint8_t cardOrder[OPERATION_MODE_LENGTH]; // Store the order of cards
         uint16_t cardDurations[OPERATION_MODE_LENGTH]; // Store duration in seconds for each card

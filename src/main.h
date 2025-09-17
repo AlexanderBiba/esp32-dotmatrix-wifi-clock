@@ -11,9 +11,10 @@ enum struct OperationMode
     DATE,          // Index 1
     WEATHER,       // Index 2
     MESSAGE,       // Index 3
-    SNAKE,         // Index 4
-    RAIN,          // Index 5
-    IP_ADDRESS,    // Index 6 - Renamed from SYSTEM_STATUS
+    COUNTDOWN,     // Index 4
+    SNAKE,         // Index 5
+    RAIN,          // Index 6
+    IP_ADDRESS,    // Index 7 - Renamed from SYSTEM_STATUS
     OPERATION_MODE_COUNT
 };
 
@@ -24,6 +25,7 @@ const char OperationModeStr[OPERATION_MODE_LENGTH][32] = {
     "DATE",
     "WEATHER",
     "MESSAGE",
+    "COUNTDOWN",
     "SNAKE",
     "RAIN",
     "IP"}; // Renamed from SYSTEM
