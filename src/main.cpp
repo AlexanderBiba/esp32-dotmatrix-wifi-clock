@@ -117,6 +117,10 @@ void handleControlRequest(char *requestBuffer)
         settings->setWeatherUnits(!strcmp(doc["weatherUnits"], "c") ? 'c' : 'f');
         updateWeather = true;
     }
+    if (doc["dateFormat"])
+    {
+        settings->setDateFormat(!strcmp(doc["dateFormat"], "ddmm") ? 'd' : 'm');
+    }
     if (doc["mdnsDomain"])
     {
         settings->setMdnsDomain(doc["mdnsDomain"]);

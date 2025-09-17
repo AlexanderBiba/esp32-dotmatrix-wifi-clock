@@ -121,6 +121,16 @@ AppSettings::AppSettings()
             Serial.println("Failed to commit card durations initialization");
           }
         }
+        
+        // Check if date format needs to be initialized (for existing devices)
+        if (settings.display.dateFormat == 0) {
+          Serial.println("Initializing date format for existing device");
+          settings.display.dateFormat = 'm'; // Default to MM.DD format
+          EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, display.dateFormat), settings.display.dateFormat);
+          if (!EEPROM.commit()) {
+            Serial.println("Failed to commit date format initialization");
+          }
+        }
     }
     
     // Validate loaded settings
@@ -237,6 +247,19 @@ void AppSettings::setWeatherUnits(char _units)
     }
 }
 
+void AppSettings::setDateFormat(char _format)
+{
+    if (_format != 'm' && _format != 'd') {
+        Serial.println("Invalid date format");
+        return;
+    }
+    settings.display.dateFormat = _format;
+    EEPROM.put(BASE_EEPROM_ADDR + offsetof(_AppSettings, display.dateFormat), settings.display.dateFormat);
+    if (!EEPROM.commit()) {
+        Serial.println("Failed to commit date format setting");
+    }
+}
+
 void AppSettings::setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH])
 {
     for (int i = 0; i < OPERATION_MODE_LENGTH; ++i)
@@ -335,6 +358,7 @@ void AppSettings::setDefaultValues()
     strcpy(settings.message.content, "Set your message here");
     settings.display.brightness = 0xf;
     settings.display.flipped = false;
+    settings.display.dateFormat = 'm'; // Default to MM.DD format
     settings.weather.latitude = 40.7128f;  // New York City latitude
     settings.weather.longitude = -74.0060f; // New York City longitude
     settings.weather.units = 'f';
@@ -382,6 +406,7 @@ void AppSettings::toJson(JsonDocument &doc)
     doc["timezone"] = settings.time.timezone;
     doc["brightness"] = settings.display.brightness;
     doc["flipped"] = settings.display.flipped;
+    doc["dateFormat"] = settings.display.dateFormat == 'm' ? "mmdd" : "ddmm";
     doc["latitude"] = settings.weather.latitude;
     doc["longitude"] = settings.weather.longitude;
     doc["weatherUnits"] = settings.weather.units == 'f' ? "f" : "c";

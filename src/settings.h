@@ -26,6 +26,7 @@ public:
     void setLatitude(float _latitude);
     void setLongitude(float _longitude);
     void setWeatherUnits(char _units);
+    void setDateFormat(char _format);
     void setActiveCards(bool _activeCards[OPERATION_MODE_LENGTH]);
     void setCardOrder(uint8_t _cardOrder[OPERATION_MODE_LENGTH]);
     void setCardDurations(uint16_t _cardDurations[OPERATION_MODE_LENGTH]);
@@ -40,6 +41,7 @@ public:
     float getLatitude() { return settings.weather.latitude; }
     float getLongitude() { return settings.weather.longitude; }
     char getWeatherUnits() { return settings.weather.units; }
+    char getDateFormat() { return settings.display.dateFormat; }
     bool *getActiveCards() { return settings.activeCards; }
     uint8_t *getCardOrder() { return settings.cardOrder; }
     uint16_t *getCardDurations() { return settings.cardDurations; }
@@ -65,6 +67,7 @@ private:
         {
             uint8_t brightness;
             bool flipped;
+            char dateFormat;
         } display;
         struct
         {

@@ -60,19 +60,23 @@ void Clock::loadDateBitmap()
     *p++ = 0;
     *p++ = 0;
 
-#ifdef MMDD_DATE_FORMAT
-    strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", localtime(&currentTime));
-    p = renderer->loadStringToBitmap(timeBuffer, p, true);
-    *p++ = 0x20;
-    strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", localtime(&currentTime));
-    p = renderer->loadStringToBitmap(timeBuffer, p, true);
-#else
-    strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", localtime(&currentTime));
-    p = renderer->loadStringToBitmap(timeBuffer, p, true);
-    *p++ = 0x10;
-    strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", localtime(&currentTime));
-    p = renderer->loadStringToBitmap(timeBuffer, p, true);
-#endif
+    // Use runtime setting for date format
+    char dateFormat = settings->getDateFormat();
+    if (dateFormat == 'm') {
+        // MM.DD format
+        strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", localtime(&currentTime));
+        p = renderer->loadStringToBitmap(timeBuffer, p, true);
+        *p++ = 0x20;
+        strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", localtime(&currentTime));
+        p = renderer->loadStringToBitmap(timeBuffer, p, true);
+    } else {
+        // DD.MM format
+        strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", localtime(&currentTime));
+        p = renderer->loadStringToBitmap(timeBuffer, p, true);
+        *p++ = 0x20;
+        strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", localtime(&currentTime));
+        p = renderer->loadStringToBitmap(timeBuffer, p, true);
+    }
 
     renderer->alignBitmapContentToCenter(dateBitmap, p);
 }

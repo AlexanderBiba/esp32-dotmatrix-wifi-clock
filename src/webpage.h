@@ -1129,12 +1129,25 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                         <label>Temperature Units</label>
                         <div class="radio-group">
                             <label>
+                                <input type="radio" id="fahrenheit-radio" name="weather-units" value="f">
+                                Fahrenheit
+                            </label>
+                            <label>
                                 <input type="radio" id="celsius-radio" name="weather-units" value="c">
                                 Celsius
                             </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Date Format</label>
+                        <div class="radio-group">
                             <label>
-                                <input type="radio" id="fahrenheit-radio" name="weather-units" value="f">
-                                Fahrenheit
+                                <input type="radio" id="mmdd-radio" name="date-format" value="mmdd">
+                                MM.DD
+                            </label>
+                            <label>
+                                <input type="radio" id="ddmm-radio" name="date-format" value="ddmm">
+                                DD.MM
                             </label>
                         </div>
                     </div>
@@ -1902,6 +1915,14 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 });
             });
             
+            // Date format radios - update immediately when changed, send only dateFormat
+            const dateFormatRadios = document.querySelectorAll('input[name="date-format"]');
+            dateFormatRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    updateSingleSetting('dateFormat', this.value);
+                });
+            });
+            
             // MDNS domain input - update when losing focus (blur event)
             const mdnsDomainInput = document.getElementById('mdns-domain');
             if (mdnsDomainInput) {
@@ -2096,6 +2117,15 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                         celsiusRadio.checked = true;
                     } else if (settings.weatherUnits === 'f' && fahrenheitRadio) {
                         fahrenheitRadio.checked = true;
+                    }
+                    
+                    // Set date format
+                    const mmddRadio = document.getElementById('mmdd-radio');
+                    const ddmmRadio = document.getElementById('ddmm-radio');
+                    if (settings.dateFormat === 'mmdd' && mmddRadio) {
+                        mmddRadio.checked = true;
+                    } else if (settings.dateFormat === 'ddmm' && ddmmRadio) {
+                        ddmmRadio.checked = true;
                     }
                     
                     // Set MDNS domain
