@@ -142,11 +142,11 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
   }
 
   // handle message mode
-  pStart = strstr(szMesg, "/&MSG=");
+  pStart = strstr(szMesg, "/&MESSAGE=");
 
   if (pStart != NULL)
   {
-    pStart += 6; // skip to start of data
+    pStart += 10; // skip to start of data
     pEnd = strstr(pStart, "/&");
 
     if (pEnd != NULL)

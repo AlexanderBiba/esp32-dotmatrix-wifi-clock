@@ -1029,9 +1029,9 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
             
             checkedModes.forEach(cb => {
                 const type = cb.id.replace('-checkbox', '').toUpperCase();
-                strLine += `&${type}`;
+                strLine += `/&${type}`;
 
-                if (type === 'MSG') {
+                if (type === 'MESSAGE') {
                     strLine += `=${encodeURIComponent(elements.messageInput.value)}`;
                 } else if (type === 'COUNTDOWN') {
                     const date = new Date(elements.countdownInput.value + "T00:00:00");
@@ -1040,7 +1040,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 }
             });
             
-            apiRequest(`/${strLine}`, { successMessage: 'Display modes updated!' });
+            apiRequest(`${strLine}`, { successMessage: 'Display modes updated!' });
         };
 
         const updateCardOrder = () => {
