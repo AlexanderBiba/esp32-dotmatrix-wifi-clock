@@ -52,11 +52,19 @@ void Clock::loadClockBitmap()
 
 void Clock::loadDateBitmap()
 {
-    static char timeBuffer[TIME_BUFFER_SIZE] = {0};
+    static const char *weekdayCharMap[7] = {
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+    };
     uint8_t *p = dateBitmap;
 
-    strftime(timeBuffer, TIME_BUFFER_SIZE, "%a", localtime(&currentTime));
-    p = renderer->loadStringToBitmap(timeBuffer, p);
+    const char *weekday = weekdayCharMap[myTimezone.weekday() - 1];
+    p = renderer->loadStringToBitmap(weekday, p);
     *p++ = 0;
     *p++ = 0;
 
@@ -64,18 +72,22 @@ void Clock::loadDateBitmap()
     char dateFormat = settings->getDateFormat();
     if (dateFormat == 'm') {
         // MM.DD format
-        strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", localtime(&currentTime));
-        p = renderer->loadStringToBitmap(timeBuffer, p, true);
+        p += renderer->writeSmallCharToBuffer('0' + myTimezone.month() / 10, p);
+        *p++ = 0;
+        p += renderer->writeSmallCharToBuffer('0' + myTimezone.month() % 10, p);
         *p++ = 0x20;
-        strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", localtime(&currentTime));
-        p = renderer->loadStringToBitmap(timeBuffer, p, true);
+        p += renderer->writeSmallCharToBuffer('0' + myTimezone.day() / 10, p);
+        *p++ = 0;
+        p += renderer->writeSmallCharToBuffer('0' + myTimezone.day() % 10, p);
     } else {
         // DD.MM format
-        strftime(timeBuffer, TIME_BUFFER_SIZE, "%d", localtime(&currentTime));
-        p = renderer->loadStringToBitmap(timeBuffer, p, true);
+        p += renderer->writeSmallCharToBuffer('0' + myTimezone.day() / 10, p);
+        *p++ = 0;
+        p += renderer->writeSmallCharToBuffer('0' + myTimezone.day() % 10, p);
         *p++ = 0x20;
-        strftime(timeBuffer, TIME_BUFFER_SIZE, "%m", localtime(&currentTime));
-        p = renderer->loadStringToBitmap(timeBuffer, p, true);
+        p += renderer->writeSmallCharToBuffer('0' + myTimezone.month() / 10, p);
+        *p++ = 0;
+        p += renderer->writeSmallCharToBuffer('0' + myTimezone.month() % 10, p);
     }
 
     renderer->alignBitmapContentToCenter(dateBitmap, p);
