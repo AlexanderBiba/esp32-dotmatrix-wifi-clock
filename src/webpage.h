@@ -1040,7 +1040,7 @@ const char WebPage[] PROGMEM = R"html(<!DOCTYPE html>
                 }
             });
             
-            apiRequest(`${strLine}`, { successMessage: 'Display modes updated!' });
+            apiRequest(`${strLine}/&nocache=${Math.random() * 1000000}`, { successMessage: 'Display modes updated!' });
         };
 
         const updateCardOrder = () => {

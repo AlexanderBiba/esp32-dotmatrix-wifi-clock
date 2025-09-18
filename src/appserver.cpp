@@ -116,12 +116,12 @@ const char* formatUptime(unsigned long uptime) {
   return uptimeString;
 }
 
-AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUEST_BUFFER_SIZE], boolean activeCards[OPERATION_MODE_LENGTH])
+AppServer::RequestMode extractHttpContent(char *szMesg, char messageBuffer[REQUEST_BUFFER_SIZE], char countdownBuffer[REQUEST_BUFFER_SIZE], char controlBuffer[REQUEST_BUFFER_SIZE], char cardOrderBuffer[REQUEST_BUFFER_SIZE], char cardDurationsBuffer[REQUEST_BUFFER_SIZE], boolean activeCards[OPERATION_MODE_LENGTH])
 {
   AppServer::RequestMode requestMode = AppServer::RequestMode::NONE;
   boolean _activeCards[OPERATION_MODE_LENGTH] = {0};
 
-  char *pStart, *pEnd, *psz = requestBuffer;
+  char *pStart, *pEnd, *psz;
 
   // STOP request handling removed - was tied to buzzer functionality
 
@@ -151,7 +151,7 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
 
     if (pEnd != NULL)
     {
-      extractPayload(pStart, pEnd, psz);
+      extractPayload(pStart, pEnd, messageBuffer);
       requestMode = AppServer::RequestMode::MODE;
       _activeCards[static_cast<int>(OperationMode::MESSAGE)] = true;
     }
@@ -167,7 +167,7 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
 
     if (pEnd != NULL)
     {
-      extractPayload(pStart, pEnd, psz);
+      extractPayload(pStart, pEnd, countdownBuffer);
       requestMode = AppServer::RequestMode::MODE;
       _activeCards[static_cast<int>(OperationMode::COUNTDOWN)] = true;
     }
@@ -236,13 +236,13 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
 
     if (pEnd != NULL)
     {
-      extractPayload(pStart, pEnd, psz);
+      extractPayload(pStart, pEnd, controlBuffer);
       requestMode = AppServer::RequestMode::CNTL;
     }
     else
     {
       // If no /& found, extract to end of string
-      extractPayload(pStart, pStart + strlen(pStart), psz);
+      extractPayload(pStart, pStart + strlen(pStart), controlBuffer);
       requestMode = AppServer::RequestMode::CNTL;
     }
   }
@@ -276,13 +276,13 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
 
     if (pEnd != NULL)
     {
-      extractPayload(pStart, pEnd, psz);
+      extractPayload(pStart, pEnd, cardOrderBuffer);
       requestMode = AppServer::RequestMode::CARD_ORDER;
     }
     else
     {
       // If no /& found, extract to end of string
-      extractPayload(pStart, pStart + strlen(pStart), psz);
+      extractPayload(pStart, pStart + strlen(pStart), cardOrderBuffer);
       requestMode = AppServer::RequestMode::CARD_ORDER;
     }
   }
@@ -301,13 +301,13 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
 
     if (pEnd != NULL)
     {
-      extractPayload(pStart, pEnd, psz);
+      extractPayload(pStart, pEnd, cardDurationsBuffer);
       requestMode = AppServer::RequestMode::CARD_DURATIONS;
     }
     else
     {
       // If no /& found, extract to end of string
-      extractPayload(pStart, pStart + strlen(pStart), psz);
+      extractPayload(pStart, pStart + strlen(pStart), cardDurationsBuffer);
       requestMode = AppServer::RequestMode::CARD_DURATIONS;
     }
   }
@@ -330,7 +330,7 @@ AppServer::RequestMode extractHttpContent(char *szMesg, char requestBuffer[REQUE
   return requestMode;
 }
 
-AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_SIZE], boolean activeCards[OPERATION_MODE_LENGTH])
+AppServer::RequestMode AppServer::handleWiFi(char messageBuffer[REQUEST_BUFFER_SIZE], char countdownBuffer[REQUEST_BUFFER_SIZE], char controlBuffer[REQUEST_BUFFER_SIZE], char cardOrderBuffer[REQUEST_BUFFER_SIZE], char cardDurationsBuffer[REQUEST_BUFFER_SIZE], boolean activeCards[OPERATION_MODE_LENGTH])
 {
   static enum { S_IDLE,
                 S_WAIT_CONN,
@@ -390,7 +390,7 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
 
   case S_EXTRACT: // extract data
     // Extract the string from the message if there is one
-    appRequestMode = extractHttpContent(szBuf, requestBuffer, activeCards);
+    appRequestMode = extractHttpContent(szBuf, messageBuffer, countdownBuffer, controlBuffer, cardOrderBuffer, cardDurationsBuffer, activeCards);
     if (appRequestMode == RequestMode::NONE)
     {
       responseHeader = "HTTP/1.1 200 OK\nContent-Type: text/html\n\n";
@@ -476,9 +476,9 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
       response = "{\"status\":\"card_order_updated\"}";
       
       // Parse the card order from JSON
-      Serial.printf("Card order request buffer: %s\n", requestBuffer);
+      Serial.printf("Card order request buffer: %s\n", cardOrderBuffer);
       JsonDocument doc;
-      DeserializationError error = deserializeJson(doc, requestBuffer);
+      DeserializationError error = deserializeJson(doc, cardOrderBuffer);
       if (error)
       {
         Serial.printf("Card order deserializeJson() failed: %s\n", error.f_str());
@@ -558,9 +558,9 @@ AppServer::RequestMode AppServer::handleWiFi(char requestBuffer[REQUEST_BUFFER_S
       response = "{\"status\":\"card_durations_updated\"}";
       
       // Parse the card durations from JSON
-      Serial.printf("Card durations request buffer: %s\n", requestBuffer);
+      Serial.printf("Card durations request buffer: %s\n", cardDurationsBuffer);
       JsonDocument doc;
-      DeserializationError error = deserializeJson(doc, requestBuffer);
+      DeserializationError error = deserializeJson(doc, cardDurationsBuffer);
       if (error)
       {
         Serial.printf("Card durations deserializeJson() failed: %s\n", error.f_str());

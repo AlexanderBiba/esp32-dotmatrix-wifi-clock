@@ -26,7 +26,7 @@ public:
 
     AppServer(AppSettings *settings);
     void setupWiFi(char *localIp);
-    RequestMode handleWiFi(char requestBuffer[1024], boolean activeCards[OPERATION_MODE_LENGTH]);
+    RequestMode handleWiFi(char messageBuffer[1024], char countdownBuffer[1024], char controlBuffer[1024], char cardOrderBuffer[1024], char cardDurationsBuffer[1024], boolean activeCards[OPERATION_MODE_LENGTH]);
     void getLocalIp(char localIp[64]);
     void processWiFi();
 

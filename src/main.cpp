@@ -275,25 +275,29 @@ void loop(void)
     }
 
     // handle control requests
-    static char requestBuffer[REQUEST_BUFFER_SIZE];
+    static char messageBuffer[REQUEST_BUFFER_SIZE];
+    static char countdownBuffer[REQUEST_BUFFER_SIZE];
+    static char controlBuffer[REQUEST_BUFFER_SIZE];
+    static char cardOrderBuffer[REQUEST_BUFFER_SIZE];
+    static char cardDurationsBuffer[REQUEST_BUFFER_SIZE];
     bool activeCards[OPERATION_MODE_LENGTH] = {0};
 
     try
     {
-        switch (appServer->handleWiFi(requestBuffer, activeCards))
+        switch (appServer->handleWiFi(messageBuffer, countdownBuffer, controlBuffer, cardOrderBuffer, cardDurationsBuffer, activeCards))
         {
         case AppServer::RequestMode::MODE:
         {
             settings->setActiveCards(activeCards);
             // If MESSAGE card is active and we have message content, store it
-            if (activeCards[static_cast<int>(OperationMode::MESSAGE)] && strlen(requestBuffer) > 0)
+            if (activeCards[static_cast<int>(OperationMode::MESSAGE)] && strlen(messageBuffer) > 0)
             {
-                settings->setMessage(requestBuffer);
+                settings->setMessage(messageBuffer);
             }
             // If COUNTDOWN card is active and we have countdown timestamp, store it
-            if (activeCards[static_cast<int>(OperationMode::COUNTDOWN)] && strlen(requestBuffer) > 0)
+            if (activeCards[static_cast<int>(OperationMode::COUNTDOWN)] && strlen(countdownBuffer) > 0)
             {
-                time_t timestamp = atol(requestBuffer);
+                time_t timestamp = atol(countdownBuffer);
                 settings->setCountdownTargetDate(timestamp);
                 if (countdown != nullptr)
                 {
@@ -303,7 +307,7 @@ void loop(void)
             break;
         }
         case AppServer::RequestMode::CNTL:
-            handleControlRequest(requestBuffer);
+            handleControlRequest(controlBuffer);
             break;
         case AppServer::RequestMode::SETT:
         case AppServer::RequestMode::CARD_ORDER:
